@@ -203,14 +203,26 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 						
 						-- Crop the highlight and other overlay textures to match our squared-off icon
+						-- Also constrain them to the button size so they don't extend past borders
 						if button.HighlightTexture then
 							button.HighlightTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							button.HighlightTexture:ClearAllPoints()
+							button.HighlightTexture:SetAllPoints(button)
 						end
 						if button.CheckedTexture then
 							button.CheckedTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							button.CheckedTexture:ClearAllPoints()
+							button.CheckedTexture:SetAllPoints(button)
 						end
 						if button.PushedTexture then
 							button.PushedTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							button.PushedTexture:ClearAllPoints()
+							button.PushedTexture:SetAllPoints(button)
+						end
+						if button.Flash then
+							button.Flash:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							button.Flash:ClearAllPoints()
+							button.Flash:SetAllPoints(button)
 						end
 					end
 
@@ -441,12 +453,23 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Update overlay textures too
 						if button.HighlightTexture then
 							button.HighlightTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							button.HighlightTexture:ClearAllPoints()
+							button.HighlightTexture:SetAllPoints(button)
 						end
 						if button.CheckedTexture then
 							button.CheckedTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							button.CheckedTexture:ClearAllPoints()
+							button.CheckedTexture:SetAllPoints(button)
 						end
 						if button.PushedTexture then
 							button.PushedTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							button.PushedTexture:ClearAllPoints()
+							button.PushedTexture:SetAllPoints(button)
+						end
+						if button.Flash then
+							button.Flash:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							button.Flash:ClearAllPoints()
+							button.Flash:SetAllPoints(button)
 						end
 					else
 						-- Restore Blizzard's rounded icon appearance
@@ -460,15 +483,23 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button.icon:SetTexCoord(0, 1, 0, 1)
 						end
 						
-						-- Reset overlay textures to default
+						-- Reset overlay textures to default (clear custom anchors)
 						if button.HighlightTexture then
 							button.HighlightTexture:SetTexCoord(0, 1, 0, 1)
+							button.HighlightTexture:ClearAllPoints()
+							-- Let Blizzard's default anchors take over
 						end
 						if button.CheckedTexture then
 							button.CheckedTexture:SetTexCoord(0, 1, 0, 1)
+							button.CheckedTexture:ClearAllPoints()
 						end
 						if button.PushedTexture then
 							button.PushedTexture:SetTexCoord(0, 1, 0, 1)
+							button.PushedTexture:ClearAllPoints()
+						end
+						if button.Flash then
+							button.Flash:SetTexCoord(0, 1, 0, 1)
+							button.Flash:ClearAllPoints()
 						end
 					end
 					
@@ -754,12 +785,19 @@ function zBarButtonBG.removeActionBarBackgrounds()
 			if data.button then
 				if data.button.HighlightTexture then
 					data.button.HighlightTexture:SetTexCoord(0, 1, 0, 1)
+					data.button.HighlightTexture:ClearAllPoints()
 				end
 				if data.button.CheckedTexture then
 					data.button.CheckedTexture:SetTexCoord(0, 1, 0, 1)
+					data.button.CheckedTexture:ClearAllPoints()
 				end
 				if data.button.PushedTexture then
 					data.button.PushedTexture:SetTexCoord(0, 1, 0, 1)
+					data.button.PushedTexture:ClearAllPoints()
+				end
+				if data.button.Flash then
+					data.button.Flash:SetTexCoord(0, 1, 0, 1)
+					data.button.Flash:ClearAllPoints()
 				end
 			end
 			
