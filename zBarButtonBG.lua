@@ -203,32 +203,84 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 						
 						-- Crop the highlight and other overlay textures to match our squared-off icon
-						-- Also constrain them to the button size so they don't extend past borders
+						-- Also constrain them inside the border so they don't get clipped
+						local inset = zBarButtonBG.charSettings.showBorder and (zBarButtonBG.charSettings.borderWidth or 1) or 0
 						if button.HighlightTexture then
 							button.HighlightTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							button.HighlightTexture:ClearAllPoints()
-							button.HighlightTexture:SetAllPoints(button)
+							button.HighlightTexture:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+							button.HighlightTexture:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+							button.HighlightTexture:SetAlpha(1)
 						end
 						if button.CheckedTexture then
 							button.CheckedTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							button.CheckedTexture:ClearAllPoints()
-							button.CheckedTexture:SetAllPoints(button)
+							button.CheckedTexture:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+							button.CheckedTexture:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+							button.CheckedTexture:SetAlpha(1)
 						end
 						if button.PushedTexture then
 							button.PushedTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							button.PushedTexture:ClearAllPoints()
-							button.PushedTexture:SetAllPoints(button)
+							button.PushedTexture:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+							button.PushedTexture:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+							button.PushedTexture:SetAlpha(1)
 						end
 						if button.Flash then
 							button.Flash:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							button.Flash:ClearAllPoints()
-							button.Flash:SetAllPoints(button)
+							button.Flash:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+							button.Flash:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+							button.Flash:SetAlpha(1)
 						end
 					end
 
 					-- Make the cooldown spiral fill the whole button
 					if button.cooldown then
 						button.cooldown:SetAllPoints(button)
+					end
+					
+					-- Hide Blizzard's default highlight and create our own custom golden overlay
+					if button.HighlightTexture then
+						button.HighlightTexture:Hide()
+					end
+					
+					-- Create custom highlight overlay
+					if not button._zBBG_customHighlight then
+						button._zBBG_customHighlight = button:CreateTexture(nil, "OVERLAY")
+						button._zBBG_customHighlight:SetColorTexture(1, 0.82, 0, 0.5) -- Golden at 50% opacity
+						button._zBBG_customHighlight:Hide() -- Hidden by default
+					end
+					
+					-- Position the highlight based on square/round mode
+					local inset = zBarButtonBG.charSettings.showBorder and (zBarButtonBG.charSettings.borderWidth or 1) or 0
+					button._zBBG_customHighlight:ClearAllPoints()
+					if zBarButtonBG.charSettings.squareButtons then
+						-- Square mode: inset by border width, square coords
+						button._zBBG_customHighlight:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+						button._zBBG_customHighlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+						button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)
+					else
+						-- Round mode: use icon mask for rounded edges
+						button._zBBG_customHighlight:SetAllPoints(button.icon)
+						if button.IconMask then
+							button._zBBG_customHighlight:AddMaskTexture(button.IconMask)
+						end
+					end
+					
+					-- Hook up hover and click events to show/hide custom highlight
+					if not button._zBBG_highlightHooked then
+						button:HookScript("OnEnter", function(self)
+							if self._zBBG_customHighlight then
+								self._zBBG_customHighlight:Show()
+							end
+						end)
+						button:HookScript("OnLeave", function(self)
+							if self._zBBG_customHighlight then
+								self._zBBG_customHighlight:Hide()
+							end
+						end)
+						button._zBBG_highlightHooked = true
 					end
 					
 					-- Replace the beveled SlotBackground with a flat texture if borders are enabled
@@ -451,25 +503,34 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 						
 						-- Update overlay textures too
+						local inset = zBarButtonBG.charSettings.showBorder and (zBarButtonBG.charSettings.borderWidth or 1) or 0
 						if button.HighlightTexture then
 							button.HighlightTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							button.HighlightTexture:ClearAllPoints()
-							button.HighlightTexture:SetAllPoints(button)
+							button.HighlightTexture:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+							button.HighlightTexture:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+							button.HighlightTexture:SetAlpha(1)
 						end
 						if button.CheckedTexture then
 							button.CheckedTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							button.CheckedTexture:ClearAllPoints()
-							button.CheckedTexture:SetAllPoints(button)
+							button.CheckedTexture:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+							button.CheckedTexture:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+							button.CheckedTexture:SetAlpha(1)
 						end
 						if button.PushedTexture then
 							button.PushedTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							button.PushedTexture:ClearAllPoints()
-							button.PushedTexture:SetAllPoints(button)
+							button.PushedTexture:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+							button.PushedTexture:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+							button.PushedTexture:SetAlpha(1)
 						end
 						if button.Flash then
 							button.Flash:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							button.Flash:ClearAllPoints()
-							button.Flash:SetAllPoints(button)
+							button.Flash:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+							button.Flash:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+							button.Flash:SetAlpha(1)
 						end
 					else
 						-- Restore Blizzard's rounded icon appearance
@@ -484,22 +545,49 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 						
 						-- Reset overlay textures to default (clear custom anchors)
+						-- Also ensure they're fully visible for round buttons
 						if button.HighlightTexture then
 							button.HighlightTexture:SetTexCoord(0, 1, 0, 1)
 							button.HighlightTexture:ClearAllPoints()
+							button.HighlightTexture:SetAlpha(1)
 							-- Let Blizzard's default anchors take over
 						end
 						if button.CheckedTexture then
 							button.CheckedTexture:SetTexCoord(0, 1, 0, 1)
 							button.CheckedTexture:ClearAllPoints()
+							button.CheckedTexture:SetAlpha(1)
 						end
 						if button.PushedTexture then
 							button.PushedTexture:SetTexCoord(0, 1, 0, 1)
 							button.PushedTexture:ClearAllPoints()
+							button.PushedTexture:SetAlpha(1)
 						end
 						if button.Flash then
 							button.Flash:SetTexCoord(0, 1, 0, 1)
 							button.Flash:ClearAllPoints()
+							button.Flash:SetAlpha(1)
+						end
+					end
+					
+					-- Update custom highlight positioning based on current mode
+					if button._zBBG_customHighlight then
+						local inset = zBarButtonBG.charSettings.showBorder and (zBarButtonBG.charSettings.borderWidth or 1) or 0
+						button._zBBG_customHighlight:ClearAllPoints()
+						if zBarButtonBG.charSettings.squareButtons then
+							-- Square mode: inset by border width
+							button._zBBG_customHighlight:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+							button._zBBG_customHighlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+							button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)
+							-- Remove mask for square
+							if button.IconMask then
+								button._zBBG_customHighlight:RemoveMaskTexture(button.IconMask)
+							end
+						else
+							-- Round mode: follow icon and use mask
+							button._zBBG_customHighlight:SetAllPoints(button.icon)
+							if button.IconMask then
+								button._zBBG_customHighlight:AddMaskTexture(button.IconMask)
+							end
 						end
 					end
 					
@@ -781,23 +869,40 @@ function zBarButtonBG.removeActionBarBackgrounds()
 				data.button.icon:SetTexCoord(0, 1, 0, 1)
 			end
 			
+			-- Remove custom highlight and restore Blizzard's default
+			if data.button then
+				if data.button._zBBG_customHighlight then
+					data.button._zBBG_customHighlight:Hide()
+					if data.button.IconMask then
+						data.button._zBBG_customHighlight:RemoveMaskTexture(data.button.IconMask)
+					end
+				end
+				if data.button.HighlightTexture then
+					data.button.HighlightTexture:Show()
+				end
+			end
+			
 			-- Reset overlay textures back to normal
 			if data.button then
 				if data.button.HighlightTexture then
 					data.button.HighlightTexture:SetTexCoord(0, 1, 0, 1)
 					data.button.HighlightTexture:ClearAllPoints()
+					data.button.HighlightTexture:SetAlpha(1)
 				end
 				if data.button.CheckedTexture then
 					data.button.CheckedTexture:SetTexCoord(0, 1, 0, 1)
 					data.button.CheckedTexture:ClearAllPoints()
+					data.button.CheckedTexture:SetAlpha(1)
 				end
 				if data.button.PushedTexture then
 					data.button.PushedTexture:SetTexCoord(0, 1, 0, 1)
 					data.button.PushedTexture:ClearAllPoints()
+					data.button.PushedTexture:SetAlpha(1)
 				end
 				if data.button.Flash then
 					data.button.Flash:SetTexCoord(0, 1, 0, 1)
 					data.button.Flash:ClearAllPoints()
+					data.button.Flash:SetAlpha(1)
 				end
 			end
 			
