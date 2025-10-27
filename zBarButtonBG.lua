@@ -23,12 +23,12 @@ Frame:SetScript("OnEvent", function(self, event)
 
 		-- Action bar background settings
 		zBarButtonBG.charSettings.enabled = zBarButtonBG.charSettings.enabled or false
-		
+
 		-- Apply saved action bar background settings
 		if zBarButtonBG.charSettings.enabled then
 			zBarButtonBG.enabled = true
 			-- Delay creation slightly to ensure action bars are loaded
-			C_Timer.After(0.5, function()
+			C_Timer.After(3.5, function()
 				zBarButtonBG.createActionBarBackgrounds()
 			end)
 		end
@@ -39,30 +39,44 @@ end)
 zBarButtonBG.enabled = false
 zBarButtonBG.frames = {}
 
+-- Function to print messages from this addon
+function zBarButtonBG.print(arg)
+	if arg == "" or arg == nil then
+		return
+	else
+		print("|cFF72B061zBarButtonBG:|r " .. arg)
+	end
+	-- End print()
+	return false
+end
+
 -- Replacement texture and atlas data for rounded buttons
 local replacementTexture = "Interface/Addons/zBarButtonBG/Assets/uiactionbar2x"
 local replacementAtlas = {
-	["UI-HUD-ActionBar-IconFrame-Slot"]={64, 31, 0.701172, 0.951172, 0.102051, 0.162598, false, false, "2x"},
-	["UI-HUD-ActionBar-IconFrame"]={46, 22, 0.701172, 0.880859, 0.316895, 0.36084, false, false, "2x"},
-	["UI-HUD-ActionBar-IconFrame-AddRow"]={51, 25, 0.701172, 0.900391, 0.215332, 0.265137, false, false, "2x"},
-	["UI-HUD-ActionBar-IconFrame-Down"]={46, 22, 0.701172, 0.880859, 0.430176, 0.474121, false, false, "2x"},
-	["UI-HUD-ActionBar-IconFrame-Flash"]={46, 22, 0.701172, 0.880859, 0.475098, 0.519043, false, false, "2x"},
-	["UI-HUD-ActionBar-IconFrame-FlyoutBorderShadow"]={52, 26, 0.701172, 0.904297, 0.163574, 0.214355, false, false, "2x"},
-	["UI-HUD-ActionBar-IconFrame-Mouseover"]={46, 22, 0.701172, 0.880859, 0.52002, 0.563965, false, false, "2x"},
-	["UI-HUD-ActionBar-IconFrame-Border"]={46, 22, 0.701172, 0.880859, 0.361816, 0.405762, false, false, "2x"},
-	["UI-HUD-ActionBar-IconFrame-AddRow-Down"]={51, 25, 0.701172, 0.900391, 0.266113, 0.315918, false, false, "2x"},
+	["UI-HUD-ActionBar-IconFrame-Slot"] = { 64, 31, 0.701172, 0.951172, 0.102051, 0.162598, false, false, "2x" },
+	["UI-HUD-ActionBar-IconFrame"] = { 46, 22, 0.701172, 0.880859, 0.316895, 0.36084, false, false, "2x" },
+	["UI-HUD-ActionBar-IconFrame-AddRow"] = { 51, 25, 0.701172, 0.900391, 0.215332, 0.265137, false, false, "2x" },
+	["UI-HUD-ActionBar-IconFrame-Down"] = { 46, 22, 0.701172, 0.880859, 0.430176, 0.474121, false, false, "2x" },
+	["UI-HUD-ActionBar-IconFrame-Flash"] = { 46, 22, 0.701172, 0.880859, 0.475098, 0.519043, false, false, "2x" },
+	["UI-HUD-ActionBar-IconFrame-FlyoutBorderShadow"] = { 52, 26, 0.701172, 0.904297, 0.163574, 0.214355, false, false, "2x" },
+	["UI-HUD-ActionBar-IconFrame-Mouseover"] = { 46, 22, 0.701172, 0.880859, 0.52002, 0.563965, false, false, "2x" },
+	["UI-HUD-ActionBar-IconFrame-Border"] = { 46, 22, 0.701172, 0.880859, 0.361816, 0.405762, false, false, "2x" },
+	["UI-HUD-ActionBar-IconFrame-AddRow-Down"] = { 51, 25, 0.701172, 0.900391, 0.266113, 0.315918, false, false, "2x" },
 }
 
 local function RemapTexture(texture, replacementTexture)
 	if not texture then return end
 	local atlasId = texture:GetAtlas()
 	local atlas = replacementAtlas[atlasId]
-	
+
 	-- don't even attempt to remap if the atlas is missing
 	if atlas == nil then
+		zBarButtonBG.print("Missing atlas for: " .. tostring(atlasId))
 		return
+	else
+		zBarButtonBG.print("Remapping atlas: " .. tostring(atlasId))
 	end
-	
+
 	local width = texture:GetWidth()
 	local height = texture:GetHeight()
 	texture:SetTexture(replacementTexture)
@@ -73,15 +87,15 @@ end
 
 function zBarButtonBG.toggle()
 	zBarButtonBG.enabled = not zBarButtonBG.enabled
-	
+
 	if zBarButtonBG.enabled then
 		zBarButtonBG.createActionBarBackgrounds()
-		print("|cFF72B061zBarButtonBG:|r Action bar backgrounds |cFF00FF00enabled|r")
+		zBarButtonBG.print("Action bar backgrounds |cFF00FF00enabled|r")
 	else
 		zBarButtonBG.removeActionBarBackgrounds()
-		print("|cFF72B061zBarButtonBG:|r Action bar backgrounds |cFFFF0000disabled|r")
+		zBarButtonBG.print("Action bar backgrounds |cFFFF0000disabled|r")
 	end
-	
+
 	-- Save settings to character-specific saved variables
 	if zBarButtonBG.charSettings then
 		zBarButtonBG.charSettings.enabled = zBarButtonBG.enabled
@@ -91,24 +105,24 @@ end
 function zBarButtonBG.createActionBarBackgrounds()
 	-- List of action bar button names to check
 	local buttonBases = {
-		"ActionButton",           -- Main action bar (1-12)
+		"ActionButton",        -- Main action bar (1-12)
 		"MultiBarBottomLeftButton", -- Bottom left bar
 		"MultiBarBottomRightButton", -- Bottom right bar
-		"MultiBarRightButton",    -- Right bar 1
-		"MultiBarLeftButton",     -- Right bar 2
-		"MultiBar5Button",        -- Bar 5
-		"MultiBar6Button",        -- Bar 6
-		"MultiBar7Button",        -- Bar 7
-		"PetActionButton",        -- Pet action bar
-		"StanceButton",           -- Stance/form bar
+		"MultiBarRightButton", -- Right bar 1
+		"MultiBarLeftButton",  -- Right bar 2
+		"MultiBar5Button",     -- Bar 5
+		"MultiBar6Button",     -- Bar 6
+		"MultiBar7Button",     -- Bar 7
+		"PetActionButton",     -- Pet action bar
+		"StanceButton",        -- Stance/form bar
 	}
-	
+
 	for _, baseName in ipairs(buttonBases) do
 		local maxButtons = (baseName == "PetActionButton" or baseName == "StanceButton") and 10 or 12
 		for i = 1, maxButtons do
 			local buttonName = baseName .. i
 			local button = _G[buttonName]
-			
+
 			if button and button:IsVisible() then
 				-- Check if we already created a background for this button
 				if not zBarButtonBG.frames[buttonName] then
@@ -119,12 +133,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if button.icon and button.IconMask then
 						button.icon:RemoveMaskTexture(button.IconMask)
 					end
-					
+
 					-- Hide normal texture on show
 					if button.NormalTexture then
 						button.NormalTexture:HookScript("OnShow", function(self) self:Hide() end)
 					end
-					
+
 					-- Adjust button overlays with rounded texture
 					if button.cooldown then
 						button.cooldown:SetAllPoints(button)
@@ -135,11 +149,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 					RemapTexture(button.NewActionTexture, replacementTexture)
 					RemapTexture(button.PushedTexture, replacementTexture)
 					RemapTexture(button.Border, replacementTexture)
-					
+
 					if button.SlotBackground then
 						button.SlotBackground:SetDrawLayer("BACKGROUND", -1)
 					end
-					
+
 					-- Hide spell cast animations
 					if button.SpellCastAnimFrame then
 						button.SpellCastAnimFrame:SetScript("OnShow", function(self) self:Hide() end)
@@ -147,28 +161,28 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if button.InterruptDisplay then
 						button.InterruptDisplay:SetScript("OnShow", function(self) self:Hide() end)
 					end
-					
+
 					-- Create the outer black background frame (extends 5px beyond button)
 					local outerFrame = CreateFrame("Frame", nil, button)
 					outerFrame:SetPoint("TOPLEFT", button, "TOPLEFT", -5, 5)
 					outerFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 5, -5)
 					outerFrame:SetFrameLevel(button:GetFrameLevel() - 1)
-					
+
 					-- Create solid black background texture for outer frame
 					local outerBg = outerFrame:CreateTexture(nil, "BACKGROUND")
 					outerBg:SetAllPoints(outerFrame)
 					outerBg:SetColorTexture(0, 0, 0, 1) -- Solid black
-					
+
 					-- Create a frame for the dark grey button background
 					local bgFrame = CreateFrame("Frame", nil, button)
 					bgFrame:SetAllPoints(button)
 					bgFrame:SetFrameLevel(button:GetFrameLevel())
-					
+
 					-- Create dark grey background texture
 					local bg = bgFrame:CreateTexture(nil, "BACKGROUND")
 					bg:SetAllPoints(bgFrame)
 					bg:SetColorTexture(0.1, 0.1, 0.1, 0.75) -- Dark grey
-					
+
 					-- Store the references
 					zBarButtonBG.frames[buttonName] = {
 						outerFrame = outerFrame,
@@ -190,7 +204,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 			end
 		end
 	end
-	
+
 	-- Hook into action bar visibility changes to add backgrounds dynamically
 	if not zBarButtonBG.hookInstalled then
 		-- Create a frame to listen for action bar updates
