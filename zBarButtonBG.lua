@@ -235,6 +235,19 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button.Flash:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
 							button.Flash:SetAlpha(1)
 						end
+					else
+						-- Round button mode: zoom in and clip with rounded corners
+						if button.icon and button.IconMask then
+							-- Keep the mask for rounded corners
+							button.icon:AddMaskTexture(button.IconMask)
+							
+							-- Scale up slightly to zoom in and hide any icon border
+							button.icon:SetScale(1.08)
+							
+							-- Crop the texture coordinates to remove edges with rounded corners
+							-- This removes the icon border while keeping rounded appearance
+							button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+						end
 					end
 
 					-- Make the cooldown spiral fill the whole button
@@ -568,12 +581,13 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Restore Blizzard's rounded icon appearance
 						if button.icon and button.IconMask then
 							button.icon:AddMaskTexture(button.IconMask)
-						end
-						
-						-- Reset icon scale and texture coordinates to default
-						if button.icon then
-							button.icon:SetScale(1.0)
-							button.icon:SetTexCoord(0, 1, 0, 1)
+							
+							-- Scale up slightly to zoom in and hide any icon border
+							button.icon:SetScale(1.08)
+							
+							-- Crop the texture coordinates to remove edges with rounded corners
+							button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+							
 							-- Restore default positioning
 							button.icon:ClearAllPoints()
 							button.icon:SetAllPoints(button)
@@ -691,7 +705,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 							if not data.borderFrame then
 							-- Border wasn't created initially, make it now
 							-- Parent to button so it follows but stays just above the icon
-							data.borderFrame = CreateFrame("Frame", nil, button)
+							data.borderFrame = CreateFrame("Frame", nil, UIParent)
 							data.borderFrame:SetFrameLevel(button:GetFrameLevel() + 1)
 							
 							-- Position to fill the button
