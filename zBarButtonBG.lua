@@ -174,10 +174,15 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Mark this button as having our custom styling applied
 					button._zBBG_styled = true
 					
-					-- Only hide the default border texture if we're using square buttons
+					-- Handle the default border texture based on settings
+					-- For square buttons, make it fully transparent so even if Blizzard shows it, it's invisible
 					-- If using round buttons, we can use it for borders instead
-					if button.NormalTexture and zBarButtonBG.charSettings.squareButtons then
-						button.NormalTexture:Hide()
+					if button.NormalTexture then
+						if zBarButtonBG.charSettings.squareButtons then
+							button.NormalTexture:SetAlpha(0)
+						else
+							button.NormalTexture:SetAlpha(1)
+						end
 					end
 					
 					-- Square off the icons if that option is enabled
@@ -398,11 +403,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Handle NormalTexture based on square buttons setting and border setting
 					if button.NormalTexture then
 						if zBarButtonBG.charSettings.squareButtons then
-							-- Square buttons always hide the NormalTexture
-							button.NormalTexture:Hide()
+							-- Square buttons: make NormalTexture fully transparent
+							button.NormalTexture:SetAlpha(0)
 						elseif zBarButtonBG.charSettings.showBorder then
 							-- Round buttons with borders: show and color the NormalTexture
-							button.NormalTexture:Show()
+							button.NormalTexture:SetAlpha(1)
 							local borderColor
 							if zBarButtonBG.charSettings.useClassColorBorder then
 								local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
@@ -412,8 +417,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 							end
 							button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 						else
-							-- Round buttons without borders: hide NormalTexture
-							button.NormalTexture:Hide()
+							-- Round buttons without borders: make NormalTexture transparent
+							button.NormalTexture:SetAlpha(0)
 						end
 					end
 					
@@ -617,15 +622,15 @@ function zBarButtonBG.createActionBarBackgrounds()
 		end)
 		
 		-- Hook into various action button update functions to manage NormalTexture
-		-- This keeps it hidden when we want it hidden, or properly colored when we're using it
+		-- This keeps it transparent when we want it hidden, or properly colored when we're using it
 		local function manageNormalTexture(button)
 			if button and button.NormalTexture and button._zBBG_styled and zBarButtonBG.enabled then
 				if zBarButtonBG.charSettings.squareButtons then
-					-- Square buttons: always hide it
-					button.NormalTexture:Hide()
+					-- Square buttons: make it fully transparent
+					button.NormalTexture:SetAlpha(0)
 				elseif zBarButtonBG.charSettings.showBorder then
-					-- Round buttons with borders: show and color it
-					button.NormalTexture:Show()
+					-- Round buttons with borders: make visible and color it
+					button.NormalTexture:SetAlpha(1)
 					local borderColor
 					if zBarButtonBG.charSettings.useClassColorBorder then
 						local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
@@ -635,8 +640,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 				else
-					-- Round buttons without borders: hide it
-					button.NormalTexture:Hide()
+					-- Round buttons without borders: make it transparent
+					button.NormalTexture:SetAlpha(0)
 				end
 			end
 		end
@@ -658,11 +663,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 							-- Manage NormalTexture visibility and color
 							if data.button.NormalTexture then
 								if zBarButtonBG.charSettings.squareButtons then
-									-- Square buttons: hide NormalTexture
-									data.button.NormalTexture:Hide()
+									-- Square buttons: make NormalTexture fully transparent
+									data.button.NormalTexture:SetAlpha(0)
 								elseif zBarButtonBG.charSettings.showBorder then
-									-- Round buttons with borders: show and color NormalTexture
-									data.button.NormalTexture:Show()
+									-- Round buttons with borders: ensure it's visible and colored
+									data.button.NormalTexture:SetAlpha(1)
 									local borderColor
 									if zBarButtonBG.charSettings.useClassColorBorder then
 										local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
@@ -672,8 +677,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 									end
 									data.button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 								else
-									-- Round buttons without borders: hide NormalTexture
-									data.button.NormalTexture:Hide()
+									-- Round buttons without borders: make NormalTexture transparent
+									data.button.NormalTexture:SetAlpha(0)
 								end
 							end
 							
@@ -722,8 +727,9 @@ function zBarButtonBG.removeActionBarBackgrounds()
 			if data.borderLeftBG then data.borderLeftBG:Hide() end
 			if data.borderRightBG then data.borderRightBG:Hide() end
 			
-			-- Put the default border texture back
+			-- Put the default border texture back and restore its alpha
 			if data.button and data.button.NormalTexture then
+				data.button.NormalTexture:SetAlpha(1)
 				data.button.NormalTexture:Show()
 			end
 			
