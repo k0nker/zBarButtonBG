@@ -18,3 +18,4 @@
 ## Category-zhTW: 快捷列
 
 zBarButtonBG.lua
+Options.lua

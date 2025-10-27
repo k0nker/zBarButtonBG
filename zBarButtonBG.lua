@@ -1,33 +1,42 @@
 zBarButtonBG = {}
 
 -- ############################################################
--- Init on login
+-- Load settings when we log in
 -- ############################################################
 local Frame = CreateFrame("Frame")
 Frame:RegisterEvent("PLAYER_LOGIN")
 Frame:SetScript("OnEvent", function(self, event)
 	if event == "PLAYER_LOGIN" then
-		-- Ensure global table exists
+		-- Make sure the saved variables table exists
 		zBarButtonBGSaved = zBarButtonBGSaved or {}
 
-		-- Get player identity
+		-- Figure out who we are
 		local realmName = GetRealmName()
 		local charName = UnitName("player")
 
-		-- Create character-specific entry inside the global saved var
+		-- Set up this character's settings table
 		zBarButtonBGSaved[realmName] = zBarButtonBGSaved[realmName] or {}
 		zBarButtonBGSaved[realmName][charName] = zBarButtonBGSaved[realmName][charName] or {}
 
-		-- Shortcut for this char's settings
+		-- Make a shortcut so we don't have to type all that every time
 		zBarButtonBG.charSettings = zBarButtonBGSaved[realmName][charName]
 
-		-- Action bar background settings
+		-- Set up defaults for anything that doesn't exist yet
 		zBarButtonBG.charSettings.enabled = zBarButtonBG.charSettings.enabled or false
+		zBarButtonBG.charSettings.squareButtons = zBarButtonBG.charSettings.squareButtons ~= nil and zBarButtonBG.charSettings.squareButtons or true
+		zBarButtonBG.charSettings.outerColor = zBarButtonBG.charSettings.outerColor or {r = 0, g = 0, b = 0, a = 1}
+		zBarButtonBG.charSettings.innerColor = zBarButtonBG.charSettings.innerColor or {r = 0.1, g = 0.1, b = 0.1, a = 0.75}
+		zBarButtonBG.charSettings.showBorder = zBarButtonBG.charSettings.showBorder ~= nil and zBarButtonBG.charSettings.showBorder or false
+		zBarButtonBG.charSettings.borderWidth = zBarButtonBG.charSettings.borderWidth or 1
+		zBarButtonBG.charSettings.borderColor = zBarButtonBG.charSettings.borderColor or {r = 1, g = 1, b = 1, a = 1}
+		zBarButtonBG.charSettings.useClassColorBorder = zBarButtonBG.charSettings.useClassColorBorder or false
+		zBarButtonBG.charSettings.useClassColorOuter = zBarButtonBG.charSettings.useClassColorOuter or false
+		zBarButtonBG.charSettings.useClassColorInner = zBarButtonBG.charSettings.useClassColorInner or false
 
-		-- Apply saved action bar background settings
+		-- If we had this enabled before, turn it back on after a short delay
+		-- (need to wait for action bars to actually load first)
 		if zBarButtonBG.charSettings.enabled then
 			zBarButtonBG.enabled = true
-			-- Delay creation slightly to ensure action bars are loaded
 			C_Timer.After(3.5, function()
 				zBarButtonBG.createActionBarBackgrounds()
 			end)
@@ -35,56 +44,21 @@ Frame:SetScript("OnEvent", function(self, event)
 	end
 end)
 
--- Action Bar Background Toggle
+-- Track whether we're enabled and store our custom frames
 zBarButtonBG.enabled = false
 zBarButtonBG.frames = {}
 
--- Function to print messages from this addon
+-- Print helper that prefixes our addon name
 function zBarButtonBG.print(arg)
 	if arg == "" or arg == nil then
 		return
 	else
 		print("|cFF72B061zBarButtonBG:|r " .. arg)
 	end
-	-- End print()
 	return false
 end
 
--- Replacement texture and atlas data for rounded buttons
-local replacementTexture = "Interface/Addons/zBarButtonBG/Assets/uiactionbar2x"
-local replacementAtlas = {
-	["UI-HUD-ActionBar-IconFrame-Slot"] = { 64, 31, 0.701172, 0.951172, 0.102051, 0.162598, false, false, "2x" },
-	["UI-HUD-ActionBar-IconFrame"] = { 46, 22, 0.701172, 0.880859, 0.316895, 0.36084, false, false, "2x" },
-	["UI-HUD-ActionBar-IconFrame-AddRow"] = { 51, 25, 0.701172, 0.900391, 0.215332, 0.265137, false, false, "2x" },
-	["UI-HUD-ActionBar-IconFrame-Down"] = { 46, 22, 0.701172, 0.880859, 0.430176, 0.474121, false, false, "2x" },
-	["UI-HUD-ActionBar-IconFrame-Flash"] = { 46, 22, 0.701172, 0.880859, 0.475098, 0.519043, false, false, "2x" },
-	["UI-HUD-ActionBar-IconFrame-FlyoutBorderShadow"] = { 52, 26, 0.701172, 0.904297, 0.163574, 0.214355, false, false, "2x" },
-	["UI-HUD-ActionBar-IconFrame-Mouseover"] = { 46, 22, 0.701172, 0.880859, 0.52002, 0.563965, false, false, "2x" },
-	["UI-HUD-ActionBar-IconFrame-Border"] = { 46, 22, 0.701172, 0.880859, 0.361816, 0.405762, false, false, "2x" },
-	["UI-HUD-ActionBar-IconFrame-AddRow-Down"] = { 51, 25, 0.701172, 0.900391, 0.266113, 0.315918, false, false, "2x" },
-}
-
-local function RemapTexture(texture, replacementTexture)
-	if not texture then return end
-	local atlasId = texture:GetAtlas()
-	local atlas = replacementAtlas[atlasId]
-
-	-- don't even attempt to remap if the atlas is missing
-	if atlas == nil then
-		zBarButtonBG.print("Missing atlas for: " .. tostring(atlasId))
-		return
-	else
-		zBarButtonBG.print("Remapping atlas: " .. tostring(atlasId))
-	end
-
-	local width = texture:GetWidth()
-	local height = texture:GetHeight()
-	texture:SetTexture(replacementTexture)
-	texture:SetTexCoord(atlas[3], atlas[4], atlas[5], atlas[6])
-	texture:SetWidth(width)
-	texture:SetHeight(height)
-end
-
+-- Toggle command - turn backgrounds on/off
 function zBarButtonBG.toggle()
 	zBarButtonBG.enabled = not zBarButtonBG.enabled
 
@@ -96,14 +70,14 @@ function zBarButtonBG.toggle()
 		zBarButtonBG.print("Action bar backgrounds |cFFFF0000disabled|r")
 	end
 
-	-- Save settings to character-specific saved variables
+	-- Save the enabled state
 	if zBarButtonBG.charSettings then
 		zBarButtonBG.charSettings.enabled = zBarButtonBG.enabled
 	end
 end
 
 function zBarButtonBG.createActionBarBackgrounds()
-	-- List of action bar button names to check
+	-- All the different types of action bar buttons we want to modify
 	local buttonBases = {
 		"ActionButton",        -- Main action bar (1-12)
 		"MultiBarBottomLeftButton", -- Bottom left bar
@@ -118,53 +92,74 @@ function zBarButtonBG.createActionBarBackgrounds()
 	}
 
 	for _, baseName in ipairs(buttonBases) do
+		-- Pet and stance bars only have 10 buttons instead of 12
 		local maxButtons = (baseName == "PetActionButton" or baseName == "StanceButton") and 10 or 12
 		for i = 1, maxButtons do
 			local buttonName = baseName .. i
 			local button = _G[buttonName]
 
 			if button and button:IsVisible() then
-				-- Check if we already created a background for this button
+				-- Check if we've already set this button up
 				if not zBarButtonBG.frames[buttonName] then
-					-- Hide the default button border and remove icon mask
+					-- Hide the default rounded border texture
 					if button.NormalTexture then
 						button.NormalTexture:Hide()
 					end
-					if button.icon and button.IconMask then
-						button.icon:RemoveMaskTexture(button.IconMask)
+					
+					-- Square off the icons if that option is enabled
+					if zBarButtonBG.charSettings.squareButtons then
+						-- Remove the icon mask that makes it rounded
+						if button.icon and button.IconMask then
+							button.icon:RemoveMaskTexture(button.IconMask)
+						end
+
+						-- Scale up the icon and crop the edges to square it off
+						if button.icon then
+							-- Reset to 1.0 first to make sure we're starting from a consistent state
+							button.icon:SetScale(1.0)
+							-- Scale it up a bit to fill in where the rounded corners were
+							button.icon:SetScale(1.08)
+							-- Crop the edges to make it square instead of round
+							button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+						end
+						
+						-- Crop the highlight and other overlay textures to match our squared-off icon
+						if button.HighlightTexture then
+							button.HighlightTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+						end
+						if button.CheckedTexture then
+							button.CheckedTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+						end
+						if button.PushedTexture then
+							button.PushedTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+						end
 					end
 
-					-- Make the icon slightly larger and clip it to button bounds
-					if button.icon then
-						-- Reset to base scale first to ensure consistent behavior
-						button.icon:SetScale(0.7)
-						-- Scale up the icon slightly to fill rounded corners
-						--button.icon:SetScale(1.08)
-						-- Ensure icon is clipped to button bounds - crop a bit more from edges
-						button.icon:SetTexCoord(0.8, 0.92, 0.8, 0.92)
-					end
-
-					-- Hide normal texture on show
+					-- Make sure the normal texture stays hidden even if something tries to show it
 					if button.NormalTexture then
 						button.NormalTexture:HookScript("OnShow", function(self) self:Hide() end)
 					end
 
-					-- Adjust button overlays with rounded texture
+					-- Make the cooldown spiral fill the whole button
 					if button.cooldown then
 						button.cooldown:SetAllPoints(button)
 					end
-					RemapTexture(button.HighlightTexture, replacementTexture)
-					RemapTexture(button.CheckedTexture, replacementTexture)
-					RemapTexture(button.SpellHighlightTexture, replacementTexture)
-					RemapTexture(button.NewActionTexture, replacementTexture)
-					RemapTexture(button.PushedTexture, replacementTexture)
-					RemapTexture(button.Border, replacementTexture)
-
+					
+					-- Replace the beveled SlotBackground with a flat texture if borders are enabled
 					if button.SlotBackground then
-						button.SlotBackground:SetDrawLayer("BACKGROUND", -1)
+						if zBarButtonBG.charSettings.showBorder then
+							-- Use a flat white texture we can make transparent
+							button.SlotBackground:SetTexture("Interface\\Buttons\\WHITE8X8")
+							button.SlotBackground:SetVertexColor(0, 0, 0, 0)
+							button.SlotBackground:SetDrawLayer("BACKGROUND", -1)
+						else
+							-- Keep the default texture when borders are off
+							button.SlotBackground:SetTexture(nil)
+							button.SlotBackground:SetDrawLayer("BACKGROUND", -1)
+						end
 					end
 
-					-- Hide spell cast animations
+					-- Hide those annoying spell cast animations
 					if button.SpellCastAnimFrame then
 						button.SpellCastAnimFrame:SetScript("OnShow", function(self) self:Hide() end)
 					end
@@ -172,71 +167,265 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button.InterruptDisplay:SetScript("OnShow", function(self) self:Hide() end)
 					end
 
-					-- Create the outer black background frame (extends 5px beyond button)
+					-- Create the outer background frame that extends 5px past the button edges
 					local outerFrame = CreateFrame("Frame", nil, button)
 					outerFrame:SetPoint("TOPLEFT", button, "TOPLEFT", -5, 5)
 					outerFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 5, -5)
-					outerFrame:SetFrameLevel(0)  -- Very back layer
+					outerFrame:SetFrameLevel(0)
 					outerFrame:SetFrameStrata("BACKGROUND")
 
-					-- Create solid black background texture for outer frame
+					-- Fill it with black (or class color if that's enabled)
 					local outerBg = outerFrame:CreateTexture(nil, "BACKGROUND", nil, -8)
 					outerBg:SetAllPoints(outerFrame)
-					outerBg:SetColorTexture(0, 0, 0, 1) -- Solid black
+					local outer
+					if zBarButtonBG.charSettings.useClassColorOuter then
+						local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+						outer = {r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings.outerColor.a}
+					else
+						outer = zBarButtonBG.charSettings.outerColor
+					end
+					outerBg:SetColorTexture(outer.r, outer.g, outer.b, outer.a)
 
-					-- Create a frame for the dark grey button background
+					-- Create the inner background that sits right behind the button
 					local bgFrame = CreateFrame("Frame", nil, button)
 					bgFrame:SetAllPoints(button)
-					bgFrame:SetFrameLevel(0)  -- Very back layer
+					bgFrame:SetFrameLevel(0)
 					bgFrame:SetFrameStrata("BACKGROUND")
 
-					-- Create dark grey background texture
+					-- Fill it with dark grey (or class color)
 					local bg = bgFrame:CreateTexture(nil, "BACKGROUND", nil, -7)
 					bg:SetAllPoints(bgFrame)
-					bg:SetColorTexture(0.1, 0.1, 0.1, 0.75) -- Dark grey
+					local inner
+					if zBarButtonBG.charSettings.useClassColorInner then
+						local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+						inner = {r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings.innerColor.a}
+					else
+						inner = zBarButtonBG.charSettings.innerColor
+					end
+					bg:SetColorTexture(inner.r, inner.g, inner.b, inner.a)
 
-					-- Store the references
+					-- Create the border if that option is turned on
+					local borderFrame, borderTop, borderBottom, borderLeft, borderRight
+					if zBarButtonBG.charSettings.showBorder and button.icon then
+						-- Parent to UIParent so it doesn't get clipped by the action bar frames
+						borderFrame = CreateFrame("Frame", nil, UIParent)
+						borderFrame:SetFrameLevel(10000)
+						borderFrame:SetFrameStrata("HIGH")
+						
+						local borderWidth = zBarButtonBG.charSettings.borderWidth or 1
+						
+						-- Position it to match the button's location on screen
+						borderFrame:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+						borderFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
+						
+						-- Figure out what color to use for the border
+						local borderColor
+						if zBarButtonBG.charSettings.useClassColorBorder then
+							local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+							borderColor = {r = classColor.r, g = classColor.g, b = classColor.b, a = 1}
+						else
+							borderColor = zBarButtonBG.charSettings.borderColor
+						end
+						
+						-- Create 4 separate textures for each edge of the border
+						-- Using BACKGROUND layer so flyout arrows can render on top
+						-- Top edge
+						borderTop = borderFrame:CreateTexture(nil, "BACKGROUND")
+						borderTop:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", 0, 0)
+						borderTop:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", 0, 0)
+						borderTop:SetHeight(borderWidth)
+						borderTop:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+						
+						-- Bottom edge
+						borderBottom = borderFrame:CreateTexture(nil, "BACKGROUND")
+						borderBottom:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", 0, 0)
+						borderBottom:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", 0, 0)
+						borderBottom:SetHeight(borderWidth)
+						borderBottom:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+						
+						-- Left edge
+						borderLeft = borderFrame:CreateTexture(nil, "BACKGROUND")
+						borderLeft:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", 0, 0)
+						borderLeft:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", 0, 0)
+						borderLeft:SetWidth(borderWidth)
+						borderLeft:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+						
+						-- Right edge
+						borderRight = borderFrame:CreateTexture(nil, "BACKGROUND")
+						borderRight:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", 0, 0)
+						borderRight:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", 0, 0)
+						borderRight:SetWidth(borderWidth)
+						borderRight:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+					end
+
+					-- Store references to everything we created so we can update or remove it later
 					zBarButtonBG.frames[buttonName] = {
 						outerFrame = outerFrame,
 						outerBg = outerBg,
 						frame = bgFrame,
 						bg = bg,
+						borderFrame = borderFrame,
+						borderTop = borderTop,
+						borderBottom = borderBottom,
+						borderLeft = borderLeft,
+						borderRight = borderRight,
 						button = button
 					}
+					-- Make sure the mask stays removed
 					if button.icon and button.IconMask then
 						button.icon:RemoveMaskTexture(button.IconMask)
 					end
 				else
-					-- Update existing frames - make sure everything is reapplied
+					-- Button already has backgrounds, just update them with current settings
 					local data = zBarButtonBG.frames[buttonName]
 					
-					-- Reapply icon modifications (reset scale first for consistency)
+					-- Reapply the icon scaling and cropping
 					if button.icon then
-						-- Reset scale first to ensure consistent behavior
-						button.icon:SetScale(0.7)
-						-- Then apply our desired scale
-						--button.icon:SetScale(1.08)
-						button.icon:SetTexCoord(0.8, 0.92, 0.8, 0.92)
+						-- Reset first to keep things consistent
+						button.icon:SetScale(1.0)
+						-- Then scale it up
+						button.icon:SetScale(1.08)
+						button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 					end
+					-- Make sure the mask stays gone
 					if button.icon and button.IconMask then
 						button.icon:RemoveMaskTexture(button.IconMask)
 					end
 					
-					-- Show frames
+					-- Update the SlotBackground based on whether borders are on or off
+					if button.SlotBackground then
+						if zBarButtonBG.charSettings.showBorder then
+							-- Flat texture when borders are enabled
+							button.SlotBackground:SetTexture("Interface\\Buttons\\WHITE8X8")
+							button.SlotBackground:SetVertexColor(0, 0, 0, 0)
+							button.SlotBackground:SetDrawLayer("BACKGROUND", -1)
+						else
+							-- Put the default texture back when borders are off
+							button.SlotBackground:SetTexture(nil)
+							button.SlotBackground:SetVertexColor(1, 1, 1, 1)
+							button.SlotBackground:SetDrawLayer("BACKGROUND", -1)
+						end
+					end
+					
+					-- Make sure our background frames are visible
 					if data.outerFrame then
 						data.outerFrame:Show()
 					end
 					if data.frame then
 						data.frame:Show()
 					end
+					
+					-- Update the colors (might have changed in settings or toggled class colors)
+					local outer, inner
+					if zBarButtonBG.charSettings.useClassColorOuter then
+						local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+						outer = {r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings.outerColor.a}
+					else
+						outer = zBarButtonBG.charSettings.outerColor
+					end
+					
+					if zBarButtonBG.charSettings.useClassColorInner then
+						local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+						inner = {r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings.innerColor.a}
+					else
+						inner = zBarButtonBG.charSettings.innerColor
+					end
+					
+					if data.outerBg then
+						data.outerBg:SetColorTexture(outer.r, outer.g, outer.b, outer.a)
+					end
+					if data.bg then
+						data.bg:SetColorTexture(inner.r, inner.g, inner.b, inner.a)
+					end
+					
+					-- Handle border updates
+					if zBarButtonBG.charSettings.showBorder and button.icon then
+						local borderWidth = zBarButtonBG.charSettings.borderWidth or 1
+						
+						-- Figure out the border color
+						local borderColor
+						if zBarButtonBG.charSettings.useClassColorBorder then
+							local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+							borderColor = {r = classColor.r, g = classColor.g, b = classColor.b, a = 1}
+						else
+							borderColor = zBarButtonBG.charSettings.borderColor
+						end
+						
+						if not data.borderFrame then
+							-- Border wasn't created initially, make it now
+							-- Parent to UIParent so it doesn't get clipped
+							data.borderFrame = CreateFrame("Frame", nil, UIParent)
+							data.borderFrame:SetFrameLevel(10000)
+							data.borderFrame:SetFrameStrata("HIGH")
+							
+							-- Position to match the button
+							data.borderFrame:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+							data.borderFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
+							
+							-- Create the four edges using BACKGROUND layer so flyout arrows render on top
+							-- Top edge
+							data.borderTop = data.borderFrame:CreateTexture(nil, "BACKGROUND")
+							data.borderTop:SetPoint("TOPLEFT", data.borderFrame, "TOPLEFT", 0, 0)
+							data.borderTop:SetPoint("TOPRIGHT", data.borderFrame, "TOPRIGHT", 0, 0)
+							data.borderTop:SetHeight(borderWidth)
+							data.borderTop:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+							
+							-- Bottom edge
+							data.borderBottom = data.borderFrame:CreateTexture(nil, "BACKGROUND")
+							data.borderBottom:SetPoint("BOTTOMLEFT", data.borderFrame, "BOTTOMLEFT", 0, 0)
+							data.borderBottom:SetPoint("BOTTOMRIGHT", data.borderFrame, "BOTTOMRIGHT", 0, 0)
+							data.borderBottom:SetHeight(borderWidth)
+							data.borderBottom:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+							
+							-- Left edge
+							data.borderLeft = data.borderFrame:CreateTexture(nil, "BACKGROUND")
+							data.borderLeft:SetPoint("TOPLEFT", data.borderFrame, "TOPLEFT", 0, 0)
+							data.borderLeft:SetPoint("BOTTOMLEFT", data.borderFrame, "BOTTOMLEFT", 0, 0)
+							data.borderLeft:SetWidth(borderWidth)
+							data.borderLeft:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+							
+							-- Right edge
+							data.borderRight = data.borderFrame:CreateTexture(nil, "BACKGROUND")
+							data.borderRight:SetPoint("TOPRIGHT", data.borderFrame, "TOPRIGHT", 0, 0)
+							data.borderRight:SetPoint("BOTTOMRIGHT", data.borderFrame, "BOTTOMRIGHT", 0, 0)
+							data.borderRight:SetWidth(borderWidth)
+							data.borderRight:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+						else
+							-- Border already exists, just update it
+							data.borderFrame:Show()
+							
+							-- Update the sizes and colors of each edge
+							if data.borderTop then
+								data.borderTop:SetHeight(borderWidth)
+								data.borderTop:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+							end
+							if data.borderBottom then
+								data.borderBottom:SetHeight(borderWidth)
+								data.borderBottom:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+							end
+							if data.borderLeft then
+								data.borderLeft:SetWidth(borderWidth)
+								data.borderLeft:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+							end
+							if data.borderRight then
+								data.borderRight:SetWidth(borderWidth)
+								data.borderRight:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+							end
+						end
+					else
+						-- Borders are disabled, hide them if they exist
+						if data.borderFrame then
+							data.borderFrame:Hide()
+						end
+					end
 				end
 			end
 		end
 	end
 
-	-- Hook into action bar visibility changes to add backgrounds dynamically
+	-- Hook into action bar events so we can update when buttons change
 	if not zBarButtonBG.hookInstalled then
-		-- Create a frame to listen for action bar updates
+		-- Listen for action bar changes and reapply our backgrounds
 		local updateFrame = CreateFrame("Frame")
 		updateFrame:RegisterEvent("ACTIONBAR_SHOWGRID")
 		updateFrame:RegisterEvent("ACTIONBAR_HIDEGRID")
@@ -251,27 +440,27 @@ function zBarButtonBG.createActionBarBackgrounds()
 	end
 end
 
+-- Turn off our backgrounds and put everything back to normal
 function zBarButtonBG.removeActionBarBackgrounds()
 	for buttonName, data in pairs(zBarButtonBG.frames) do
 		if data then
-			-- Hide the outer black frame
+			-- Hide our custom background frames
 			if data.outerFrame then
 				data.outerFrame:Hide()
 			end
-			-- Hide the grey button frame
 			if data.frame then
 				data.frame:Hide()
 			end
-			-- Restore button normal texture
+			-- Put the default border texture back
 			if data.button and data.button.NormalTexture then
 				data.button.NormalTexture:Show()
 			end
-			-- Restore icon to normal size and texture coords
+			-- Reset the icon back to normal size and coords
 			if data.button and data.button.icon then
 				data.button.icon:SetScale(1.0)
 				data.button.icon:SetTexCoord(0, 1, 0, 1)
 			end
-			-- Restore icon mask if it was removed
+			-- Put the icon mask back on to make it round again
 			if data.button and data.button.icon and data.button.IconMask then
 				data.button.icon:AddMaskTexture(data.button.IconMask)
 			end
@@ -279,7 +468,7 @@ function zBarButtonBG.removeActionBarBackgrounds()
 	end
 end
 
--- Slash command registration
+-- Set up the /zbg slash command
 SLASH_ZBARBUTTONBG1 = "/zbg"
 SlashCmdList["ZBARBUTTONBG"] = function(msg)
 	zBarButtonBG.toggle()
