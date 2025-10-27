@@ -275,6 +275,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 					-- Create the border if that option is turned on
 					local borderFrame, borderTop, borderBottom, borderLeft, borderRight
+					local borderTopBG, borderBottomBG, borderLeftBG, borderRightBG
 					if zBarButtonBG.charSettings.showBorder and button.icon and button:IsShown() then
 						-- For round buttons, just use and color Blizzard's NormalTexture
 						if not zBarButtonBG.charSettings.squareButtons and button.NormalTexture then
@@ -312,8 +313,33 @@ function zBarButtonBG.createActionBarBackgrounds()
 							borderColor = zBarButtonBG.charSettings.borderColor
 						end
 						
-						-- Create 4 separate textures for each edge of the border
-						-- Using BACKGROUND layer so flyout arrows can render on top
+						-- First create solid black backing layers to prevent transparency overlap at corners
+						borderTopBG = borderFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
+						borderTopBG:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", borderWidth, 0)
+						borderTopBG:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", -borderWidth, 0)
+						borderTopBG:SetHeight(borderWidth)
+						borderTopBG:SetColorTexture(0, 0, 0, 1)
+						
+						borderBottomBG = borderFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
+						borderBottomBG:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", borderWidth, 0)
+						borderBottomBG:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", -borderWidth, 0)
+						borderBottomBG:SetHeight(borderWidth)
+						borderBottomBG:SetColorTexture(0, 0, 0, 1)
+						
+						borderLeftBG = borderFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
+						borderLeftBG:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", 0, 0)
+						borderLeftBG:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", 0, 0)
+						borderLeftBG:SetWidth(borderWidth)
+						borderLeftBG:SetColorTexture(0, 0, 0, 1)
+						
+						borderRightBG = borderFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
+						borderRightBG:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", 0, 0)
+						borderRightBG:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", 0, 0)
+						borderRightBG:SetWidth(borderWidth)
+						borderRightBG:SetColorTexture(0, 0, 0, 1)
+						
+						-- Create 4 separate textures for each edge of the border (colored layer on top)
+						-- Using BACKGROUND layer 0 so flyout arrows can render on top
 						-- Top edge
 						borderTop = borderFrame:CreateTexture(nil, "BACKGROUND")
 						borderTop:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", borderWidth, 0)
@@ -355,6 +381,10 @@ function zBarButtonBG.createActionBarBackgrounds()
 						borderBottom = borderBottom,
 						borderLeft = borderLeft,
 						borderRight = borderRight,
+						borderTopBG = borderTopBG,
+						borderBottomBG = borderBottomBG,
+						borderLeftBG = borderLeftBG,
+						borderRightBG = borderRightBG,
 						button = button
 					}
 					-- Make sure the mask stays removed
@@ -686,6 +716,11 @@ function zBarButtonBG.removeActionBarBackgrounds()
 			if data.borderBottom then data.borderBottom:Hide() end
 			if data.borderLeft then data.borderLeft:Hide() end
 			if data.borderRight then data.borderRight:Hide() end
+			-- Hide the border backing layers too
+			if data.borderTopBG then data.borderTopBG:Hide() end
+			if data.borderBottomBG then data.borderBottomBG:Hide() end
+			if data.borderLeftBG then data.borderLeftBG:Hide() end
+			if data.borderRightBG then data.borderRightBG:Hide() end
 			
 			-- Put the default border texture back
 			if data.button and data.button.NormalTexture then

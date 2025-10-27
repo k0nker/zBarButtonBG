@@ -300,7 +300,7 @@ function zBBG.BuildOptionsPanels()
 		widgets.borderCb = borderCb
 		
 		-- Border width slider (only shown if showBorder is enabled)
-		local borderWidthFrame, newY = MakeSlider(self, "Border Width (pixels)", "borderWidth", 1, 30, y)
+		local borderWidthFrame, newY = MakeSlider(self, "Border Width (pixels)", "borderWidth", 1, 5, y)
 		y = newY
 		widgets.borderWidthFrame = borderWidthFrame
 		
