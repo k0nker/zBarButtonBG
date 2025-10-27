@@ -192,19 +192,21 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button.icon:RemoveMaskTexture(button.IconMask)
 						end
 
-						-- Scale up the icon and crop the edges to square it off
+						-- Constrain and crop the icon to make it square and fit inside borders
 						if button.icon then
-							-- Reset to 1.0 first to make sure we're starting from a consistent state
+							-- Reset scale to default
 							button.icon:SetScale(1.0)
-							-- Scale it up a bit to fill in where the rounded corners were
-							button.icon:SetScale(1.08)
 							-- Crop the edges to make it square instead of round
 							button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							-- Constrain icon to be 2px smaller on all sides to prevent border clipping
+							button.icon:ClearAllPoints()
+							button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
+							button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 2)
 						end
 						
 						-- Crop the highlight and other overlay textures to match our squared-off icon
-						-- Also constrain them inside the border so they don't get clipped
-						local inset = zBarButtonBG.charSettings.showBorder and (zBarButtonBG.charSettings.borderWidth or 1) or 0
+						-- Constrain them to 2px smaller to prevent border clipping
+						local inset = 2
 						if button.HighlightTexture then
 							button.HighlightTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							button.HighlightTexture:ClearAllPoints()
@@ -241,8 +243,15 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					
 					-- Hide Blizzard's default highlight and create our own custom golden overlay
+					-- Use SetAlpha(0) to make them invisible even if Blizzard tries to show them
 					if button.HighlightTexture then
-						button.HighlightTexture:Hide()
+						button.HighlightTexture:SetAlpha(0)
+					end
+					if button.PushedTexture then
+						button.PushedTexture:SetAlpha(0)
+					end
+					if button.CheckedTexture then
+						button.CheckedTexture:SetAlpha(0)
 					end
 					
 					-- Create custom highlight overlay
@@ -253,10 +262,10 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					
 					-- Position the highlight based on square/round mode
-					local inset = zBarButtonBG.charSettings.showBorder and (zBarButtonBG.charSettings.borderWidth or 1) or 0
+					local inset = 2
 					button._zBBG_customHighlight:ClearAllPoints()
 					if zBarButtonBG.charSettings.squareButtons then
-						-- Square mode: inset by border width, square coords
+						-- Square mode: inset by 2px to match icon clipping
 						button._zBBG_customHighlight:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
 						button._zBBG_customHighlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
 						button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)
@@ -280,6 +289,19 @@ function zBarButtonBG.createActionBarBackgrounds()
 								self._zBBG_customHighlight:Hide()
 							end
 						end)
+						button:HookScript("OnMouseDown", function(self)
+							if self._zBBG_customHighlight then
+								self._zBBG_customHighlight:Show()
+							end
+						end)
+						button:HookScript("OnMouseUp", function(self)
+							if self._zBBG_customHighlight then
+								-- Keep showing if mouse is still over button, hide otherwise
+								if not self:IsMouseOver() then
+									self._zBBG_customHighlight:Hide()
+								end
+							end
+						end)
 						button._zBBG_highlightHooked = true
 					end
 					
@@ -290,10 +312,16 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button.SlotBackground:SetTexture("Interface\\Buttons\\WHITE8X8")
 							button.SlotBackground:SetVertexColor(0, 0, 0, 0)
 							button.SlotBackground:SetDrawLayer("BACKGROUND", -1)
+							-- Make SlotBackground 2px smaller on all sides to prevent clipping borders
+							button.SlotBackground:ClearAllPoints()
+							button.SlotBackground:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
+							button.SlotBackground:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 2)
 						else
 							-- Keep the default texture when borders are off
 							button.SlotBackground:SetTexture(nil)
 							button.SlotBackground:SetDrawLayer("BACKGROUND", -1)
+							button.SlotBackground:ClearAllPoints()
+							button.SlotBackground:SetAllPoints(button)
 						end
 					end
 
@@ -362,16 +390,18 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 						else
 							-- For square buttons, create our custom 4-edge border
-							-- Parent to UIParent so it doesn't get clipped by the action bar frames
+							-- Parent to button's parent to avoid inheriting button's clipping region
 							borderFrame = CreateFrame("Frame", nil, UIParent)
-							borderFrame:SetFrameLevel(10000)
-							borderFrame:SetFrameStrata("HIGH")
+							-- Use MEDIUM strata to stay below other UI elements
+							borderFrame:SetFrameStrata("MEDIUM")
+							borderFrame:SetFrameLevel(button:GetFrameLevel() + 10)
+							-- Disable clipping on the border frame
+							borderFrame:SetClipsChildren(false)
 						
 						local borderWidth = zBarButtonBG.charSettings.borderWidth or 1
 						
-						-- Position it to match the button's location on screen
-						borderFrame:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
-						borderFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
+						-- Position it to match the button exactly
+						borderFrame:SetAllPoints(button)
 						
 						-- Figure out what color to use for the border
 						local borderColor
@@ -383,55 +413,55 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 						
 						-- First create solid black backing layers to prevent transparency overlap at corners
-						borderTopBG = borderFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
+						borderTopBG = borderFrame:CreateTexture(nil, "OVERLAY", nil, -1)
 						borderTopBG:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", borderWidth, 0)
 						borderTopBG:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", -borderWidth, 0)
 						borderTopBG:SetHeight(borderWidth)
 						borderTopBG:SetColorTexture(0, 0, 0, 1)
 						
-						borderBottomBG = borderFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
+						borderBottomBG = borderFrame:CreateTexture(nil, "OVERLAY", nil, -1)
 						borderBottomBG:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", borderWidth, 0)
 						borderBottomBG:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", -borderWidth, 0)
 						borderBottomBG:SetHeight(borderWidth)
 						borderBottomBG:SetColorTexture(0, 0, 0, 1)
 						
-						borderLeftBG = borderFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
+						borderLeftBG = borderFrame:CreateTexture(nil, "OVERLAY", nil, -1)
 						borderLeftBG:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", 0, 0)
 						borderLeftBG:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", 0, 0)
 						borderLeftBG:SetWidth(borderWidth)
 						borderLeftBG:SetColorTexture(0, 0, 0, 1)
 						
-						borderRightBG = borderFrame:CreateTexture(nil, "BACKGROUND", nil, -1)
+						borderRightBG = borderFrame:CreateTexture(nil, "OVERLAY", nil, -1)
 						borderRightBG:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", 0, 0)
 						borderRightBG:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", 0, 0)
 						borderRightBG:SetWidth(borderWidth)
 						borderRightBG:SetColorTexture(0, 0, 0, 1)
 						
 						-- Create 4 separate textures for each edge of the border (colored layer on top)
-						-- Using BACKGROUND layer 0 so flyout arrows can render on top
+						-- Using OVERLAY layer to prevent clipping by bar artwork
 						-- Top edge
-						borderTop = borderFrame:CreateTexture(nil, "BACKGROUND")
+						borderTop = borderFrame:CreateTexture(nil, "OVERLAY")
 						borderTop:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", borderWidth, 0)
 						borderTop:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", -borderWidth, 0)
 						borderTop:SetHeight(borderWidth)
 						borderTop:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 						
 						-- Bottom edge
-						borderBottom = borderFrame:CreateTexture(nil, "BACKGROUND")
+						borderBottom = borderFrame:CreateTexture(nil, "OVERLAY")
 						borderBottom:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", borderWidth, 0)
 						borderBottom:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", -borderWidth, 0)
 						borderBottom:SetHeight(borderWidth)
 						borderBottom:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 						
 						-- Left edge
-						borderLeft = borderFrame:CreateTexture(nil, "BACKGROUND")
+						borderLeft = borderFrame:CreateTexture(nil, "OVERLAY")
 						borderLeft:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", 0, 0)
 						borderLeft:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", 0, 0)
 						borderLeft:SetWidth(borderWidth)
 						borderLeft:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 						
 						-- Right edge
-						borderRight = borderFrame:CreateTexture(nil, "BACKGROUND")
+						borderRight = borderFrame:CreateTexture(nil, "OVERLAY")
 						borderRight:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", 0, 0)
 						borderRight:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", 0, 0)
 						borderRight:SetWidth(borderWidth)
@@ -495,15 +525,17 @@ function zBarButtonBG.createActionBarBackgrounds()
 						
 						-- Reapply the icon scaling and cropping
 						if button.icon then
-							-- Reset first to keep things consistent
+							-- Reset scale to default
 							button.icon:SetScale(1.0)
-							-- Then scale it up
-							button.icon:SetScale(1.08)
 							button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+							-- Constrain icon to be 2px smaller on all sides to prevent border clipping
+							button.icon:ClearAllPoints()
+							button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
+							button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 2)
 						end
 						
 						-- Update overlay textures too
-						local inset = zBarButtonBG.charSettings.showBorder and (zBarButtonBG.charSettings.borderWidth or 1) or 0
+						local inset = 2
 						if button.HighlightTexture then
 							button.HighlightTexture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							button.HighlightTexture:ClearAllPoints()
@@ -542,6 +574,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 						if button.icon then
 							button.icon:SetScale(1.0)
 							button.icon:SetTexCoord(0, 1, 0, 1)
+							-- Restore default positioning
+							button.icon:ClearAllPoints()
+							button.icon:SetAllPoints(button)
 						end
 						
 						-- Reset overlay textures to default (clear custom anchors)
@@ -655,14 +690,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 							
 							if not data.borderFrame then
 							-- Border wasn't created initially, make it now
-							-- Parent to UIParent so it doesn't get clipped
-							data.borderFrame = CreateFrame("Frame", nil, UIParent)
-							data.borderFrame:SetFrameLevel(10000)
-							data.borderFrame:SetFrameStrata("HIGH")
+							-- Parent to button so it follows but stays just above the icon
+							data.borderFrame = CreateFrame("Frame", nil, button)
+							data.borderFrame:SetFrameLevel(button:GetFrameLevel() + 1)
 							
-							-- Position to match the button
-							data.borderFrame:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
-							data.borderFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
+							-- Position to fill the button
+							data.borderFrame:SetAllPoints(button)
 							
 							-- Create the four edges using BACKGROUND layer so flyout arrows render on top
 							-- Top edge
@@ -878,7 +911,13 @@ function zBarButtonBG.removeActionBarBackgrounds()
 					end
 				end
 				if data.button.HighlightTexture then
-					data.button.HighlightTexture:Show()
+					data.button.HighlightTexture:SetAlpha(1)
+				end
+				if data.button.PushedTexture then
+					data.button.PushedTexture:SetAlpha(1)
+				end
+				if data.button.CheckedTexture then
+					data.button.CheckedTexture:SetAlpha(1)
 				end
 			end
 			
