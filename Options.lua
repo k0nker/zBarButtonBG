@@ -40,7 +40,7 @@ zBBG.Events:Register("SETTING_CHANGED", function(key, value)
 			zBBG.removeActionBarBackgrounds()
 			zBBG.print("Action bar backgrounds |cFFFF0000disabled|r")
 		end
-	elseif key == "outerColor" or key == "innerColor" or key == "borderColor" or 
+	elseif key == "squareButtons" or key == "outerColor" or key == "innerColor" or key == "borderColor" or 
 	       key == "showBorder" or key == "borderWidth" or 
 	       key == "useClassColorBorder" or key == "useClassColorOuter" or key == "useClassColorInner" then
 		-- Refresh backgrounds if enabled
@@ -267,6 +267,10 @@ function zBBG.BuildOptionsPanels()
 		
 		-- Enable checkbox
 		local enableCb, newY = MakeCheckbox(self, "Enable Action Bar Backgrounds", "Toggle action bar backgrounds on/off. Note: /reload may be required when disabling to restore default borders.", "enabled", y)
+		y = newY
+		
+		-- Square Buttons checkbox
+		local squareCb, newY = MakeCheckbox(self, "Square Buttons", "Square off action button icons instead of keeping them round. This makes icons fill the button better when using borders.", "squareButtons", y)
 		y = newY
 		
 		-- Backdrop (outer) settings
