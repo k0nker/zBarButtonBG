@@ -316,15 +316,15 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Using BACKGROUND layer so flyout arrows can render on top
 						-- Top edge
 						borderTop = borderFrame:CreateTexture(nil, "BACKGROUND")
-						borderTop:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", 0, 0)
-						borderTop:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", 0, 0)
+						borderTop:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", borderWidth, 0)
+						borderTop:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", -borderWidth, 0)
 						borderTop:SetHeight(borderWidth)
 						borderTop:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 						
 						-- Bottom edge
 						borderBottom = borderFrame:CreateTexture(nil, "BACKGROUND")
-						borderBottom:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", 0, 0)
-						borderBottom:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", 0, 0)
+						borderBottom:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", borderWidth, 0)
+						borderBottom:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", -borderWidth, 0)
 						borderBottom:SetHeight(borderWidth)
 						borderBottom:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 						
