@@ -79,6 +79,71 @@ function zBarButtonBG.toggle()
 	end
 end
 
+-- Update colors on existing frames without rebuilding everything
+function zBarButtonBG.updateColors()
+	if not zBarButtonBG.enabled then return end
+	
+	for buttonName, data in pairs(zBarButtonBG.frames) do
+		if data then
+			-- Update outer background color
+			if data.outerBg then
+				local outer
+				if zBarButtonBG.charSettings.useClassColorOuter then
+					local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+					outer = {r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings.outerColor.a}
+				else
+					outer = zBarButtonBG.charSettings.outerColor
+				end
+				data.outerBg:SetColorTexture(outer.r, outer.g, outer.b, outer.a)
+			end
+			
+			-- Update inner background color
+			if data.bg then
+				local inner
+				if zBarButtonBG.charSettings.useClassColorInner then
+					local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+					inner = {r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings.innerColor.a}
+				else
+					inner = zBarButtonBG.charSettings.innerColor
+				end
+				data.bg:SetColorTexture(inner.r, inner.g, inner.b, inner.a)
+			end
+			
+			-- Update border color
+			if zBarButtonBG.charSettings.showBorder then
+				local borderColor
+				if zBarButtonBG.charSettings.useClassColorBorder then
+					local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+					borderColor = {r = classColor.r, g = classColor.g, b = classColor.b, a = 1}
+				else
+					borderColor = zBarButtonBG.charSettings.borderColor
+				end
+				
+				-- Update NormalTexture for round buttons
+				if data.button and data.button.NormalTexture and not zBarButtonBG.charSettings.squareButtons then
+					data.button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+				end
+				
+				-- Update pixel borders for square buttons
+				if zBarButtonBG.charSettings.squareButtons then
+					if data.borderTop then
+						data.borderTop:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+					end
+					if data.borderBottom then
+						data.borderBottom:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+					end
+					if data.borderLeft then
+						data.borderLeft:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+					end
+					if data.borderRight then
+						data.borderRight:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+					end
+				end
+			end
+		end
+	end
+end
+
 function zBarButtonBG.createActionBarBackgrounds()
 	-- All the different types of action bar buttons we want to modify
 	local buttonBases = {
@@ -210,7 +275,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 					-- Create the border if that option is turned on
 					local borderFrame, borderTop, borderBottom, borderLeft, borderRight
-					if zBarButtonBG.charSettings.showBorder and button.icon then
+					if zBarButtonBG.charSettings.showBorder and button.icon and button:IsShown() then
 						-- For round buttons, just use and color Blizzard's NormalTexture
 						if not zBarButtonBG.charSettings.squareButtons and button.NormalTexture then
 							button.NormalTexture:Show()
@@ -557,24 +622,38 @@ function zBarButtonBG.createActionBarBackgrounds()
 				self.timer = 0
 				if zBarButtonBG.enabled then
 					for buttonName, data in pairs(zBarButtonBG.frames) do
-						if data.button and data.button.NormalTexture and data.button._zBBG_styled then
-							if zBarButtonBG.charSettings.squareButtons then
-								-- Square buttons: hide NormalTexture
-								data.button.NormalTexture:Hide()
-							elseif zBarButtonBG.charSettings.showBorder then
-								-- Round buttons with borders: show and color NormalTexture
-								data.button.NormalTexture:Show()
-								local borderColor
-								if zBarButtonBG.charSettings.useClassColorBorder then
-									local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-									borderColor = {r = classColor.r, g = classColor.g, b = classColor.b, a = 1}
+						if data.button and data.button._zBBG_styled then
+							local buttonShown = data.button:IsShown()
+							
+							-- Manage NormalTexture visibility and color
+							if data.button.NormalTexture then
+								if zBarButtonBG.charSettings.squareButtons then
+									-- Square buttons: hide NormalTexture
+									data.button.NormalTexture:Hide()
+								elseif zBarButtonBG.charSettings.showBorder then
+									-- Round buttons with borders: show and color NormalTexture
+									data.button.NormalTexture:Show()
+									local borderColor
+									if zBarButtonBG.charSettings.useClassColorBorder then
+										local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+										borderColor = {r = classColor.r, g = classColor.g, b = classColor.b, a = 1}
+									else
+										borderColor = zBarButtonBG.charSettings.borderColor
+									end
+									data.button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 								else
-									borderColor = zBarButtonBG.charSettings.borderColor
+									-- Round buttons without borders: hide NormalTexture
+									data.button.NormalTexture:Hide()
 								end
-								data.button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
-							else
-								-- Round buttons without borders: hide NormalTexture
-								data.button.NormalTexture:Hide()
+							end
+							
+							-- Manage border frame visibility for square buttons
+							if data.borderFrame and zBarButtonBG.charSettings.squareButtons then
+								if buttonShown then
+									data.borderFrame:Show()
+								else
+									data.borderFrame:Hide()
+								end
 							end
 						end
 					end
@@ -618,6 +697,10 @@ function zBarButtonBG.removeActionBarBackgrounds()
 				data.button.SlotBackground:SetTexture(nil)
 				data.button.SlotBackground:SetVertexColor(1, 1, 1, 1)
 				data.button.SlotBackground:SetDrawLayer("BACKGROUND", 0)
+				-- Remove any masking we applied
+				if data.button.IconMask then
+					data.button.SlotBackground:RemoveMaskTexture(data.button.IconMask)
+				end
 			end
 			
 			-- Reset the icon back to normal size and coords
@@ -645,6 +728,9 @@ function zBarButtonBG.removeActionBarBackgrounds()
 			end
 		end
 	end
+	
+	-- CRITICAL: Clear the frames table so next createActionBarBackgrounds() starts fresh
+	wipe(zBarButtonBG.frames)
 end
 
 -- Set up the /zbg slash command

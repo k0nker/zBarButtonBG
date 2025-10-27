@@ -40,13 +40,17 @@ zBBG.Events:Register("SETTING_CHANGED", function(key, value)
 			zBBG.removeActionBarBackgrounds()
 			zBBG.print("Action bar backgrounds |cFFFF0000disabled|r")
 		end
-	elseif key == "squareButtons" or key == "outerColor" or key == "innerColor" or key == "borderColor" or 
-	       key == "showBorder" or key == "borderWidth" or 
+	elseif key == "squareButtons" or key == "showBorder" or key == "borderWidth" or 
 	       key == "useClassColorBorder" or key == "useClassColorOuter" or key == "useClassColorInner" then
-		-- Refresh backgrounds if enabled
+		-- Structural changes need full rebuild
 		if zBBG.enabled then
 			zBBG.removeActionBarBackgrounds()
 			zBBG.createActionBarBackgrounds()
+		end
+	elseif key == "outerColor" or key == "innerColor" or key == "borderColor" then
+		-- Color changes can be applied to existing frames without rebuilding
+		if zBBG.enabled and zBBG.updateColors then
+			zBBG.updateColors()
 		end
 	end
 end)
