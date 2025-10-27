@@ -1,0 +1,8 @@
+## Interface: 110002
+## Title: zBarButtonBG
+## Notes: Adds customizable backgrounds to action bar buttons
+## Author: k0nker
+## Version: 1.0
+## SavedVariables: zBarButtonBGSaved
+
+zBarButtonBG.lua
