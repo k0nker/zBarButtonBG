@@ -134,6 +134,16 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button.icon:RemoveMaskTexture(button.IconMask)
 					end
 
+					-- Make the icon slightly larger and clip it to button bounds
+					if button.icon then
+						-- Reset to base scale first to ensure consistent behavior
+						button.icon:SetScale(0.7)
+						-- Scale up the icon slightly to fill rounded corners
+						--button.icon:SetScale(1.08)
+						-- Ensure icon is clipped to button bounds - crop a bit more from edges
+						button.icon:SetTexCoord(0.8, 0.92, 0.8, 0.92)
+					end
+
 					-- Hide normal texture on show
 					if button.NormalTexture then
 						button.NormalTexture:HookScript("OnShow", function(self) self:Hide() end)
@@ -166,20 +176,22 @@ function zBarButtonBG.createActionBarBackgrounds()
 					local outerFrame = CreateFrame("Frame", nil, button)
 					outerFrame:SetPoint("TOPLEFT", button, "TOPLEFT", -5, 5)
 					outerFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 5, -5)
-					outerFrame:SetFrameLevel(button:GetFrameLevel() - 1)
+					outerFrame:SetFrameLevel(0)  -- Very back layer
+					outerFrame:SetFrameStrata("BACKGROUND")
 
 					-- Create solid black background texture for outer frame
-					local outerBg = outerFrame:CreateTexture(nil, "BACKGROUND")
+					local outerBg = outerFrame:CreateTexture(nil, "BACKGROUND", nil, -8)
 					outerBg:SetAllPoints(outerFrame)
 					outerBg:SetColorTexture(0, 0, 0, 1) -- Solid black
 
 					-- Create a frame for the dark grey button background
 					local bgFrame = CreateFrame("Frame", nil, button)
 					bgFrame:SetAllPoints(button)
-					bgFrame:SetFrameLevel(button:GetFrameLevel())
+					bgFrame:SetFrameLevel(0)  -- Very back layer
+					bgFrame:SetFrameStrata("BACKGROUND")
 
 					-- Create dark grey background texture
-					local bg = bgFrame:CreateTexture(nil, "BACKGROUND")
+					local bg = bgFrame:CreateTexture(nil, "BACKGROUND", nil, -7)
 					bg:SetAllPoints(bgFrame)
 					bg:SetColorTexture(0.1, 0.1, 0.1, 0.75) -- Dark grey
 
@@ -191,9 +203,26 @@ function zBarButtonBG.createActionBarBackgrounds()
 						bg = bg,
 						button = button
 					}
+					if button.icon and button.IconMask then
+						button.icon:RemoveMaskTexture(button.IconMask)
+					end
 				else
-					-- Update existing frames
+					-- Update existing frames - make sure everything is reapplied
 					local data = zBarButtonBG.frames[buttonName]
+					
+					-- Reapply icon modifications (reset scale first for consistency)
+					if button.icon then
+						-- Reset scale first to ensure consistent behavior
+						button.icon:SetScale(0.7)
+						-- Then apply our desired scale
+						--button.icon:SetScale(1.08)
+						button.icon:SetTexCoord(0.8, 0.92, 0.8, 0.92)
+					end
+					if button.icon and button.IconMask then
+						button.icon:RemoveMaskTexture(button.IconMask)
+					end
+					
+					-- Show frames
 					if data.outerFrame then
 						data.outerFrame:Show()
 					end
@@ -236,6 +265,15 @@ function zBarButtonBG.removeActionBarBackgrounds()
 			-- Restore button normal texture
 			if data.button and data.button.NormalTexture then
 				data.button.NormalTexture:Show()
+			end
+			-- Restore icon to normal size and texture coords
+			if data.button and data.button.icon then
+				data.button.icon:SetScale(1.0)
+				data.button.icon:SetTexCoord(0, 1, 0, 1)
+			end
+			-- Restore icon mask if it was removed
+			if data.button and data.button.icon and data.button.IconMask then
+				data.button.icon:AddMaskTexture(data.button.IconMask)
 			end
 		end
 	end
