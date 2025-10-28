@@ -444,15 +444,19 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 
 						-- Update icon scale and texcoords based on mode
-						if zBarButtonBG.charSettings.squareButtons then
+							button.icon:SetScale(1.0)
+							button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+						--[[
+							if zBarButtonBG.charSettings.squareButtons then
 							-- Square mode: normal scale
 							button.icon:SetScale(1.0)
-							button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+							button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 						else
 							-- Round mode: zoom in slightly
 							button.icon:SetScale(1.05)
 							button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 						end
+						]]--
 
 						-- Create new mask with correct texture for current mode
 						button._zBBG_customMask = button:CreateMaskTexture()
