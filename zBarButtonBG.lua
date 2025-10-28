@@ -1,5 +1,19 @@
 zBarButtonBG = {}
 
+-- Default settings for new users and reset function
+zBarButtonBG.defaultSettings = {
+	enabled = true,
+	squareButtons = true,
+	showBorder = true,
+	borderWidth = 1,
+	borderColor = {r = 0.2, g = 0.2, b = 0.2, a = 1},  -- Slightly lighter grey than button background
+	useClassColorBorder = false,
+	outerColor = {r = 0, g = 0, b = 0, a = 1},  -- Black backdrop
+	useClassColorOuter = false,
+	innerColor = {r = 0.1, g = 0.1, b = 0.1, a = 1},  -- Dark grey button background
+	useClassColorInner = false,
+}
+
 -- ############################################################
 -- Load settings when we log in
 -- ############################################################
@@ -22,19 +36,19 @@ Frame:SetScript("OnEvent", function(self, event)
 		zBarButtonBG.charSettings = zBarButtonBGSaved[realmName][charName]
 
 		-- Set up defaults for anything that doesn't exist yet
-		zBarButtonBG.charSettings.enabled = zBarButtonBG.charSettings.enabled or false
-		-- For boolean settings that default to true, we need to check if they're nil specifically
-		if zBarButtonBG.charSettings.squareButtons == nil then
-			zBarButtonBG.charSettings.squareButtons = true
+		for key, value in pairs(zBarButtonBG.defaultSettings) do
+			if zBarButtonBG.charSettings[key] == nil then
+				-- Deep copy color tables
+				if type(value) == "table" then
+					zBarButtonBG.charSettings[key] = {}
+					for k, v in pairs(value) do
+						zBarButtonBG.charSettings[key][k] = v
+					end
+				else
+					zBarButtonBG.charSettings[key] = value
+				end
+			end
 		end
-		zBarButtonBG.charSettings.outerColor = zBarButtonBG.charSettings.outerColor or {r = 0, g = 0, b = 0, a = 1}
-		zBarButtonBG.charSettings.innerColor = zBarButtonBG.charSettings.innerColor or {r = 0.1, g = 0.1, b = 0.1, a = 0.75}
-		zBarButtonBG.charSettings.showBorder = zBarButtonBG.charSettings.showBorder ~= nil and zBarButtonBG.charSettings.showBorder or false
-		zBarButtonBG.charSettings.borderWidth = zBarButtonBG.charSettings.borderWidth or 1
-		zBarButtonBG.charSettings.borderColor = zBarButtonBG.charSettings.borderColor or {r = 1, g = 1, b = 1, a = 1}
-		zBarButtonBG.charSettings.useClassColorBorder = zBarButtonBG.charSettings.useClassColorBorder or false
-		zBarButtonBG.charSettings.useClassColorOuter = zBarButtonBG.charSettings.useClassColorOuter or false
-		zBarButtonBG.charSettings.useClassColorInner = zBarButtonBG.charSettings.useClassColorInner or false
 
 		-- If we had this enabled before, turn it back on after a short delay
 		-- (need to wait for action bars to actually load first)
@@ -200,8 +214,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							-- Constrain icon to be 2px smaller on all sides to prevent border clipping
 							button.icon:ClearAllPoints()
-							button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
-							button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 2)
+							button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+							button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
 						end
 						
 						-- Crop the highlight and other overlay textures to match our squared-off icon
@@ -322,9 +336,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if button.SlotBackground then
 						if zBarButtonBG.charSettings.showBorder then
 							-- Use a flat white texture we can make transparent
-							button.SlotBackground:SetTexture("Interface\\Buttons\\WHITE8X8")
-							button.SlotBackground:SetVertexColor(0, 0, 0, 0)
-							button.SlotBackground:SetDrawLayer("BACKGROUND", -1)
+							--button.SlotBackground:SetTexture("Interface\\Buttons\\WHITE8X8")
+							--button.SlotBackground:SetVertexColor(0, 0, 0, 0)
+							--button.SlotBackground:SetDrawLayer("BACKGROUND", -1)
 							-- Make SlotBackground 2px smaller on all sides to prevent clipping borders
 							button.SlotBackground:ClearAllPoints()
 							button.SlotBackground:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
@@ -543,8 +557,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 							-- Constrain icon to be 2px smaller on all sides to prevent border clipping
 							button.icon:ClearAllPoints()
-							button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
-							button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 2)
+							button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+							button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
 						end
 						
 						-- Update overlay textures too
@@ -591,6 +605,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 							-- Restore default positioning
 							button.icon:ClearAllPoints()
 							button.icon:SetAllPoints(button)
+							button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
+							button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 2)
 						end
 						
 						-- Reset overlay textures to default (clear custom anchors)

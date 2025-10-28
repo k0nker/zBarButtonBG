@@ -331,6 +331,61 @@ function zBBG.BuildOptionsPanels()
 				UpdateBorderWidgets()
 			end
 		end)
+		
+		-- Reset Options button
+		y = y - 40
+		local resetBtn = CreateFrame("Button", nil, self, "UIPanelButtonTemplate")
+		resetBtn:SetPoint("TOPLEFT", 16, y)
+		resetBtn:SetSize(120, 25)
+		resetBtn:SetText("Reset Options")
+		resetBtn:SetScript("OnClick", function()
+			-- Show confirmation dialog
+			StaticPopupDialogs["ZBARBUTTONBG_RESET_CONFIRM"] = {
+				text = "Are you sure you want to reset all zBarButtonBG settings to their defaults?",
+				button1 = "Yes",
+				button2 = "No",
+				OnAccept = function()
+					-- Reset all settings to defaults
+					for key, value in pairs(zBBG.defaultSettings) do
+						if type(value) == "table" then
+							-- Deep copy color tables
+							zBBG.charSettings[key] = {}
+							for k, v in pairs(value) do
+								zBBG.charSettings[key][k] = v
+							end
+						else
+							zBBG.charSettings[key] = value
+						end
+					end
+					
+					-- Trigger setting changes to update UI and rebuild
+					zBBG.Events:Trigger("SETTING_CHANGED", "enabled", zBBG.charSettings.enabled)
+					zBBG.Events:Trigger("SETTING_CHANGED", "squareButtons", zBBG.charSettings.squareButtons)
+					zBBG.Events:Trigger("SETTING_CHANGED", "showBorder", zBBG.charSettings.showBorder)
+					zBBG.Events:Trigger("SETTING_CHANGED", "borderWidth", zBBG.charSettings.borderWidth)
+					zBBG.Events:Trigger("SETTING_CHANGED", "outerColor", zBBG.charSettings.outerColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "innerColor", zBBG.charSettings.innerColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "borderColor", zBBG.charSettings.borderColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorBorder", zBBG.charSettings.useClassColorBorder)
+					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorOuter", zBBG.charSettings.useClassColorOuter)
+					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorInner", zBBG.charSettings.useClassColorInner)
+					
+					zBBG.print("Settings reset to defaults!")
+				end,
+				timeout = 0,
+				whileDead = true,
+				hideOnEscape = true,
+				preferredIndex = 3,
+			}
+			StaticPopup_Show("ZBARBUTTONBG_RESET_CONFIRM")
+		end)
+		resetBtn:SetScript("OnEnter", function(btn)
+			GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
+			GameTooltip:SetText("Reset Options")
+			GameTooltip:AddLine("Reset all settings to their default values", 1, 1, 1, true)
+			GameTooltip:Show()
+		end)
+		resetBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	end)
 	
 	-- Register parent
