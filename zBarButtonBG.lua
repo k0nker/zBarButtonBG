@@ -64,6 +64,39 @@ end)
 zBarButtonBG.enabled = false
 zBarButtonBG.frames = {}
 
+-- ############################################################
+-- Helper Functions
+-- ############################################################
+
+-- Get color table with optional class color override
+local function getColorTable(colorKey, useClassColorKey)
+	if zBarButtonBG.charSettings[useClassColorKey] then
+		local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+		return { r = classColor.r, g = classColor.g, b = classColor.b, a = 1 }
+	else
+		local c = zBarButtonBG.charSettings[colorKey]
+		return { r = c.r, g = c.g, b = c.b, a = c.a }
+	end
+end
+
+-- Get mask texture path based on square/round setting
+local function getMaskPath()
+	return zBarButtonBG.charSettings.squareButtons 
+		and "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconMask_Square" 
+		or "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconMask_Rounded"
+end
+
+-- Get border texture path based on square/round setting
+local function getBorderPath()
+	return zBarButtonBG.charSettings.squareButtons 
+		and "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconBorder_Square" 
+		or "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconBorder_Rounded"
+end
+
+-- ############################################################
+-- Main Functions
+-- ############################################################
+
 -- Print helper that prefixes our addon name
 function zBarButtonBG.print(arg)
 	if arg == "" or arg == nil then
@@ -96,49 +129,27 @@ end
 function zBarButtonBG.updateColors()
 	if not zBarButtonBG.enabled then return end
 
+	-- Get color tables once using helpers
+	local outerColor = getColorTable("outerColor", "useClassColorOuter")
+	local innerColor = getColorTable("innerColor", "useClassColorInner")
+	local borderColor = getColorTable("borderColor", "useClassColorBorder")
+
 	for buttonName, data in pairs(zBarButtonBG.frames) do
 		if data then
 			-- Update outer background color
 			if data.outerBg then
-				local outer
-				if zBarButtonBG.charSettings.useClassColorOuter then
-					local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-					outer = { r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings
-					.outerColor.a }
-				else
-					outer = zBarButtonBG.charSettings.outerColor
-				end
-				data.outerBg:SetColorTexture(outer.r, outer.g, outer.b, outer.a)
+				data.outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
 			end
 
 			-- Update inner background color
 			if data.bg then
-				local inner
-				if zBarButtonBG.charSettings.useClassColorInner then
-					local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-					inner = { r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings
-					.innerColor.a }
-				else
-					inner = zBarButtonBG.charSettings.innerColor
-				end
-				data.bg:SetColorTexture(inner.r, inner.g, inner.b, inner.a)
+				data.bg:SetColorTexture(innerColor.r, innerColor.g, innerColor.b, innerColor.a)
 			end
 
 			-- Update border color
-			if zBarButtonBG.charSettings.showBorder then
-				local borderColor
-				if zBarButtonBG.charSettings.useClassColorBorder then
-					local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-					borderColor = { r = classColor.r, g = classColor.g, b = classColor.b, a = 1 }
-				else
-					borderColor = zBarButtonBG.charSettings.borderColor
-				end
-
-				-- Update custom border texture for both round and square buttons
-				if data.customBorderTexture then
-					-- Use color picker's alpha for overall border transparency (ADD mode handles black=transparent)
-					data.customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
-				end
+			if zBarButtonBG.charSettings.showBorder and data.customBorderTexture then
+				-- Use color picker's alpha for overall border transparency (ADD mode handles black=transparent)
+				data.customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 			end
 		end
 	end
@@ -199,10 +210,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 						if not button._zBBG_customMask then
 							button._zBBG_customMask = button:CreateMaskTexture()
 							-- Use BLEND mode which respects alpha: transparent=hide, opaque=show
-							local maskPath = zBarButtonBG.charSettings.squareButtons and
-								"Interface/AddOns/zBarButtonBG/Assets/ButtonIconMask_Square" or
-								"Interface/AddOns/zBarButtonBG/Assets/ButtonIconMask_Rounded"
-							button._zBBG_customMask:SetTexture(maskPath)
+							button._zBBG_customMask:SetTexture(getMaskPath())
 							button._zBBG_customMask:SetAllPoints(button)
 						end
 						button.icon:AddMaskTexture(button._zBBG_customMask)
@@ -325,10 +333,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Apply appropriate mask to clip the SlotBackground
 						if not button._zBBG_customMask then
 							button._zBBG_customMask = button:CreateMaskTexture()
-							local maskPath = zBarButtonBG.charSettings.squareButtons and
-								"Interface/AddOns/zBarButtonBG/Assets/ButtonIconMask_Square" or
-								"Interface/AddOns/zBarButtonBG/Assets/ButtonIconMask_Rounded"
-							button._zBBG_customMask:SetTexture(maskPath)
+							button._zBBG_customMask:SetTexture(getMaskPath())
 							button._zBBG_customMask:SetAllPoints(button)
 						end
 						button.SlotBackground:AddMaskTexture(button._zBBG_customMask)
@@ -352,15 +357,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Fill it with black (or class color if that's enabled)
 					local outerBg = outerFrame:CreateTexture(nil, "BACKGROUND", nil, -8)
 					outerBg:SetAllPoints(outerFrame)
-					local outer
-					if zBarButtonBG.charSettings.useClassColorOuter then
-						local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-						outer = { r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings
-						.outerColor.a }
-					else
-						outer = zBarButtonBG.charSettings.outerColor
-					end
-					outerBg:SetColorTexture(outer.r, outer.g, outer.b, outer.a)
+					local outerColor = getColorTable("outerColor", "useClassColorOuter")
+					outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
 
 					-- Create the inner background that sits right behind the button
 					local bgFrame = CreateFrame("Frame", nil, button)
@@ -371,23 +369,13 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Fill it with dark grey (or class color)
 					local bg = bgFrame:CreateTexture(nil, "BACKGROUND", nil, -7)
 					bg:SetAllPoints(bgFrame)
-					local inner
-					if zBarButtonBG.charSettings.useClassColorInner then
-						local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-						inner = { r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings
-						.innerColor.a }
-					else
-						inner = zBarButtonBG.charSettings.innerColor
-					end
-					bg:SetColorTexture(inner.r, inner.g, inner.b, inner.a)
+					local innerColor = getColorTable("innerColor", "useClassColorInner")
+					bg:SetColorTexture(innerColor.r, innerColor.g, innerColor.b, innerColor.a)
 
 					-- Apply appropriate mask to inner background
 					if not button._zBBG_customMask then
 						button._zBBG_customMask = button:CreateMaskTexture()
-						local maskPath = zBarButtonBG.charSettings.squareButtons and
-							"Interface/AddOns/zBarButtonBG/Assets/ButtonIconMask_Square" or
-							"Interface/AddOns/zBarButtonBG/Assets/ButtonIconMask_Rounded"
-						button._zBBG_customMask:SetTexture(maskPath)
+						button._zBBG_customMask:SetTexture(getMaskPath())
 						button._zBBG_customMask:SetAllPoints(button)
 					end
 					bg:AddMaskTexture(button._zBBG_customMask)
@@ -402,22 +390,13 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 						-- Create the border texture with appropriate asset for current mode
 						customBorderTexture = borderFrame:CreateTexture(nil, "OVERLAY")
-						local borderPath = zBarButtonBG.charSettings.squareButtons and
-							"Interface/AddOns/zBarButtonBG/Assets/ButtonIconBorder_Square" or
-							"Interface/AddOns/zBarButtonBG/Assets/ButtonIconBorder_Rounded"
-						customBorderTexture:SetTexture(borderPath)
+						customBorderTexture:SetTexture(getBorderPath())
 						customBorderTexture:SetAllPoints(borderFrame)
 						-- Use ADD blend mode which treats black as transparent
 						customBorderTexture:SetBlendMode("ADD")
 
 						-- Figure out what color to use for the border
-						local borderColor
-						if zBarButtonBG.charSettings.useClassColorBorder then
-							local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-							borderColor = { r = classColor.r, g = classColor.g, b = classColor.b, a = 1 }
-						else
-							borderColor = zBarButtonBG.charSettings.borderColor
-						end
+						local borderColor = getColorTable("borderColor", "useClassColorBorder")
 
 						-- Use color picker's alpha for overall border transparency (ADD mode handles black=transparent)
 						customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
@@ -477,10 +456,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 						-- Create new mask with correct texture for current mode
 						button._zBBG_customMask = button:CreateMaskTexture()
-						local maskPath = zBarButtonBG.charSettings.squareButtons and
-							"Interface/AddOns/zBarButtonBG/Assets/ButtonIconMask_Square" or
-							"Interface/AddOns/zBarButtonBG/Assets/ButtonIconMask_Rounded"
-						button._zBBG_customMask:SetTexture(maskPath)
+						button._zBBG_customMask:SetTexture(getMaskPath())
 						button._zBBG_customMask:SetAllPoints(button)
 
 						-- Apply new mask to all elements
@@ -535,40 +511,20 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 
 					-- Update the colors (might have changed in settings or toggled class colors)
-					local outer, inner
-					if zBarButtonBG.charSettings.useClassColorOuter then
-						local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-						outer = { r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings
-						.outerColor.a }
-					else
-						outer = zBarButtonBG.charSettings.outerColor
-					end
-
-					if zBarButtonBG.charSettings.useClassColorInner then
-						local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-						inner = { r = classColor.r, g = classColor.g, b = classColor.b, a = zBarButtonBG.charSettings
-						.innerColor.a }
-					else
-						inner = zBarButtonBG.charSettings.innerColor
-					end
+					local outerColor = getColorTable("outerColor", "useClassColorOuter")
+					local innerColor = getColorTable("innerColor", "useClassColorInner")
 
 					if data.outerBg then
-						data.outerBg:SetColorTexture(outer.r, outer.g, outer.b, outer.a)
+						data.outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
 					end
 					if data.bg then
-						data.bg:SetColorTexture(inner.r, inner.g, inner.b, inner.a)
+						data.bg:SetColorTexture(innerColor.r, innerColor.g, innerColor.b, innerColor.a)
 					end
 
 					-- Handle border updates
 					if zBarButtonBG.charSettings.showBorder and button.icon then
 						-- Figure out the border color
-						local borderColor
-						if zBarButtonBG.charSettings.useClassColorBorder then
-							local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-							borderColor = { r = classColor.r, g = classColor.g, b = classColor.b, a = 1 }
-						else
-							borderColor = zBarButtonBG.charSettings.borderColor
-						end
+						local borderColor = getColorTable("borderColor", "useClassColorBorder")
 
 						if not data.customBorderTexture then
 							-- Border wasn't created initially, make it now
@@ -582,20 +538,14 @@ function zBarButtonBG.createActionBarBackgrounds()
 							data.customBorderTexture:SetAllPoints(data.borderFrame)
 							data.customBorderTexture:SetBlendMode("ADD")
 
-							local borderPath = zBarButtonBG.charSettings.squareButtons and
-								"Interface/AddOns/zBarButtonBG/Assets/ButtonIconBorder_Square" or
-								"Interface/AddOns/zBarButtonBG/Assets/ButtonIconBorder_Rounded"
-							data.customBorderTexture:SetTexture(borderPath)
+							data.customBorderTexture:SetTexture(getBorderPath())
 							data.customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b,
 								borderColor.a)
 						else
 							-- Border exists, update texture for current mode
 							data.borderFrame:Show()
 
-							local borderPath = zBarButtonBG.charSettings.squareButtons and
-								"Interface/AddOns/zBarButtonBG/Assets/ButtonIconBorder_Square" or
-								"Interface/AddOns/zBarButtonBG/Assets/ButtonIconBorder_Rounded"
-							data.customBorderTexture:SetTexture(borderPath)
+							data.customBorderTexture:SetTexture(getBorderPath())
 							data.customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b,
 								borderColor.a)
 						end
@@ -634,13 +584,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Round buttons with borders: make visible and color it
 					button.NormalTexture:Show()
 					button.NormalTexture:SetAlpha(1)
-					local borderColor
-					if zBarButtonBG.charSettings.useClassColorBorder then
-						local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-						borderColor = { r = classColor.r, g = classColor.g, b = classColor.b, a = 1 }
-					else
-						borderColor = zBarButtonBG.charSettings.borderColor
-					end
+					local borderColor = getColorTable("borderColor", "useClassColorBorder")
 					button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 				else
 					-- Round buttons without borders: make it transparent
@@ -717,43 +661,24 @@ function zBarButtonBG.removeActionBarBackgrounds()
 				end
 			end
 
-			-- Remove custom highlight and restore Blizzard's default
+			-- Remove custom highlight and restore Blizzard's default overlays
 			if data.button then
 				if data.button._zBBG_customHighlight then
 					data.button._zBBG_customHighlight:Hide()
 				end
-				if data.button.HighlightTexture then
-					data.button.HighlightTexture:SetAlpha(1)
-				end
-				if data.button.PushedTexture then
-					data.button.PushedTexture:SetAlpha(1)
-				end
-				if data.button.CheckedTexture then
-					data.button.CheckedTexture:SetAlpha(1)
-				end
-			end
-
-			-- Reset overlay textures back to normal
-			if data.button then
-				if data.button.HighlightTexture then
-					data.button.HighlightTexture:SetTexCoord(0, 1, 0, 1)
-					data.button.HighlightTexture:ClearAllPoints()
-					data.button.HighlightTexture:SetAlpha(1)
-				end
-				if data.button.CheckedTexture then
-					data.button.CheckedTexture:SetTexCoord(0, 1, 0, 1)
-					data.button.CheckedTexture:ClearAllPoints()
-					data.button.CheckedTexture:SetAlpha(1)
-				end
-				if data.button.PushedTexture then
-					data.button.PushedTexture:SetTexCoord(0, 1, 0, 1)
-					data.button.PushedTexture:ClearAllPoints()
-					data.button.PushedTexture:SetAlpha(1)
-				end
-				if data.button.Flash then
-					data.button.Flash:SetTexCoord(0, 1, 0, 1)
-					data.button.Flash:ClearAllPoints()
-					data.button.Flash:SetAlpha(1)
+				-- Restore default overlay textures (highlight, pushed, checked, flash)
+				local overlays = {
+					data.button.HighlightTexture,
+					data.button.PushedTexture,
+					data.button.CheckedTexture,
+					data.button.Flash
+				}
+				for _, overlay in ipairs(overlays) do
+					if overlay then
+						overlay:SetTexCoord(0, 1, 0, 1)
+						overlay:ClearAllPoints()
+						overlay:SetAlpha(1)
+					end
 				end
 			end
 		end
@@ -767,6 +692,7 @@ end
 SLASH_ZBARBUTTONBG1 = "/zbg"
 SlashCmdList["ZBARBUTTONBG"] = function(msg)
 	msg = msg:lower():trim()
-
+	if msg == "" or msg == "toggle" then
 		zBarButtonBG.toggle()
+	end
 end
