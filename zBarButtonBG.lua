@@ -764,8 +764,43 @@ function zBarButtonBG.createActionBarBackgrounds()
 				if zBarButtonBG.charSettings.fadeCooldown and button.cooldown then
 					local start, duration = button.cooldown:GetCooldownTimes()
 					if start and duration and start > 0 and duration > 0 then
-						-- On cooldown - show overlay
-						button._zBBG_cooldownOverlay:Show()
+						-- Try to get GCD info - try both old and new API
+						local gcdStart, gcdDuration = 0, 0
+						
+						-- Try the old API first (might still exist)
+						if GetSpellCooldown then
+							gcdStart, gcdDuration = GetSpellCooldown(61304)
+							-- Old API returns seconds, convert to milliseconds to match button cooldown
+							gcdDuration = gcdDuration * 1000
+						else
+							-- Use new API
+							local gcdInfo = C_Spell.GetSpellCooldown(61304)
+							if gcdInfo then
+								gcdStart = gcdInfo.startTime or 0
+								gcdDuration = (gcdInfo.duration or 0) * 1000 -- Convert seconds to milliseconds
+							end
+						end
+						
+						-- Debug: Add a test command to see what's happening
+						if button == ActionButton1 and zBarButtonBG._debugGCD then
+							print("Button CD:", duration, "GCD:", gcdDuration, "Diff:", math.abs(duration - gcdDuration))
+						end
+						
+						-- Check if this looks like GCD by duration comparison
+						-- GCD is typically 1000-1500ms, so if duration is close to that range and matches GCD, hide it
+						if gcdDuration > 0 and duration > 800 and duration < 2000 then
+							-- This could be GCD - check if duration is very close to GCD duration
+							if math.abs(duration - gcdDuration) < 50 then -- Tighter tolerance (50ms)
+								-- Duration matches GCD closely - hide overlay (just GCD)
+								button._zBBG_cooldownOverlay:Hide()
+							else
+								-- Duration doesn't match GCD - show overlay (real cooldown)
+								button._zBBG_cooldownOverlay:Show()
+							end
+						else
+							-- Duration is outside GCD range or no GCD detected - show overlay
+							button._zBBG_cooldownOverlay:Show()
+						end
 					else
 						-- Not on cooldown - hide overlay
 						button._zBBG_cooldownOverlay:Hide()
@@ -881,6 +916,7 @@ SlashCmdList["ZBARBUTTONBG"] = function(msg)
 	msg = msg:lower():trim()
 	if msg == "" or msg == "toggle" then
 		zBarButtonBG.toggle()
+	--[[
 	elseif msg == "rangetest" then
 		-- Debug range checking for first two action buttons
 		local b1, b2 = ActionButton1, ActionButton2
@@ -910,5 +946,9 @@ SlashCmdList["ZBARBUTTONBG"] = function(msg)
 		else
 			zBarButtonBG.print("Button2: No action assigned")
 		end
+	elseif msg == "gcdtest" then
+		print("zBarButtonBG: GCD debug mode toggled")
+		zBarButtonBG._debugGCD = not zBarButtonBG._debugGCD
+		--]]
 	end
 end
