@@ -40,7 +40,7 @@ zBBG.Events:Register("SETTING_CHANGED", function(key, value)
 			zBBG.removeActionBarBackgrounds()
 			zBBG.print("Action bar backgrounds |cFFFF0000disabled|r")
 		end
-	elseif key == "squareButtons" or key == "showBorder" or key == "borderWidth" or 
+	elseif key == "squareButtons" or key == "showBorder" or 
 	       key == "useClassColorBorder" or key == "useClassColorOuter" or key == "useClassColorInner" then
 		-- Structural changes need full rebuild
 		if zBBG.enabled then
@@ -299,11 +299,6 @@ function zBBG.BuildOptionsPanels()
 		y = newY
 		widgets.borderCb = borderCb
 		
-		-- Border width slider (only shown if showBorder is enabled)
-		local borderWidthFrame, newY = MakeSlider(self, "Border Width (pixels)", "borderWidth", 1, 5, y)
-		y = newY
-		widgets.borderWidthFrame = borderWidthFrame
-		
 		-- Border settings
 		y = y - 10
 		local borderClassColorCb, newY = MakeCheckbox(self, "Use Class Color for Button Border", "Use your class color for the icon border", "useClassColorBorder", y)
@@ -315,12 +310,9 @@ function zBBG.BuildOptionsPanels()
 		widgets.borderLbl = borderLbl
 		widgets.borderBtn = borderBtn
 		
-		-- Update visibility based on showBorder and squareButtons settings
+		-- Update visibility based on showBorder setting
 		local function UpdateBorderWidgets()
 			local showBorder = zBBG.charSettings.showBorder
-			local squareButtons = zBBG.charSettings.squareButtons
-			-- Border width only applies to square buttons (round buttons use fixed-width custom texture)
-			borderWidthFrame:SetShown(showBorder and squareButtons)
 			borderClassColorCb:SetShown(showBorder)
 			borderLbl:SetShown(showBorder)
 			borderBtn:SetShown(showBorder)
@@ -364,7 +356,6 @@ function zBBG.BuildOptionsPanels()
 					zBBG.Events:Trigger("SETTING_CHANGED", "enabled", zBBG.charSettings.enabled)
 					zBBG.Events:Trigger("SETTING_CHANGED", "squareButtons", zBBG.charSettings.squareButtons)
 					zBBG.Events:Trigger("SETTING_CHANGED", "showBorder", zBBG.charSettings.showBorder)
-					zBBG.Events:Trigger("SETTING_CHANGED", "borderWidth", zBBG.charSettings.borderWidth)
 					zBBG.Events:Trigger("SETTING_CHANGED", "outerColor", zBBG.charSettings.outerColor)
 					zBBG.Events:Trigger("SETTING_CHANGED", "innerColor", zBBG.charSettings.innerColor)
 					zBBG.Events:Trigger("SETTING_CHANGED", "borderColor", zBBG.charSettings.borderColor)

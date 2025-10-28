@@ -1,4 +1,4 @@
-## Interface: 110002
+## Interface: 110205
 ## Title: zBarButtonBG
 ## Notes: Adds customizable backgrounds to action bar buttons
 ## Author: k0nker
