@@ -7,12 +7,14 @@ zBarButtonBG.defaultSettings = {
 	showBorder = true,
 	borderColor = { r = 0.2, g = 0.2, b = 0.2, a = 1 }, -- Slightly lighter grey than button background
 	useClassColorBorder = false,
+	showBackdrop = true,
 	outerColor = { r = 0, g = 0, b = 0, a = 1 },   -- Black backdrop
 	useClassColorOuter = false,
+	showSlotBackground = true,
 	innerColor = { r = 0.1, g = 0.1, b = 0.1, a = 1 }, -- Dark grey button background
 	useClassColorInner = false,
 	showRangeIndicator = false,
-	rangeIndicatorColor = { r = 1, g = 0, b = 0, a = 0.5 }, -- Red at 50% opacity
+	rangeIndicatorColor = { r = .42, g = 0.07, b = .12, a = 0.75 }, -- Dark red at 75% opacity
 	fadeCooldown = false,
 	cooldownColor = { r = 0, g = 0, b = 0, a = 0.5 }, -- Black at 50% opacity
 }
@@ -417,38 +419,44 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button.InterruptDisplay:SetScript("OnShow", function(self) self:Hide() end)
 					end
 
-					-- Create the outer background frame that extends 5px past the button edges
-					local outerFrame = CreateFrame("Frame", nil, button)
-					outerFrame:SetPoint("TOPLEFT", button, "TOPLEFT", -5, 5)
-					outerFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 5, -5)
-					outerFrame:SetFrameLevel(0)
-					outerFrame:SetFrameStrata("BACKGROUND")
+					-- Create the outer background frame that extends 5px past the button edges (if enabled)
+					local outerFrame, outerBg
+					if zBarButtonBG.charSettings.showBackdrop then
+						outerFrame = CreateFrame("Frame", nil, button)
+						outerFrame:SetPoint("TOPLEFT", button, "TOPLEFT", -5, 5)
+						outerFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 5, -5)
+						outerFrame:SetFrameLevel(0)
+						outerFrame:SetFrameStrata("BACKGROUND")
 
-					-- Fill it with black (or class color if that's enabled)
-					local outerBg = outerFrame:CreateTexture(nil, "BACKGROUND", nil, -8)
-					outerBg:SetAllPoints(outerFrame)
-					local outerColor = getColorTable("outerColor", "useClassColorOuter")
-					outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
-
-					-- Create the inner background that sits right behind the button
-					local bgFrame = CreateFrame("Frame", nil, button)
-					bgFrame:SetAllPoints(button)
-					bgFrame:SetFrameLevel(0)
-					bgFrame:SetFrameStrata("BACKGROUND")
-
-					-- Fill it with dark grey (or class color)
-					local bg = bgFrame:CreateTexture(nil, "BACKGROUND", nil, -7)
-					bg:SetAllPoints(bgFrame)
-					local innerColor = getColorTable("innerColor", "useClassColorInner")
-					bg:SetColorTexture(innerColor.r, innerColor.g, innerColor.b, innerColor.a)
-
-					-- Apply appropriate mask to inner background
-					if not button._zBBG_customMask then
-						button._zBBG_customMask = button:CreateMaskTexture()
-						button._zBBG_customMask:SetTexture(getMaskPath())
-						button._zBBG_customMask:SetAllPoints(button)
+						-- Fill it with black (or class color if that's enabled)
+						outerBg = outerFrame:CreateTexture(nil, "BACKGROUND", nil, -8)
+						outerBg:SetAllPoints(outerFrame)
+						local outerColor = getColorTable("outerColor", "useClassColorOuter")
+						outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
 					end
-					applyMaskToTexture(bg, button._zBBG_customMask)
+
+					-- Create the inner background that sits right behind the button (if enabled)
+					local bgFrame, bg
+					if zBarButtonBG.charSettings.showSlotBackground then
+						bgFrame = CreateFrame("Frame", nil, button)
+						bgFrame:SetAllPoints(button)
+						bgFrame:SetFrameLevel(0)
+						bgFrame:SetFrameStrata("BACKGROUND")
+
+						-- Fill it with dark grey (or class color)
+						bg = bgFrame:CreateTexture(nil, "BACKGROUND", nil, -7)
+						bg:SetAllPoints(bgFrame)
+						local innerColor = getColorTable("innerColor", "useClassColorInner")
+						bg:SetColorTexture(innerColor.r, innerColor.g, innerColor.b, innerColor.a)
+
+						-- Apply appropriate mask to inner background
+						if not button._zBBG_customMask then
+							button._zBBG_customMask = button:CreateMaskTexture()
+							button._zBBG_customMask:SetTexture(getMaskPath())
+							button._zBBG_customMask:SetAllPoints(button)
+						end
+						applyMaskToTexture(bg, button._zBBG_customMask)
+					end
 
 					-- Create the border if that option is turned on
 					local borderFrame, customBorderTexture
@@ -564,10 +572,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_rangeOverlay:SetAllPoints(button.icon)
 						
 						if zBarButtonBG.charSettings.squareButtons then
-							-- Square mode: no mask needed
-							if button._zBBG_customMask then
-								button._zBBG_rangeOverlay:RemoveMaskTexture(button._zBBG_customMask)
-							end
+							-- Square mode: remove any mask we previously applied
+							removeMaskFromTexture(button._zBBG_rangeOverlay)
 						else
 							-- Round mode: apply mask
 							if button._zBBG_customMask then
@@ -581,10 +587,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
 						
 						if zBarButtonBG.charSettings.squareButtons then
-							-- Square mode: no mask needed
-							if button._zBBG_customMask then
-								button._zBBG_cooldownOverlay:RemoveMaskTexture(button._zBBG_customMask)
-							end
+							-- Square mode: remove any mask we previously applied
+							removeMaskFromTexture(button._zBBG_cooldownOverlay)
 						else
 							-- Round mode: apply mask
 							if button._zBBG_customMask then
@@ -608,12 +612,20 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 					end
 
-					-- Make sure our background frames are visible
+					-- Make sure our background frames are visible (or hidden if disabled)
 					if data.outerFrame then
-						data.outerFrame:Show()
+						if zBarButtonBG.charSettings.showBackdrop then
+							data.outerFrame:Show()
+						else
+							data.outerFrame:Hide()
+						end
 					end
 					if data.frame then
-						data.frame:Show()
+						if zBarButtonBG.charSettings.showSlotBackground then
+							data.frame:Show()
+						else
+							data.frame:Hide()
+						end
 					end
 
 					-- Update the colors (might have changed in settings or toggled class colors)

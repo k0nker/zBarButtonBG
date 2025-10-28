@@ -42,7 +42,8 @@ zBBG.Events:Register("SETTING_CHANGED", function(key, value)
 		end
 	elseif key == "squareButtons" or key == "showBorder" or 
 	       key == "useClassColorBorder" or key == "useClassColorOuter" or key == "useClassColorInner" or
-	       key == "showRangeIndicator" or key == "fadeCooldown" then
+	       key == "showRangeIndicator" or key == "fadeCooldown" or
+	       key == "showBackdrop" or key == "showSlotBackground" then
 		-- Structural changes need full rebuild
 		if zBBG.enabled then
 			zBBG.removeActionBarBackgrounds()
@@ -275,24 +276,38 @@ function zBBG.BuildOptionsPanels()
 		y = newY
 		
 		-- Square Buttons checkbox
-		local squareCb, newY = MakeCheckbox(self, "Square Buttons", "Square off action button icons instead of keeping them round. This makes icons fill the button better when using borders. /reload may be required when swapping styles to redraw overlays correctly.", "squareButtons", y)
+		local squareCb, newY = MakeCheckbox(self, "Square Buttons", "Square off action button icons. /reload may be required when swapping styles to redraw overlays correctly.", "squareButtons", y)
 		y = newY
 		
 		-- Backdrop (outer) settings
 		y = y - 10
+		local backdropCb, newY = MakeCheckbox(self, "Show Backdrop", "Show the outer backdrop frame behind each button", "showBackdrop", y)
+		y = newY
+		widgets.backdropCb = backdropCb
+		
 		local outerClassColorCb, newY = MakeCheckbox(self, "Use Class Color for Backdrop", "Use your class color for the outer backdrop", "useClassColorOuter", y)
 		y = newY
+		widgets.outerClassColorCb = outerClassColorCb
 		
 		local outerLbl, outerBtn, newY = MakeColorPicker(self, "Backdrop Color:", "outerColor", y, "useClassColorOuter")
 		y = newY
+		widgets.outerLbl = outerLbl
+		widgets.outerBtn = outerBtn
 		
 		-- Button background (inner) settings
 		y = y - 10
+		local slotBgCb, newY = MakeCheckbox(self, "Show Slot Background", "Show the slot background fill behind each button icon", "showSlotBackground", y)
+		y = newY
+		widgets.slotBgCb = slotBgCb
+		
 		local innerClassColorCb, newY = MakeCheckbox(self, "Use Class Color for Button Background", "Use your class color for the button background", "useClassColorInner", y)
 		y = newY
+		widgets.innerClassColorCb = innerClassColorCb
 		
 		local innerLbl, innerBtn, newY = MakeColorPicker(self, "Button Background Color:", "innerColor", y, "useClassColorInner")
 		y = newY
+		widgets.innerLbl = innerLbl
+		widgets.innerBtn = innerBtn
 		
 		-- Border section
 		y = y - 10
@@ -321,9 +336,33 @@ function zBBG.BuildOptionsPanels()
 		
 		UpdateBorderWidgets()
 		
+		-- Update visibility based on showBackdrop setting
+		local function UpdateBackdropWidgets()
+			local showBackdrop = zBBG.charSettings.showBackdrop
+			outerClassColorCb:SetShown(showBackdrop)
+			outerLbl:SetShown(showBackdrop)
+			outerBtn:SetShown(showBackdrop)
+		end
+		
+		UpdateBackdropWidgets()
+		
+		-- Update visibility based on showSlotBackground setting
+		local function UpdateSlotBackgroundWidgets()
+			local showSlotBg = zBBG.charSettings.showSlotBackground
+			innerClassColorCb:SetShown(showSlotBg)
+			innerLbl:SetShown(showSlotBg)
+			innerBtn:SetShown(showSlotBg)
+		end
+		
+		UpdateSlotBackgroundWidgets()
+		
 		zBBG.Events:Register("SETTING_CHANGED", function(k, val)
 			if k == "showBorder" or k == "squareButtons" then
 				UpdateBorderWidgets()
+			elseif k == "showBackdrop" then
+				UpdateBackdropWidgets()
+			elseif k == "showSlotBackground" then
+				UpdateSlotBackgroundWidgets()
 			end
 		end)
 		
@@ -405,6 +444,8 @@ function zBBG.BuildOptionsPanels()
 					zBBG.Events:Trigger("SETTING_CHANGED", "enabled", zBBG.charSettings.enabled)
 					zBBG.Events:Trigger("SETTING_CHANGED", "squareButtons", zBBG.charSettings.squareButtons)
 					zBBG.Events:Trigger("SETTING_CHANGED", "showBorder", zBBG.charSettings.showBorder)
+					zBBG.Events:Trigger("SETTING_CHANGED", "showBackdrop", zBBG.charSettings.showBackdrop)
+					zBBG.Events:Trigger("SETTING_CHANGED", "showSlotBackground", zBBG.charSettings.showSlotBackground)
 					zBBG.Events:Trigger("SETTING_CHANGED", "outerColor", zBBG.charSettings.outerColor)
 					zBBG.Events:Trigger("SETTING_CHANGED", "innerColor", zBBG.charSettings.innerColor)
 					zBBG.Events:Trigger("SETTING_CHANGED", "borderColor", zBBG.charSettings.borderColor)
