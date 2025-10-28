@@ -415,6 +415,16 @@ function zBarButtonBG.createActionBarBackgrounds()
 						inner = zBarButtonBG.charSettings.innerColor
 					end
 					bg:SetColorTexture(inner.r, inner.g, inner.b, inner.a)
+					
+					-- For round buttons, apply mask to inner background too
+					if not zBarButtonBG.charSettings.squareButtons then
+						if not button._zBBG_customMask then
+							button._zBBG_customMask = button:CreateMaskTexture()
+							button._zBBG_customMask:SetTexture("Interface/AddOns/zBarButtonBG/Assets/ButtonIconMask")
+							button._zBBG_customMask:SetAllPoints(button)
+						end
+						bg:AddMaskTexture(button._zBBG_customMask)
+					end
 
 					-- Create the border if that option is turned on
 					local borderFrame, borderTop, borderBottom, borderLeft, borderRight
@@ -734,6 +744,18 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					if data.bg then
 						data.bg:SetColorTexture(inner.r, inner.g, inner.b, inner.a)
+						
+						-- For round buttons, apply mask to inner background
+						if not zBarButtonBG.charSettings.squareButtons then
+							if button._zBBG_customMask then
+								data.bg:AddMaskTexture(button._zBBG_customMask)
+							end
+						else
+							-- Remove mask for square buttons
+							if button._zBBG_customMask then
+								data.bg:RemoveMaskTexture(button._zBBG_customMask)
+							end
+						end
 					end
 					
 					-- Handle border updates
@@ -944,6 +966,11 @@ function zBarButtonBG.removeActionBarBackgrounds()
 				if data.button._zBBG_customMask then
 					data.button.SlotBackground:RemoveMaskTexture(data.button._zBBG_customMask)
 				end
+			end
+			
+			-- Remove mask from inner background
+			if data.bg and data.button and data.button._zBBG_customMask then
+				data.bg:RemoveMaskTexture(data.button._zBBG_customMask)
 			end
 			
 			-- Reset the icon back to normal size and coords
