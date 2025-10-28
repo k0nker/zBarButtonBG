@@ -277,12 +277,18 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Use SetAlpha(0) to make them invisible even if Blizzard tries to show them
 					if button.HighlightTexture then
 						button.HighlightTexture:SetAlpha(0)
+						button.HighlightTexture:Hide()
+						button.HighlightTexture:SetScript("OnShow", function(self) self:Hide() end)
 					end
 					if button.PushedTexture then
 						button.PushedTexture:SetAlpha(0)
+						button.PushedTexture:Hide()
+						button.PushedTexture:SetScript("OnShow", function(self) self:Hide() end)
 					end
 					if button.CheckedTexture then
 						button.CheckedTexture:SetAlpha(0)
+						button.CheckedTexture:Hide()
+						button.CheckedTexture:SetScript("OnShow", function(self) self:Hide() end)
 					end
 					
 					-- Create custom highlight overlay
@@ -310,16 +316,19 @@ function zBarButtonBG.createActionBarBackgrounds()
 					
 					-- Hook up hover and click events to show/hide custom highlight
 					if not button._zBBG_highlightHooked then
+						-- Mouse hover events
 						button:HookScript("OnEnter", function(self)
-							if self._zBBG_customHighlight then
+							if self._zBBG_customHighlight and self:GetButtonState() ~= "PUSHED" then
 								self._zBBG_customHighlight:Show()
 							end
 						end)
 						button:HookScript("OnLeave", function(self)
-							if self._zBBG_customHighlight then
+							if self._zBBG_customHighlight and self:GetButtonState() ~= "PUSHED" then
 								self._zBBG_customHighlight:Hide()
 							end
 						end)
+						
+						-- Mouse click events
 						button:HookScript("OnMouseDown", function(self)
 							if self._zBBG_customHighlight then
 								self._zBBG_customHighlight:Show()
@@ -333,6 +342,18 @@ function zBarButtonBG.createActionBarBackgrounds()
 								end
 							end
 						end)
+						
+						-- Hook SetButtonState to catch keybind presses
+						hooksecurefunc(button, "SetButtonState", function(self, state)
+							if self._zBBG_customHighlight then
+								if state == "PUSHED" then
+									self._zBBG_customHighlight:Show()
+								elseif state == "NORMAL" and not self:IsMouseOver() then
+									self._zBBG_customHighlight:Hide()
+								end
+							end
+						end)
+						
 						button._zBBG_highlightHooked = true
 					end
 					
