@@ -315,10 +315,12 @@ function zBBG.BuildOptionsPanels()
 		widgets.borderLbl = borderLbl
 		widgets.borderBtn = borderBtn
 		
-		-- Update visibility based on showBorder setting
+		-- Update visibility based on showBorder and squareButtons settings
 		local function UpdateBorderWidgets()
 			local showBorder = zBBG.charSettings.showBorder
-			borderWidthFrame:SetShown(showBorder)
+			local squareButtons = zBBG.charSettings.squareButtons
+			-- Border width only applies to square buttons (round buttons use fixed-width custom texture)
+			borderWidthFrame:SetShown(showBorder and squareButtons)
 			borderClassColorCb:SetShown(showBorder)
 			borderLbl:SetShown(showBorder)
 			borderBtn:SetShown(showBorder)
@@ -327,7 +329,7 @@ function zBBG.BuildOptionsPanels()
 		UpdateBorderWidgets()
 		
 		zBBG.Events:Register("SETTING_CHANGED", function(k, val)
-			if k == "showBorder" then
+			if k == "showBorder" or k == "squareButtons" then
 				UpdateBorderWidgets()
 			end
 		end)
