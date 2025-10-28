@@ -746,7 +746,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 			end
 			
 			-- inRange: true = in range, nil = out of range (when target exists)
-			if inRange == nil or inRange == false then
+			if inRange == false then
 				-- Out of range - show overlay
 				local c = zBarButtonBG.charSettings.rangeIndicatorColor
 				button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
@@ -881,5 +881,34 @@ SlashCmdList["ZBARBUTTONBG"] = function(msg)
 	msg = msg:lower():trim()
 	if msg == "" or msg == "toggle" then
 		zBarButtonBG.toggle()
+	elseif msg == "rangetest" then
+		-- Debug range checking for first two action buttons
+		local b1, b2 = ActionButton1, ActionButton2
+		local a1, a2 = b1.action, b2.action
+		
+		zBarButtonBG.print("=== Range Test Debug ===")
+		if UnitExists("target") then
+			zBarButtonBG.print("Target: " .. UnitName("target") .. " (" .. UnitClass("target") .. ")")
+		else
+			zBarButtonBG.print("Target: None")
+		end
+		
+		-- Button 1
+		if a1 then
+			local usable, nomana = IsUsableAction(a1)
+			local range = IsActionInRange(a1, "target")
+			zBarButtonBG.print("Button1 (action " .. a1 .. "): usable=" .. tostring(usable) .. ", nomana=" .. tostring(nomana) .. ", range=" .. tostring(range))
+		else
+			zBarButtonBG.print("Button1: No action assigned")
+		end
+		
+		-- Button 2
+		if a2 then
+			local usable, nomana = IsUsableAction(a2)
+			local range = IsActionInRange(a2, "target")
+			zBarButtonBG.print("Button2 (action " .. a2 .. "): usable=" .. tostring(usable) .. ", nomana=" .. tostring(nomana) .. ", range=" .. tostring(range))
+		else
+			zBarButtonBG.print("Button2: No action assigned")
+		end
 	end
 end
