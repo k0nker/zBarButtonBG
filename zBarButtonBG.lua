@@ -11,6 +11,10 @@ zBarButtonBG.defaultSettings = {
 	useClassColorOuter = false,
 	innerColor = { r = 0.1, g = 0.1, b = 0.1, a = 1 }, -- Dark grey button background
 	useClassColorInner = false,
+	showRangeIndicator = false,
+	rangeIndicatorColor = { r = 1, g = 0, b = 0, a = 0.5 }, -- Red at 50% opacity
+	fadeCooldown = false,
+	cooldownColor = { r = 0, g = 0, b = 0, a = 0.5 }, -- Black at 50% opacity
 }
 
 -- ############################################################
@@ -93,6 +97,30 @@ local function getBorderPath()
 		or "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconBorder_Rounded"
 end
 
+-- Helper to apply/remove a mask to a texture while tracking what mask is applied
+local function applyMaskToTexture(tex, mask)
+	if not tex then return end
+	-- If the mask is already applied to this texture, do nothing
+	if tex._zBBG_appliedMask == mask then return end
+	-- If there is a different mask applied, remove it first
+	if tex._zBBG_appliedMask then
+		tex:RemoveMaskTexture(tex._zBBG_appliedMask)
+		tex._zBBG_appliedMask = nil
+	end
+	if mask then
+		tex:AddMaskTexture(mask)
+		tex._zBBG_appliedMask = mask
+	end
+end
+
+local function removeMaskFromTexture(tex)
+	if not tex then return end
+	if tex._zBBG_appliedMask then
+		tex:RemoveMaskTexture(tex._zBBG_appliedMask)
+		tex._zBBG_appliedMask = nil
+	end
+end
+
 -- ############################################################
 -- Main Functions
 -- ############################################################
@@ -133,9 +161,11 @@ function zBarButtonBG.updateColors()
 	local outerColor = getColorTable("outerColor", "useClassColorOuter")
 	local innerColor = getColorTable("innerColor", "useClassColorInner")
 	local borderColor = getColorTable("borderColor", "useClassColorBorder")
+	local rangeColor = zBarButtonBG.charSettings.rangeIndicatorColor
+	local cooldownColor = zBarButtonBG.charSettings.cooldownColor
 
 	for buttonName, data in pairs(zBarButtonBG.frames) do
-		if data then
+		if data and data.button then
 			-- Update outer background color
 			if data.outerBg then
 				data.outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
@@ -150,6 +180,16 @@ function zBarButtonBG.updateColors()
 			if zBarButtonBG.charSettings.showBorder and data.customBorderTexture then
 				-- Use color picker's alpha for overall border transparency (ADD mode handles black=transparent)
 				data.customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+			end
+
+			-- Update range indicator color
+			if data.button._zBBG_rangeOverlay then
+				data.button._zBBG_rangeOverlay:SetColorTexture(rangeColor.r, rangeColor.g, rangeColor.b, rangeColor.a)
+			end
+
+			-- Update cooldown overlay color
+			if data.button._zBBG_cooldownOverlay then
+				data.button._zBBG_cooldownOverlay:SetColorTexture(cooldownColor.r, cooldownColor.g, cooldownColor.b, cooldownColor.a)
 			end
 		end
 	end
@@ -213,7 +253,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button._zBBG_customMask:SetTexture(getMaskPath())
 							button._zBBG_customMask:SetAllPoints(button)
 						end
-						button.icon:AddMaskTexture(button._zBBG_customMask)
+						applyMaskToTexture(button.icon, button._zBBG_customMask)
 					end
 
 					-- Make the cooldown spiral fill the whole button
@@ -246,25 +286,55 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_customHighlight:Hide()         -- Hidden by default
 					end
 
+					-- Create custom range indicator overlay
+					if not button._zBBG_rangeOverlay then
+						button._zBBG_rangeOverlay = button:CreateTexture(nil, "OVERLAY", nil, 1)
+						local c = zBarButtonBG.charSettings.rangeIndicatorColor
+						button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+						button._zBBG_rangeOverlay:Hide() -- Hidden by default
+					end
+
+					-- Create custom cooldown fade overlay
+					if not button._zBBG_cooldownOverlay then
+						button._zBBG_cooldownOverlay = button:CreateTexture(nil, "OVERLAY", nil, 2)
+						local c = zBarButtonBG.charSettings.cooldownColor
+						button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+						button._zBBG_cooldownOverlay:Hide() -- Hidden by default
+					end
+
 					-- Position the highlight based on square/round mode
 					local inset = 2
 					button._zBBG_customHighlight:ClearAllPoints()
+					button._zBBG_rangeOverlay:ClearAllPoints()
+					button._zBBG_cooldownOverlay:ClearAllPoints()
+					
 					if zBarButtonBG.charSettings.squareButtons then
-						-- Square mode: inset by 2px to match icon clipping
+						-- Square mode: highlight inset by 2px, overlays fill entire button
 						button._zBBG_customHighlight:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
 						button._zBBG_customHighlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
 						button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)
-						-- Remove mask for square mode
+						
+						-- Range and cooldown overlays fill the entire button (no inset)
+						button._zBBG_rangeOverlay:SetAllPoints(button.icon)
+						button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
+						
+						-- Remove masks for square mode
 						if button._zBBG_customMask then
-							button._zBBG_customHighlight:RemoveMaskTexture(button._zBBG_customMask)
+							removeMaskFromTexture(button._zBBG_customHighlight)
+							removeMaskFromTexture(button._zBBG_rangeOverlay)
+							removeMaskFromTexture(button._zBBG_cooldownOverlay)
 						end
 					else
 						-- Round mode: use custom mask for rounded edges
 						button._zBBG_customHighlight:SetAllPoints(button.icon)
+						button._zBBG_rangeOverlay:SetAllPoints(button.icon)
+						button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
+						
 						if button._zBBG_customMask then
-							-- Remove any existing masks before adding new one
-							button._zBBG_customHighlight:RemoveMaskTexture(button._zBBG_customMask)
-							button._zBBG_customHighlight:AddMaskTexture(button._zBBG_customMask)
+							-- Apply mask to highlight and overlays
+							applyMaskToTexture(button._zBBG_customHighlight, button._zBBG_customMask)
+							applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_customMask)
+							applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_customMask)
 						end
 					end
 
@@ -336,7 +406,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button._zBBG_customMask:SetTexture(getMaskPath())
 							button._zBBG_customMask:SetAllPoints(button)
 						end
-						button.SlotBackground:AddMaskTexture(button._zBBG_customMask)
+						applyMaskToTexture(button.SlotBackground, button._zBBG_customMask)
 					end
 
 					-- Hide those annoying spell cast animations
@@ -378,7 +448,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_customMask:SetTexture(getMaskPath())
 						button._zBBG_customMask:SetAllPoints(button)
 					end
-					bg:AddMaskTexture(button._zBBG_customMask)
+					applyMaskToTexture(bg, button._zBBG_customMask)
 
 					-- Create the border if that option is turned on
 					local borderFrame, customBorderTexture
@@ -427,18 +497,15 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 					-- Update icon mask when switching modes
 					if button.icon then
-						-- Remove old mask completely
+						-- Remove old mask completely from ALL elements
 						if button._zBBG_customMask then
-							button.icon:RemoveMaskTexture(button._zBBG_customMask)
-							if button.SlotBackground then
-								button.SlotBackground:RemoveMaskTexture(button._zBBG_customMask)
-							end
-							if data.bg then
-								data.bg:RemoveMaskTexture(button._zBBG_customMask)
-							end
-							if button._zBBG_customHighlight then
-								button._zBBG_customHighlight:RemoveMaskTexture(button._zBBG_customMask)
-							end
+							-- Use helper removal to safely clear any masks we applied
+							removeMaskFromTexture(button.icon)
+							removeMaskFromTexture(button.SlotBackground)
+							removeMaskFromTexture(data.bg)
+							removeMaskFromTexture(button._zBBG_customHighlight)
+							removeMaskFromTexture(button._zBBG_rangeOverlay)
+							removeMaskFromTexture(button._zBBG_cooldownOverlay)
 							-- Destroy the old mask to force texture reload
 							button._zBBG_customMask = nil
 						end
@@ -463,13 +530,13 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_customMask:SetTexture(getMaskPath())
 						button._zBBG_customMask:SetAllPoints(button)
 
-						-- Apply new mask to all elements
-						button.icon:AddMaskTexture(button._zBBG_customMask)
+						-- Apply new mask to all elements (use helpers to avoid duplicate adds)
+						applyMaskToTexture(button.icon, button._zBBG_customMask)
 						if button.SlotBackground then
-							button.SlotBackground:AddMaskTexture(button._zBBG_customMask)
+							applyMaskToTexture(button.SlotBackground, button._zBBG_customMask)
 						end
 						if data.bg then
-							data.bg:AddMaskTexture(button._zBBG_customMask)
+							applyMaskToTexture(data.bg, button._zBBG_customMask)
 						end
 					end
 
@@ -486,7 +553,42 @@ function zBarButtonBG.createActionBarBackgrounds()
 							-- Round mode: use custom mask
 							button._zBBG_customHighlight:SetAllPoints(button.icon)
 							if button._zBBG_customMask then
-								button._zBBG_customHighlight:AddMaskTexture(button._zBBG_customMask)
+								applyMaskToTexture(button._zBBG_customHighlight, button._zBBG_customMask)
+							end
+						end
+					end
+
+					-- Update range and cooldown overlays positioning
+					if button._zBBG_rangeOverlay then
+						button._zBBG_rangeOverlay:ClearAllPoints()
+						button._zBBG_rangeOverlay:SetAllPoints(button.icon)
+						
+						if zBarButtonBG.charSettings.squareButtons then
+							-- Square mode: no mask needed
+							if button._zBBG_customMask then
+								button._zBBG_rangeOverlay:RemoveMaskTexture(button._zBBG_customMask)
+							end
+						else
+							-- Round mode: apply mask
+							if button._zBBG_customMask then
+								applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_customMask)
+							end
+						end
+					end
+
+					if button._zBBG_cooldownOverlay then
+						button._zBBG_cooldownOverlay:ClearAllPoints()
+						button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
+						
+						if zBarButtonBG.charSettings.squareButtons then
+							-- Square mode: no mask needed
+							if button._zBBG_customMask then
+								button._zBBG_cooldownOverlay:RemoveMaskTexture(button._zBBG_customMask)
+							end
+						else
+							-- Round mode: apply mask
+							if button._zBBG_customMask then
+								applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_customMask)
 							end
 						end
 					end
@@ -600,6 +702,74 @@ function zBarButtonBG.createActionBarBackgrounds()
 		-- Hook the range indicator update (this one definitely exists)
 		hooksecurefunc("ActionButton_UpdateRangeIndicator", manageNormalTexture)
 
+		-- Hook range indicator to show/hide range overlay
+		local function updateRangeOverlay(button)
+			if not button or not button._zBBG_rangeOverlay or not button._zBBG_styled or not zBarButtonBG.enabled then
+				return
+			end
+			
+			if not zBarButtonBG.charSettings.showRangeIndicator then
+				button._zBBG_rangeOverlay:Hide()
+				return
+			end
+			
+			-- Check if there's a valid target
+			local hasTarget = UnitExists("target")
+			if not hasTarget then
+				button._zBBG_rangeOverlay:Hide()
+				return
+			end
+			
+			-- Check range based on button type
+			local inRange = nil
+			if button.action then
+				-- Regular action buttons - check range against current target
+				inRange = IsActionInRange(button.action, "target")
+			elseif button.GetAction then
+				-- Try to get action from the button
+				local action = button:GetAction()
+				if action then
+					inRange = IsActionInRange(action, "target")
+				end
+			end
+			
+			-- inRange: true = in range, nil = out of range (when target exists)
+			if inRange == nil or inRange == false then
+				-- Out of range - show overlay
+				local c = zBarButtonBG.charSettings.rangeIndicatorColor
+				button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+				button._zBBG_rangeOverlay:Show()
+			else
+				-- In range - hide overlay
+				button._zBBG_rangeOverlay:Hide()
+			end
+		end
+		hooksecurefunc("ActionButton_UpdateRangeIndicator", updateRangeOverlay)
+
+		-- Hook cooldown to show/hide cooldown fade overlay
+		local function updateCooldownOverlay(button)
+			if button and button._zBBG_cooldownOverlay and button._zBBG_styled and zBarButtonBG.enabled then
+				if zBarButtonBG.charSettings.fadeCooldown and button.cooldown then
+					local start, duration = button.cooldown:GetCooldownTimes()
+					if start and duration and start > 0 and duration > 0 then
+						-- On cooldown - show overlay
+						button._zBBG_cooldownOverlay:Show()
+					else
+						-- Not on cooldown - hide overlay
+						button._zBBG_cooldownOverlay:Hide()
+					end
+				else
+					button._zBBG_cooldownOverlay:Hide()
+				end
+			end
+		end
+		hooksecurefunc("ActionButton_UpdateCooldown", updateCooldownOverlay)
+		hooksecurefunc("CooldownFrame_Set", function(cooldown)
+			if cooldown and cooldown:GetParent() and cooldown:GetParent()._zBBG_styled then
+				updateCooldownOverlay(cooldown:GetParent())
+			end
+		end)
+
 		zBarButtonBG.hookInstalled = true
 	end
 end
@@ -636,18 +806,18 @@ function zBarButtonBG.removeActionBarBackgrounds()
 				data.button.SlotBackground:SetDrawLayer("BACKGROUND", 0)
 				-- Remove our custom masking
 				if data.button._zBBG_customMask then
-					data.button.SlotBackground:RemoveMaskTexture(data.button._zBBG_customMask)
+					removeMaskFromTexture(data.button.SlotBackground)
 				end
 			end
 
 			-- Remove mask from inner background
 			if data.bg and data.button and data.button._zBBG_customMask then
-				data.bg:RemoveMaskTexture(data.button._zBBG_customMask)
+				removeMaskFromTexture(data.bg)
 			end
 
 			-- Remove custom mask from highlight
 			if data.button and data.button._zBBG_customHighlight and data.button._zBBG_customMask then
-				data.button._zBBG_customHighlight:RemoveMaskTexture(data.button._zBBG_customMask)
+				removeMaskFromTexture(data.button._zBBG_customHighlight)
 			end
 
 			-- Reset the icon back to normal size and coords
@@ -656,11 +826,12 @@ function zBarButtonBG.removeActionBarBackgrounds()
 				data.button.icon:SetTexCoord(0, 1, 0, 1)
 				-- Remove our custom mask and restore Blizzard's mask
 				if data.button._zBBG_customMask then
-					data.button.icon:RemoveMaskTexture(data.button._zBBG_customMask)
+					removeMaskFromTexture(data.button.icon)
 					-- Destroy the mask object completely so it gets recreated fresh
 					data.button._zBBG_customMask = nil
 				end
 				if data.button.IconMask then
+					-- Reapply Blizzard's icon mask directly (not tracked by our helpers)
 					data.button.icon:AddMaskTexture(data.button.IconMask)
 				end
 			end

@@ -41,13 +41,14 @@ zBBG.Events:Register("SETTING_CHANGED", function(key, value)
 			zBBG.print("Action bar backgrounds |cFFFF0000disabled|r")
 		end
 	elseif key == "squareButtons" or key == "showBorder" or 
-	       key == "useClassColorBorder" or key == "useClassColorOuter" or key == "useClassColorInner" then
+	       key == "useClassColorBorder" or key == "useClassColorOuter" or key == "useClassColorInner" or
+	       key == "showRangeIndicator" or key == "fadeCooldown" then
 		-- Structural changes need full rebuild
 		if zBBG.enabled then
 			zBBG.removeActionBarBackgrounds()
 			zBBG.createActionBarBackgrounds()
 		end
-	elseif key == "outerColor" or key == "innerColor" or key == "borderColor" then
+	elseif key == "outerColor" or key == "innerColor" or key == "borderColor" or key == "rangeIndicatorColor" or key == "cooldownColor" then
 		-- Color changes can be applied to existing frames without rebuilding
 		if zBBG.enabled and zBBG.updateColors then
 			zBBG.updateColors()
@@ -274,7 +275,7 @@ function zBBG.BuildOptionsPanels()
 		y = newY
 		
 		-- Square Buttons checkbox
-		local squareCb, newY = MakeCheckbox(self, "Square Buttons", "Square off action button icons instead of keeping them round. This makes icons fill the button better when using borders.", "squareButtons", y)
+		local squareCb, newY = MakeCheckbox(self, "Square Buttons", "Square off action button icons instead of keeping them round. This makes icons fill the button better when using borders. /reload may be required when swapping styles to redraw overlays correctly.", "squareButtons", y)
 		y = newY
 		
 		-- Backdrop (outer) settings
@@ -326,6 +327,54 @@ function zBBG.BuildOptionsPanels()
 			end
 		end)
 		
+		-- Range Indicator section
+		y = y - 10
+		local rangeCb, newY = MakeCheckbox(self, "Show Out-of-Range Highlight", "Show a colored overlay on buttons when the ability is out of range", "showRangeIndicator", y)
+		y = newY
+		widgets.rangeCb = rangeCb
+		
+		local rangeLbl, rangeBtn, newY = MakeColorPicker(self, "Range Indicator Color:", "rangeIndicatorColor", y)
+		y = newY
+		widgets.rangeLbl = rangeLbl
+		widgets.rangeBtn = rangeBtn
+		
+		-- Cooldown Fade section
+		y = y - 10
+		local cooldownCb, newY = MakeCheckbox(self, "Fade On Cooldown", "Add a dark overlay to buttons while on cooldown", "fadeCooldown", y)
+		y = newY
+		widgets.cooldownCb = cooldownCb
+		
+		local cooldownLbl, cooldownBtn, newY = MakeColorPicker(self, "Cooldown Overlay Color:", "cooldownColor", y)
+		y = newY
+		widgets.cooldownLbl = cooldownLbl
+		widgets.cooldownBtn = cooldownBtn
+		
+		-- Update visibility based on showRangeIndicator setting
+		local function UpdateRangeWidgets()
+			local showRange = zBBG.charSettings.showRangeIndicator
+			rangeLbl:SetShown(showRange)
+			rangeBtn:SetShown(showRange)
+		end
+		
+		UpdateRangeWidgets()
+		
+		-- Update visibility based on fadeCooldown setting
+		local function UpdateCooldownWidgets()
+			local fadeCooldown = zBBG.charSettings.fadeCooldown
+			cooldownLbl:SetShown(fadeCooldown)
+			cooldownBtn:SetShown(fadeCooldown)
+		end
+		
+		UpdateCooldownWidgets()
+		
+		zBBG.Events:Register("SETTING_CHANGED", function(k, val)
+			if k == "showRangeIndicator" then
+				UpdateRangeWidgets()
+			elseif k == "fadeCooldown" then
+				UpdateCooldownWidgets()
+			end
+		end)
+		
 		-- Reset Options button
 		y = y - 40
 		local resetBtn = CreateFrame("Button", nil, self, "UIPanelButtonTemplate")
@@ -362,6 +411,10 @@ function zBBG.BuildOptionsPanels()
 					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorBorder", zBBG.charSettings.useClassColorBorder)
 					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorOuter", zBBG.charSettings.useClassColorOuter)
 					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorInner", zBBG.charSettings.useClassColorInner)
+					zBBG.Events:Trigger("SETTING_CHANGED", "showRangeIndicator", zBBG.charSettings.showRangeIndicator)
+					zBBG.Events:Trigger("SETTING_CHANGED", "rangeIndicatorColor", zBBG.charSettings.rangeIndicatorColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "fadeCooldown", zBBG.charSettings.fadeCooldown)
+					zBBG.Events:Trigger("SETTING_CHANGED", "cooldownColor", zBBG.charSettings.cooldownColor)
 					
 					zBBG.print("Settings reset to defaults!")
 				end,
