@@ -1,3 +1,51 @@
+-- Initialize Ace addon for options only
+zBarButtonBGAce = LibStub("AceAddon-3.0"):NewAddon("zBarButtonBG", "AceConsole-3.0")
+
+-- AceDB defaults structure
+local aceDefaults = {
+	profile = {
+		enabled = true,
+		squareButtons = true,
+		showBorder = true,
+		borderColor = { r = 0.2, g = 0.2, b = 0.2, a = 1 },
+		useClassColorBorder = false,
+		showBackdrop = true,
+		outerColor = { r = 0, g = 0, b = 0, a = 1 },
+		useClassColorOuter = false,
+		showSlotBackground = true,
+		innerColor = { r = 0.1, g = 0.1, b = 0.1, a = 1 },
+		useClassColorInner = false,
+		showRangeIndicator = false,
+		rangeIndicatorColor = { r = .42, g = 0.07, b = .12, a = 0.75 },
+		fadeCooldown = false,
+		cooldownColor = { r = 0, g = 0, b = 0, a = 0.5 },
+		macroNameFont = "Fonts\\FRIZQT__.TTF",
+		macroNameFontSize = 10,
+		macroNameFontFlags = "OUTLINE",
+		macroNameWidth = 60,
+		macroNameHeight = 12,
+		macroNameColor = { r = 1, g = 1, b = 1, a = 1 },
+		countFont = "Fonts\\FRIZQT__.TTF",
+		countFontSize = 12,
+		countFontFlags = "OUTLINE",
+		countWidth = 20,
+		countHeight = 15,
+		countColor = { r = 1, g = 1, b = 1, a = 1 }
+	}
+}
+
+function zBarButtonBGAce:OnInitialize()
+	-- Initialize AceDB
+	self.db = LibStub("AceDB-3.0"):New("zBarButtonBGDB", aceDefaults, true)
+end
+
+function zBarButtonBGAce:InitializeOptions()
+	-- Register options with Ace Config
+	LibStub("AceConfig-3.0"):RegisterOptionsTable("zBarButtonBG", self:GetOptionsTable())
+	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("zBarButtonBG", "zBarButtonBG")
+end
+
+-- Keep main functionality in global namespace (native WoW API)
 zBarButtonBG = {}
 
 -- Default settings for new users and reset function
@@ -76,6 +124,9 @@ Frame:SetScript("OnEvent", function(self, event)
 				zBarButtonBG.createActionBarBackgrounds()
 			end)
 		end
+		
+		-- Initialize Ace options after settings are loaded
+		zBarButtonBGAce:InitializeOptions()
 	end
 end)
 
