@@ -224,20 +224,8 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = "Reset to Defaults",
 						desc = "Reset all settings to their default values",
 						func = function()
-							-- Reset profile to defaults
+							-- Reset profile to defaults (zBarButtonBG.charSettings points to profile, so it updates automatically)
 							self.db:ResetProfile()
-							-- Sync with native system
-							for key, value in pairs(self.db.profile) do
-								if type(value) == "table" then
-									-- Deep copy color tables
-									zBarButtonBG.charSettings[key] = {}
-									for k, v in pairs(value) do
-										zBarButtonBG.charSettings[key][k] = v
-									end
-								else
-									zBarButtonBG.charSettings[key] = value
-								end
-							end
 							-- Trigger rebuild
 							if zBarButtonBG.enabled then
 								zBarButtonBG.removeActionBarBackgrounds()
@@ -350,9 +338,26 @@ function zBarButtonBGAce:GetOptionsTable()
 					},
 					macroNameFont = {
 						order = 3,
-						type = "input",
-						name = "Macro Name Font Path",
-						desc = "Font file path for macro names (e.g., Fonts\\\\FRIZQT__.TTF)",
+						type = "select",
+						name = "Macro Name Font",
+						desc = "Font family for macro names",
+						values = {
+							["Fonts\\FRIZQT__.TTF"] = "Friz Quadrata (Default)",
+							["Fonts\\ARIALN.TTF"] = "Arial Narrow",
+							["Fonts\\skurri.ttf"] = "Skurri",
+							["Fonts\\MORPHEUS.ttf"] = "Morpheus",
+							["Fonts\\NIM_____.ttf"] = "Nimrod MT",
+							["Fonts\\FRIENDS.TTF"] = "Friends",
+							["Interface\\AddOns\\SharedMedia\\fonts\\DIABLO.TTF"] = "Diablo (if available)",
+							["Fonts\\2002.TTF"] = "2002",
+							["Fonts\\2002B.TTF"] = "2002 Bold",
+							["Fonts\\ARKAI_T.ttf"] = "AR Kai",
+							["Fonts\\bHEI00M.ttf"] = "BHei",
+							["Fonts\\bKAI00M.ttf"] = "BKai",
+							["Fonts\\bLEI00D.ttf"] = "BLei",
+							["Fonts\\K_Damage.TTF"] = "Damage Font",
+							["Fonts\\K_Pagetext.TTF"] = "Page Text",
+						},
 						get = function() return self.db.profile.macroNameFont end,
 						set = function(_, value) 
 							self.db.profile.macroNameFont = value
@@ -362,25 +367,8 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					macroNameFontSize = {
-						order = 4,
-						type = "range",
-						name = "Macro Name Font Size",
-						desc = "Size of the macro name text",
-						min = 6,
-						max = 24,
-						step = 1,
-						get = function() return self.db.profile.macroNameFontSize end,
-						set = function(_, value) 
-							self.db.profile.macroNameFontSize = value
-							zBarButtonBG.charSettings.macroNameFontSize = value
-							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
-								zBarButtonBG.updateFonts()
-							end
-						end,
-					},
 					macroNameFontFlags = {
-						order = 5,
+						order = 4,
 						type = "select",
 						name = "Macro Name Font Style",
 						desc = "Font style flags for macro names",
@@ -399,42 +387,8 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					macroNameWidth = {
-						order = 6,
-						type = "range",
-						name = "Macro Name Width",
-						desc = "Width of the macro name text frame",
-						min = 20,
-						max = 200,
-						step = 1,
-						get = function() return self.db.profile.macroNameWidth end,
-						set = function(_, value) 
-							self.db.profile.macroNameWidth = value
-							zBarButtonBG.charSettings.macroNameWidth = value
-							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
-								zBarButtonBG.updateFonts()
-							end
-						end,
-					},
-					macroNameHeight = {
-						order = 7,
-						type = "range",
-						name = "Macro Name Height",
-						desc = "Height of the macro name text frame",
-						min = 8,
-						max = 50,
-						step = 1,
-						get = function() return self.db.profile.macroNameHeight end,
-						set = function(_, value) 
-							self.db.profile.macroNameHeight = value
-							zBarButtonBG.charSettings.macroNameHeight = value
-							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
-								zBarButtonBG.updateFonts()
-							end
-						end,
-					},
 					macroNameColor = {
-						order = 8,
+						order = 5,
 						type = "color",
 						name = "Macro Name Color",
 						desc = "Color of the macro name text",
@@ -451,21 +405,149 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					spacer1 = {
+					macroNameFontSize = {
+						order = 6,
+						type = "range",
+						name = "Macro Name Font Size",
+						desc = "Size of the macro name text",
+						min = 6,
+						max = 24,
+						step = 1,
+						get = function() return self.db.profile.macroNameFontSize end,
+						set = function(_, value) 
+							self.db.profile.macroNameFontSize = value
+							zBarButtonBG.charSettings.macroNameFontSize = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					macroNameWidth = {
+						order = 7,
+						type = "range",
+						name = "Macro Name Width",
+						desc = "Width of the macro name text frame",
+						min = 20,
+						max = 200,
+						step = 1,
+						get = function() return self.db.profile.macroNameWidth end,
+						set = function(_, value) 
+							self.db.profile.macroNameWidth = value
+							zBarButtonBG.charSettings.macroNameWidth = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					macroNameHeight = {
+						order = 8,
+						type = "range",
+						name = "Macro Name Height",
+						desc = "Height of the macro name text frame",
+						min = 8,
+						max = 50,
+						step = 1,
+						get = function() return self.db.profile.macroNameHeight end,
+						set = function(_, value) 
+							self.db.profile.macroNameHeight = value
+							zBarButtonBG.charSettings.macroNameHeight = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					macroNameOffsetX = {
 						order = 9,
+						type = "range",
+						name = "Macro Name X Offset",
+						desc = "Horizontal positioning offset for macro name text",
+						min = -50,
+						max = 50,
+						step = 1,
+						bigStep = 5,
+						get = function() return self.db.profile.macroNameOffsetX end,
+						set = function(_, value) 
+							-- Clamp value to valid range
+							value = math.max(-50, math.min(50, tonumber(value) or 0))
+							self.db.profile.macroNameOffsetX = value
+							zBarButtonBG.charSettings.macroNameOffsetX = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+						validate = function(_, value)
+							local num = tonumber(value)
+							if not num then
+								return "Value must be a number"
+							end
+							if num < -50 or num > 50 then
+								return "Value must be between -50 and 50"
+							end
+							return true
+						end,
+					},
+					macroNameOffsetY = {
+						order = 10,
+						type = "range",
+						name = "Macro Name Y Offset",
+						desc = "Vertical positioning offset for macro name text",
+						min = -50,
+						max = 50,
+						step = 1,
+						bigStep = 5,
+						get = function() return self.db.profile.macroNameOffsetY end,
+						set = function(_, value) 
+							-- Clamp value to valid range
+							value = math.max(-50, math.min(50, tonumber(value) or 0))
+							self.db.profile.macroNameOffsetY = value
+							zBarButtonBG.charSettings.macroNameOffsetY = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+						validate = function(_, value)
+							local num = tonumber(value)
+							if not num then
+								return "Value must be a number"
+							end
+							if num < -50 or num > 50 then
+								return "Value must be between -50 and 50"
+							end
+							return true
+						end,
+					},
+					spacer1 = {
+						order = 11,
 						type = "description",
 						name = " ",
 					},
 					countHeader = {
-						order = 10,
+						order = 12,
 						type = "header",
 						name = "Count/Charge Font",
 					},
 					countFont = {
-						order = 11,
-						type = "input",
-						name = "Count Font Path",
-						desc = "Font file path for count/charge numbers (e.g., Fonts\\\\FRIZQT__.TTF)",
+						order = 13,
+						type = "select",
+						name = "Count Font",
+						desc = "Font family for count/charge numbers",
+						values = {
+							["Fonts\\FRIZQT__.TTF"] = "Friz Quadrata (Default)",
+							["Fonts\\ARIALN.TTF"] = "Arial Narrow",
+							["Fonts\\skurri.ttf"] = "Skurri",
+							["Fonts\\MORPHEUS.ttf"] = "Morpheus",
+							["Fonts\\NIM_____.ttf"] = "Nimrod MT",
+							["Fonts\\FRIENDS.TTF"] = "Friends",
+							["Interface\\AddOns\\SharedMedia\\fonts\\DIABLO.TTF"] = "Diablo (if available)",
+							["Fonts\\2002.TTF"] = "2002",
+							["Fonts\\2002B.TTF"] = "2002 Bold",
+							["Fonts\\ARKAI_T.ttf"] = "AR Kai",
+							["Fonts\\bHEI00M.ttf"] = "BHei",
+							["Fonts\\bKAI00M.ttf"] = "BKai",
+							["Fonts\\bLEI00D.ttf"] = "BLei",
+							["Fonts\\K_Damage.TTF"] = "Damage Font",
+							["Fonts\\K_Pagetext.TTF"] = "Page Text",
+						},
 						get = function() return self.db.profile.countFont end,
 						set = function(_, value) 
 							self.db.profile.countFont = value
@@ -476,7 +558,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countFontSize = {
-						order = 12,
+						order = 14,
 						type = "range",
 						name = "Count Font Size",
 						desc = "Size of the count/charge text",
@@ -493,7 +575,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countFontFlags = {
-						order = 13,
+						order = 15,
 						type = "select",
 						name = "Count Font Style",
 						desc = "Font style flags for count/charge numbers",
@@ -513,7 +595,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countWidth = {
-						order = 14,
+						order = 16,
 						type = "range",
 						name = "Count Width",
 						desc = "Width of the count text frame",
@@ -530,7 +612,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countHeight = {
-						order = 15,
+						order = 17,
 						type = "range",
 						name = "Count Height",
 						desc = "Height of the count text frame",
@@ -547,7 +629,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countColor = {
-						order = 16,
+						order = 18,
 						type = "color",
 						name = "Count Color",
 						desc = "Color of the count/charge text",
@@ -562,6 +644,66 @@ function zBarButtonBGAce:GetOptionsTable()
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
 								zBarButtonBG.updateFonts()
 							end
+						end,
+					},
+					countOffsetX = {
+						order = 19,
+						type = "range",
+						name = "Count X Offset",
+						desc = "Horizontal positioning offset for count/charge text",
+						min = -50,
+						max = 50,
+						step = 1,
+						bigStep = 5,
+						get = function() return self.db.profile.countOffsetX end,
+						set = function(_, value) 
+							-- Clamp value to valid range
+							value = math.max(-50, math.min(50, tonumber(value) or 0))
+							self.db.profile.countOffsetX = value
+							zBarButtonBG.charSettings.countOffsetX = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+						validate = function(_, value)
+							local num = tonumber(value)
+							if not num then
+								return "Value must be a number"
+							end
+							if num < -50 or num > 50 then
+								return "Value must be between -50 and 50"
+							end
+							return true
+						end,
+					},
+					countOffsetY = {
+						order = 20,
+						type = "range",
+						name = "Count Y Offset",
+						desc = "Vertical positioning offset for count/charge text",
+						min = -50,
+						max = 50,
+						step = 1,
+						bigStep = 5,
+						get = function() return self.db.profile.countOffsetY end,
+						set = function(_, value) 
+							-- Clamp value to valid range
+							value = math.max(-50, math.min(50, tonumber(value) or 0))
+							self.db.profile.countOffsetY = value
+							zBarButtonBG.charSettings.countOffsetY = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+						validate = function(_, value)
+							local num = tonumber(value)
+							if not num then
+								return "Value must be a number"
+							end
+							if num < -50 or num > 50 then
+								return "Value must be between -50 and 50"
+							end
+							return true
 						end,
 					},
 				},

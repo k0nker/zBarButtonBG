@@ -10,7 +10,7 @@ local aceDefaults = {
 		borderColor = { r = 0.2, g = 0.2, b = 0.2, a = 1 },
 		useClassColorBorder = false,
 		showBackdrop = true,
-		outerColor = { r = 0, g = 0, b = 0, a = 1 },
+		outerColor = { r = 0.08, g = 0.08, b = 0.08, a = 1 },
 		useClassColorOuter = false,
 		showSlotBackground = true,
 		innerColor = { r = 0.1, g = 0.1, b = 0.1, a = 1 },
@@ -25,60 +25,42 @@ local aceDefaults = {
 		macroNameWidth = 60,
 		macroNameHeight = 12,
 		macroNameColor = { r = 1, g = 1, b = 1, a = 1 },
+		macroNameOffsetX = 0,
+		macroNameOffsetY = 0,
 		countFont = "Fonts\\FRIZQT__.TTF",
 		countFontSize = 12,
 		countFontFlags = "OUTLINE",
 		countWidth = 20,
 		countHeight = 15,
-		countColor = { r = 1, g = 1, b = 1, a = 1 }
+		countColor = { r = 1, g = 1, b = 1, a = 1 },
+		countOffsetX = 0,
+		countOffsetY = 0
 	}
 }
 
 function zBarButtonBGAce:OnInitialize()
 	-- Initialize AceDB
 	self.db = LibStub("AceDB-3.0"):New("zBarButtonBGDB", aceDefaults, true)
+	
+	-- Make Ace the single source of truth - native system points to Ace profile
+	zBarButtonBG.charSettings = self.db.profile
 end
 
 function zBarButtonBGAce:InitializeOptions()
 	-- Register options with Ace Config
 	LibStub("AceConfig-3.0"):RegisterOptionsTable("zBarButtonBG", self:GetOptionsTable())
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("zBarButtonBG", "zBarButtonBG")
+	
+	-- Register slash command to open options
+	SLASH_ZBARBUTTONBGOPTIONS1 = "/zbg"
+	SlashCmdList["ZBARBUTTONBGOPTIONS"] = function(msg)
+		-- Open the options panel using Ace Config Dialog
+		LibStub("AceConfigDialog-3.0"):Open("zBarButtonBG")
+	end
 end
 
 -- Keep main functionality in global namespace (native WoW API)
 zBarButtonBG = {}
-
--- Default settings for new users and reset function
-zBarButtonBG.defaultSettings = {
-	enabled = true,
-	squareButtons = true,
-	showBorder = true,
-	borderColor = { r = 0.2, g = 0.2, b = 0.2, a = 1 }, -- Slightly lighter grey than button background
-	useClassColorBorder = false,
-	showBackdrop = true,
-	outerColor = { r = 0, g = 0, b = 0, a = 1 },   -- Black backdrop
-	useClassColorOuter = false,
-	showSlotBackground = true,
-	innerColor = { r = 0.1, g = 0.1, b = 0.1, a = 1 }, -- Dark grey button background
-	useClassColorInner = false,
-	showRangeIndicator = false,
-	rangeIndicatorColor = { r = .42, g = 0.07, b = .12, a = 0.75 }, -- Dark red at 75% opacity
-	fadeCooldown = false,
-	cooldownColor = { r = 0, g = 0, b = 0, a = 0.5 }, -- Black at 50% opacity
-	-- Font settings
-	macroNameFont = "Fonts\\FRIZQT__.TTF", -- Default UI font
-	macroNameFontSize = 10,
-	macroNameFontFlags = "OUTLINE",
-	macroNameWidth = 60, -- Width of macro name text frame
-	macroNameHeight = 12, -- Height of macro name text frame
-	macroNameColor = { r = 1, g = 1, b = 1, a = 1 }, -- White text
-	countFont = "Fonts\\FRIZQT__.TTF", -- Default UI font  
-	countFontSize = 12,
-	countFontFlags = "OUTLINE",
-	countWidth = 20, -- Width of count text frame
-	countHeight = 15, -- Height of count text frame
-	countColor = { r = 1, g = 1, b = 1, a = 1 } -- White text
-}
 
 -- ############################################################
 -- Load settings when we log in
@@ -87,35 +69,9 @@ local Frame = CreateFrame("Frame")
 Frame:RegisterEvent("PLAYER_LOGIN")
 Frame:SetScript("OnEvent", function(self, event)
 	if event == "PLAYER_LOGIN" then
-		-- Make sure the saved variables table exists
-		zBarButtonBGSaved = zBarButtonBGSaved or {}
-
-		-- Figure out who we are
-		local realmName = GetRealmName()
-		local charName = UnitName("player")
-
-		-- Set up this character's settings table
-		zBarButtonBGSaved[realmName] = zBarButtonBGSaved[realmName] or {}
-		zBarButtonBGSaved[realmName][charName] = zBarButtonBGSaved[realmName][charName] or {}
-
-		-- Make a shortcut so we don't have to type all that every time
-		zBarButtonBG.charSettings = zBarButtonBGSaved[realmName][charName]
-
-		-- Set up defaults for anything that doesn't exist yet
-		for key, value in pairs(zBarButtonBG.defaultSettings) do
-			if zBarButtonBG.charSettings[key] == nil then
-				-- Deep copy color tables
-				if type(value) == "table" then
-					zBarButtonBG.charSettings[key] = {}
-					for k, v in pairs(value) do
-						zBarButtonBG.charSettings[key][k] = v
-					end
-				else
-					zBarButtonBG.charSettings[key] = value
-				end
-			end
-		end
-
+		-- Settings are now handled entirely by Ace - zBarButtonBG.charSettings already points to Ace profile
+		-- No need for native SavedVariables system anymore
+		
 		-- If we had this enabled before, turn it back on after a short delay
 		-- (need to wait for action bars to actually load first)
 		if zBarButtonBG.charSettings.enabled then
@@ -213,7 +169,7 @@ function zBarButtonBG.toggle()
 		zBarButtonBG.print("Action bar backgrounds |cFFFF0000disabled|r")
 	end
 
-	-- Save the enabled state
+	-- Save the enabled state (zBarButtonBG.charSettings points to Ace profile, so this automatically saves)
 	if zBarButtonBG.charSettings then
 		zBarButtonBG.charSettings.enabled = zBarButtonBG.enabled
 	end
@@ -282,6 +238,15 @@ function zBarButtonBG.updateFonts()
 				-- Set text color
 				local c = zBarButtonBG.charSettings.macroNameColor
 				data.button.Name:SetTextColor(c.r, c.g, c.b, c.a)
+				
+				-- Apply position offset if offsets are non-zero
+				local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
+				local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
+				if xOffset ~= 0 or yOffset ~= 0 then
+					-- Clear existing points and reposition with offset
+					data.button.Name:ClearAllPoints()
+					data.button.Name:SetPoint("BOTTOM", data.button, "BOTTOM", xOffset, 2 + yOffset)
+				end
 			end
 
 			-- Update count/charge font and size (button.Count)
@@ -299,6 +264,15 @@ function zBarButtonBG.updateFonts()
 				-- Set text color
 				local c = zBarButtonBG.charSettings.countColor
 				data.button.Count:SetTextColor(c.r, c.g, c.b, c.a)
+				
+				-- Apply position offset if offsets are non-zero
+				local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
+				local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
+				if xOffset ~= 0 or yOffset ~= 0 then
+					-- Clear existing points and reposition with offset
+					data.button.Count:ClearAllPoints()
+					data.button.Count:SetPoint("TOPRIGHT", data.button, "TOPRIGHT", -2 + xOffset, -2 + yOffset)
+				end
 			end
 		end
 	end
@@ -395,27 +369,43 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_customHighlight:Hide()         -- Hidden by default
 					end
 
-					-- Create custom range indicator overlay
-					if not button._zBBG_rangeOverlay then
-						button._zBBG_rangeOverlay = button:CreateTexture(nil, "OVERLAY", nil, 1)
-						local c = zBarButtonBG.charSettings.rangeIndicatorColor
-						button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
-						button._zBBG_rangeOverlay:Hide() -- Hidden by default
+					-- Create custom range indicator overlay (only if enabled)
+					if zBarButtonBG.charSettings.showRangeIndicator then
+						if not button._zBBG_rangeOverlay then
+							button._zBBG_rangeOverlay = button:CreateTexture(nil, "OVERLAY", nil, 1)
+							local c = zBarButtonBG.charSettings.rangeIndicatorColor
+							button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+							button._zBBG_rangeOverlay:Hide() -- Hidden by default
+						end
+					elseif button._zBBG_rangeOverlay then
+						-- Range indicators disabled, hide and remove overlay
+						button._zBBG_rangeOverlay:Hide()
+						button._zBBG_rangeOverlay = nil
 					end
 
-					-- Create custom cooldown fade overlay
-					if not button._zBBG_cooldownOverlay then
-						button._zBBG_cooldownOverlay = button:CreateTexture(nil, "OVERLAY", nil, 2)
-						local c = zBarButtonBG.charSettings.cooldownColor
-						button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
-						button._zBBG_cooldownOverlay:Hide() -- Hidden by default
+					-- Create custom cooldown fade overlay (only if enabled)
+					if zBarButtonBG.charSettings.fadeCooldown then
+						if not button._zBBG_cooldownOverlay then
+							button._zBBG_cooldownOverlay = button:CreateTexture(nil, "OVERLAY", nil, 2)
+							local c = zBarButtonBG.charSettings.cooldownColor
+							button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+							button._zBBG_cooldownOverlay:Hide() -- Hidden by default
+						end
+					elseif button._zBBG_cooldownOverlay then
+						-- Cooldown fade disabled, hide and remove overlay
+						button._zBBG_cooldownOverlay:Hide()
+						button._zBBG_cooldownOverlay = nil
 					end
 
 					-- Position the highlight based on square/round mode
 					local inset = 2
 					button._zBBG_customHighlight:ClearAllPoints()
-					button._zBBG_rangeOverlay:ClearAllPoints()
-					button._zBBG_cooldownOverlay:ClearAllPoints()
+					if button._zBBG_rangeOverlay then
+						button._zBBG_rangeOverlay:ClearAllPoints()
+					end
+					if button._zBBG_cooldownOverlay then
+						button._zBBG_cooldownOverlay:ClearAllPoints()
+					end
 					
 					if zBarButtonBG.charSettings.squareButtons then
 						-- Square mode: highlight inset by 2px, overlays fill entire button
@@ -424,26 +414,42 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)
 						
 						-- Range and cooldown overlays fill the entire button (no inset)
-						button._zBBG_rangeOverlay:SetAllPoints(button.icon)
-						button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
+						if button._zBBG_rangeOverlay then
+							button._zBBG_rangeOverlay:SetAllPoints(button.icon)
+						end
+						if button._zBBG_cooldownOverlay then
+							button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
+						end
 						
 						-- Remove masks for square mode
 						if button._zBBG_customMask then
 							removeMaskFromTexture(button._zBBG_customHighlight)
-							removeMaskFromTexture(button._zBBG_rangeOverlay)
-							removeMaskFromTexture(button._zBBG_cooldownOverlay)
+							if button._zBBG_rangeOverlay then
+								removeMaskFromTexture(button._zBBG_rangeOverlay)
+							end
+							if button._zBBG_cooldownOverlay then
+								removeMaskFromTexture(button._zBBG_cooldownOverlay)
+							end
 						end
 					else
 						-- Round mode: use custom mask for rounded edges
 						button._zBBG_customHighlight:SetAllPoints(button.icon)
-						button._zBBG_rangeOverlay:SetAllPoints(button.icon)
-						button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
+						if button._zBBG_rangeOverlay then
+							button._zBBG_rangeOverlay:SetAllPoints(button.icon)
+						end
+						if button._zBBG_cooldownOverlay then
+							button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
+						end
 						
 						if button._zBBG_customMask then
 							-- Apply mask to highlight and overlays
 							applyMaskToTexture(button._zBBG_customHighlight, button._zBBG_customMask)
-							applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_customMask)
-							applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_customMask)
+							if button._zBBG_rangeOverlay then
+								applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_customMask)
+							end
+							if button._zBBG_cooldownOverlay then
+								applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_customMask)
+							end
 						end
 					end
 
@@ -1081,80 +1087,4 @@ function zBarButtonBG.removeActionBarBackgrounds()
 	wipe(zBarButtonBG.frames)
 end
 
--- Set up the /zbg slash command
-SLASH_ZBARBUTTONBG1 = "/zbg"
-SlashCmdList["ZBARBUTTONBG"] = function(msg)
-	msg = msg:lower():trim()
-	if msg == "" or msg == "toggle" then
-		zBarButtonBG.toggle()
-	--[[
-	elseif msg == "rangetest" then
-		-- Debug range checking for first two action buttons
-		local b1, b2 = ActionButton1, ActionButton2
-		local a1, a2 = b1.action, b2.action
-		
-		zBarButtonBG.print("=== Range Test Debug ===")
-		if UnitExists("target") then
-			zBarButtonBG.print("Target: " .. UnitName("target") .. " (" .. UnitClass("target") .. ")")
-		else
-			zBarButtonBG.print("Target: None")
-		end
-		
-		-- Button 1
-		if a1 then
-			local usable, nomana = IsUsableAction(a1)
-			local range = IsActionInRange(a1, "target")
-			zBarButtonBG.print("Button1 (action " .. a1 .. "): usable=" .. tostring(usable) .. ", nomana=" .. tostring(nomana) .. ", range=" .. tostring(range))
-		else
-			zBarButtonBG.print("Button1: No action assigned")
-		end
-		
-		-- Button 2
-		if a2 then
-			local usable, nomana = IsUsableAction(a2)
-			local range = IsActionInRange(a2, "target")
-			zBarButtonBG.print("Button2 (action " .. a2 .. "): usable=" .. tostring(usable) .. ", nomana=" .. tostring(nomana) .. ", range=" .. tostring(range))
-		else
-			zBarButtonBG.print("Button2: No action assigned")
-		end
-	elseif msg == "gcdtest" then
-		print("zBarButtonBG: GCD debug mode toggled")
-		zBarButtonBG._debugGCD = not zBarButtonBG._debugGCD
-	elseif msg == "fonttest" then
-		-- Test fonts by cycling through different sizes on ActionButton1
-		local button = ActionButton1
-		if button and button.Name and button.Count then
-			local newSize = (button.Count._testSize or 12) + 2
-			if newSize > 20 then newSize = 8 end
-			button.Count._testSize = newSize
-			button.Name._testSize = newSize
-			
-			button.Name:SetFont("Fonts\\FRIZQT__.TTF", newSize, "OUTLINE")
-			button.Count:SetFont("Fonts\\FRIZQT__.TTF", newSize, "OUTLINE")
-			print("Font size changed to:", newSize)
-		end
-	elseif msg == "colortest" then
-		-- Test colors by cycling through different colors on ActionButton1
-		local button = ActionButton1
-		if button and button.Name and button.Count then
-			local colors = {
-				{1, 1, 1, 1}, -- White
-				{1, 0, 0, 1}, -- Red
-				{0, 1, 0, 1}, -- Green
-				{0, 0, 1, 1}, -- Blue
-				{1, 1, 0, 1}, -- Yellow
-				{1, 0, 1, 1}, -- Magenta
-				{0, 1, 1, 1}  -- Cyan
-			}
-			local colorIndex = (button._testColorIndex or 0) + 1
-			if colorIndex > #colors then colorIndex = 1 end
-			button._testColorIndex = colorIndex
-			
-			local color = colors[colorIndex]
-			button.Name:SetTextColor(color[1], color[2], color[3], color[4])
-			button.Count:SetTextColor(color[1], color[2], color[3], color[4])
-			print("Font color changed to:", color[1], color[2], color[3], color[4])
-		end
-		--]]
-	end
-end
+-- Slash command now handled in InitializeOptions() function
