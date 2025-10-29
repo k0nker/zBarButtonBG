@@ -54,11 +54,19 @@ zBBG.Events:Register("SETTING_CHANGED", function(key, value)
 		if zBBG.enabled and zBBG.updateColors then
 			zBBG.updateColors()
 		end
+	elseif key == "macroNameFont" or key == "macroNameFontSize" or key == "macroNameFontFlags" or
+	       key == "macroNameWidth" or key == "macroNameHeight" or key == "macroNameColor" or
+	       key == "countFont" or key == "countFontSize" or key == "countFontFlags" or
+	       key == "countWidth" or key == "countHeight" or key == "countColor" then
+		-- Font changes can be applied to existing frames without rebuilding
+		if zBBG.enabled and zBBG.updateFonts then
+			zBBG.updateFonts()
+		end
 	end
 end)
 
 -- ############################################################
--- Build the options panel dynamically
+-- Build the options panels with subcategories
 -- ############################################################
 function zBBG.BuildOptionsPanels()
 	if zBBG._optionsBuilt then return end
@@ -66,6 +74,29 @@ function zBBG.BuildOptionsPanels()
 	
 	-- Store widgets for conditional visibility
 	local widgets = {}
+	
+	-- Create main category
+	local mainPanel = CreateFrame("Frame")
+	mainPanel.name = "zBarButtonBG"
+	mainPanel:Hide()
+	
+	-- Create Button Settings subcategory
+	local buttonPanel = CreateFrame("Frame")
+	buttonPanel.name = "Button Settings"
+	buttonPanel.parent = "zBarButtonBG"
+	buttonPanel:Hide()
+	
+	-- Create Indicators subcategory
+	local indicatorPanel = CreateFrame("Frame")
+	indicatorPanel.name = "Indicators" 
+	indicatorPanel.parent = "zBarButtonBG"
+	indicatorPanel:Hide()
+	
+	-- Create Text subcategory
+	local textPanel = CreateFrame("Frame")
+	textPanel.name = "Text"
+	textPanel.parent = "zBarButtonBG"
+	textPanel:Hide()
 	
 	-- Helper: checkbox
 	local function MakeCheckbox(parent, label, tooltip, key, y)
@@ -145,6 +176,78 @@ function zBBG.BuildOptionsPanels()
 			if k == key then
 				slider:SetValue(val)
 				eb:SetText(tostring(val))
+			end
+		end)
+		
+		return frame, y - 40
+	end
+
+	-- Helper: dropdown for font selection
+	local function MakeDropdown(parent, label, key, options, y)
+		local frame = CreateFrame("Frame", nil, parent)
+		frame:SetSize(300, 32)
+		frame:SetPoint("TOPLEFT", 16, y)
+		
+		local lbl = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		lbl:SetPoint("LEFT", frame, "LEFT", 0, 0)
+		lbl:SetText(label)
+		
+		local dropdown = CreateFrame("Button", nil, frame, "UIDropDownMenuTemplate")
+		dropdown:SetPoint("LEFT", lbl, "RIGHT", 10, 0)
+		UIDropDownMenu_SetWidth(dropdown, 200)
+		UIDropDownMenu_SetText(dropdown, zBBG.charSettings[key] or options[1].value)
+		
+		UIDropDownMenu_Initialize(dropdown, function(self, level)
+			for _, option in ipairs(options) do
+				local info = UIDropDownMenu_CreateInfo()
+				info.text = option.text
+				info.value = option.value
+				info.func = function()
+					zBBG.SetSetting(key, option.value)
+					UIDropDownMenu_SetText(dropdown, option.value)
+				end
+				info.checked = (zBBG.charSettings[key] == option.value)
+				UIDropDownMenu_AddButton(info, level)
+			end
+		end)
+		
+		zBBG.Events:Register("SETTING_CHANGED", function(k, val)
+			if k == key then
+				UIDropDownMenu_SetText(dropdown, val)
+			end
+		end)
+		
+		return frame, y - 40
+	end
+
+	-- Helper: text input for font paths
+	local function MakeTextInput(parent, label, key, width, y)
+		local frame = CreateFrame("Frame", nil, parent)
+		frame:SetSize(300, 32)
+		frame:SetPoint("TOPLEFT", 16, y)
+		
+		local lbl = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		lbl:SetPoint("LEFT", frame, "LEFT", 0, 0)
+		lbl:SetText(label)
+		
+		local eb = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+		eb:SetSize(width or 200, 20)
+		eb:SetPoint("LEFT", lbl, "RIGHT", 10, 0)
+		eb:SetAutoFocus(false)
+		eb:SetText(zBBG.charSettings[key] or "")
+		
+		eb:SetScript("OnEnterPressed", function(self)
+			zBBG.SetSetting(key, self:GetText())
+			self:ClearFocus()
+		end)
+		
+		eb:SetScript("OnEditFocusLost", function(self)
+			zBBG.SetSetting(key, self:GetText())
+		end)
+		
+		zBBG.Events:Register("SETTING_CHANGED", function(k, val)
+			if k == key then
+				eb:SetText(val or "")
 			end
 		end)
 		
@@ -254,7 +357,7 @@ function zBBG.BuildOptionsPanels()
 		return lbl, btn, y - 28
 	end
 	
-	-- Create parent panel
+	-- Create main panel
 	local mainPanel = CreateFrame("Frame")
 	mainPanel.name = "zBarButtonBG"
 	mainPanel:Hide()
@@ -271,57 +374,126 @@ function zBBG.BuildOptionsPanels()
 		title:SetText("zBarButtonBG Settings")
 		y = y - 32
 		
+		-- Reset Options button (moved to top)
+		local resetBtn = CreateFrame("Button", nil, self, "UIPanelButtonTemplate")
+		resetBtn:SetPoint("TOPLEFT", 16, y)
+		resetBtn:SetSize(120, 25)
+		resetBtn:SetText("Reset Options")
+		resetBtn:SetScript("OnClick", function()
+			-- Show confirmation dialog
+			StaticPopupDialogs["ZBARBUTTONBG_RESET_CONFIRM"] = {
+				text = "Are you sure you want to reset all zBarButtonBG settings to their defaults?",
+				button1 = "Yes",
+				button2 = "No",
+				OnAccept = function()
+					-- Reset all settings to defaults
+					for key, value in pairs(zBBG.defaultSettings) do
+						if type(value) == "table" then
+							-- Deep copy color tables
+							zBBG.charSettings[key] = {}
+							for k, v in pairs(value) do
+								zBBG.charSettings[key][k] = v
+							end
+						else
+							zBBG.charSettings[key] = value
+						end
+					end
+					
+					-- Trigger setting changes to update UI and rebuild
+					zBBG.Events:Trigger("SETTING_CHANGED", "enabled", zBBG.charSettings.enabled)
+					zBBG.Events:Trigger("SETTING_CHANGED", "squareButtons", zBBG.charSettings.squareButtons)
+					zBBG.Events:Trigger("SETTING_CHANGED", "showBorder", zBBG.charSettings.showBorder)
+					zBBG.Events:Trigger("SETTING_CHANGED", "showBackdrop", zBBG.charSettings.showBackdrop)
+					zBBG.Events:Trigger("SETTING_CHANGED", "showSlotBackground", zBBG.charSettings.showSlotBackground)
+					zBBG.Events:Trigger("SETTING_CHANGED", "outerColor", zBBG.charSettings.outerColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "innerColor", zBBG.charSettings.innerColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "borderColor", zBBG.charSettings.borderColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorBorder", zBBG.charSettings.useClassColorBorder)
+					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorOuter", zBBG.charSettings.useClassColorOuter)
+					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorInner", zBBG.charSettings.useClassColorInner)
+					zBBG.Events:Trigger("SETTING_CHANGED", "showRangeIndicator", zBBG.charSettings.showRangeIndicator)
+					zBBG.Events:Trigger("SETTING_CHANGED", "rangeIndicatorColor", zBBG.charSettings.rangeIndicatorColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "fadeCooldown", zBBG.charSettings.fadeCooldown)
+					zBBG.Events:Trigger("SETTING_CHANGED", "cooldownColor", zBBG.charSettings.cooldownColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "macroNameFont", zBBG.charSettings.macroNameFont)
+					zBBG.Events:Trigger("SETTING_CHANGED", "macroNameFontSize", zBBG.charSettings.macroNameFontSize)
+					zBBG.Events:Trigger("SETTING_CHANGED", "macroNameFontFlags", zBBG.charSettings.macroNameFontFlags)
+					zBBG.Events:Trigger("SETTING_CHANGED", "macroNameWidth", zBBG.charSettings.macroNameWidth)
+					zBBG.Events:Trigger("SETTING_CHANGED", "macroNameHeight", zBBG.charSettings.macroNameHeight)
+					zBBG.Events:Trigger("SETTING_CHANGED", "macroNameColor", zBBG.charSettings.macroNameColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "countFont", zBBG.charSettings.countFont)
+					zBBG.Events:Trigger("SETTING_CHANGED", "countFontSize", zBBG.charSettings.countFontSize)
+					zBBG.Events:Trigger("SETTING_CHANGED", "countFontFlags", zBBG.charSettings.countFontFlags)
+					zBBG.Events:Trigger("SETTING_CHANGED", "countWidth", zBBG.charSettings.countWidth)
+					zBBG.Events:Trigger("SETTING_CHANGED", "countHeight", zBBG.charSettings.countHeight)
+					zBBG.Events:Trigger("SETTING_CHANGED", "macroNameColor", zBBG.charSettings.macroNameColor)
+					zBBG.Events:Trigger("SETTING_CHANGED", "countColor", zBBG.charSettings.countColor)
+					
+					zBBG.print("Settings reset to defaults!")
+				end,
+				timeout = 0,
+				whileDead = true,
+				hideOnEscape = true,
+				preferredIndex = 3,
+			}
+			StaticPopup_Show("ZBARBUTTONBG_RESET_CONFIRM")
+		end)
+		resetBtn:SetScript("OnEnter", function(btn)
+			GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
+			GameTooltip:SetText("Reset Options")
+			GameTooltip:AddLine("Reset all settings to their default values", 1, 1, 1, true)
+			GameTooltip:Show()
+		end)
+		resetBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		y = y - 40
+		
 		-- Enable checkbox
 		local enableCb, newY = MakeCheckbox(self, "Enable Action Bar Backgrounds", "Toggle action bar backgrounds on/off. Note: /reload may be required when disabling to restore default borders.", "enabled", y)
 		y = newY
 		
-		-- Square Buttons checkbox
-		local squareCb, newY = MakeCheckbox(self, "Square Buttons", "Square off action button icons. /reload may be required when swapping styles to redraw overlays correctly.", "squareButtons", y)
-		y = newY
-		
 		-- Backdrop (outer) settings
 		y = y - 10
-		local backdropCb, newY = MakeCheckbox(self, "Show Backdrop", "Show the outer backdrop frame behind each button", "showBackdrop", y)
+		local backdropCb, newY = MakeCheckbox(contentFrame, "Show Backdrop", "Show the outer backdrop frame behind each button", "showBackdrop", y)
 		y = newY
 		widgets.backdropCb = backdropCb
 		
-		local outerClassColorCb, newY = MakeCheckbox(self, "Use Class Color for Backdrop", "Use your class color for the outer backdrop", "useClassColorOuter", y)
+		local outerClassColorCb, newY = MakeCheckbox(contentFrame, "Use Class Color for Backdrop", "Use your class color for the outer backdrop", "useClassColorOuter", y)
 		y = newY
 		widgets.outerClassColorCb = outerClassColorCb
 		
-		local outerLbl, outerBtn, newY = MakeColorPicker(self, "Backdrop Color:", "outerColor", y, "useClassColorOuter")
+		local outerLbl, outerBtn, newY = MakeColorPicker(contentFrame, "Backdrop Color:", "outerColor", y, "useClassColorOuter")
 		y = newY
 		widgets.outerLbl = outerLbl
 		widgets.outerBtn = outerBtn
 		
 		-- Button background (inner) settings
 		y = y - 10
-		local slotBgCb, newY = MakeCheckbox(self, "Show Slot Background", "Show the slot background fill behind each button icon", "showSlotBackground", y)
+		local slotBgCb, newY = MakeCheckbox(contentFrame, "Show Slot Background", "Show the slot background fill behind each button icon", "showSlotBackground", y)
 		y = newY
 		widgets.slotBgCb = slotBgCb
 		
-		local innerClassColorCb, newY = MakeCheckbox(self, "Use Class Color for Button Background", "Use your class color for the button background", "useClassColorInner", y)
+		local innerClassColorCb, newY = MakeCheckbox(contentFrame, "Use Class Color for Button Background", "Use your class color for the button background", "useClassColorInner", y)
 		y = newY
 		widgets.innerClassColorCb = innerClassColorCb
 		
-		local innerLbl, innerBtn, newY = MakeColorPicker(self, "Button Background Color:", "innerColor", y, "useClassColorInner")
+		local innerLbl, innerBtn, newY = MakeColorPicker(contentFrame, "Button Background Color:", "innerColor", y, "useClassColorInner")
 		y = newY
 		widgets.innerLbl = innerLbl
 		widgets.innerBtn = innerBtn
 		
 		-- Border section
 		y = y - 10
-		local borderCb, newY = MakeCheckbox(self, "Enable Button Border", "Add a border around each action button icon", "showBorder", y)
+		local borderCb, newY = MakeCheckbox(contentFrame, "Enable Button Border", "Add a border around each action button icon", "showBorder", y)
 		y = newY
 		widgets.borderCb = borderCb
 		
 		-- Border settings
 		y = y - 10
-		local borderClassColorCb, newY = MakeCheckbox(self, "Use Class Color for Button Border", "Use your class color for the icon border", "useClassColorBorder", y)
+		local borderClassColorCb, newY = MakeCheckbox(contentFrame, "Use Class Color for Button Border", "Use your class color for the icon border", "useClassColorBorder", y)
 		y = newY
 		widgets.borderClassColorCb = borderClassColorCb
 		
-		local borderLbl, borderBtn, newY = MakeColorPicker(self, "Button Border Color:", "borderColor", y, "useClassColorBorder")
+		local borderLbl, borderBtn, newY = MakeColorPicker(contentFrame, "Button Border Color:", "borderColor", y, "useClassColorBorder")
 		y = newY
 		widgets.borderLbl = borderLbl
 		widgets.borderBtn = borderBtn
@@ -368,22 +540,22 @@ function zBBG.BuildOptionsPanels()
 		
 		-- Range Indicator section
 		y = y - 10
-		local rangeCb, newY = MakeCheckbox(self, "Show Out-of-Range Highlight", "Show a colored overlay on buttons when the ability is out of range", "showRangeIndicator", y)
+		local rangeCb, newY = MakeCheckbox(contentFrame, "Show Out-of-Range Highlight", "Show a colored overlay on buttons when the ability is out of range", "showRangeIndicator", y)
 		y = newY
 		widgets.rangeCb = rangeCb
 		
-		local rangeLbl, rangeBtn, newY = MakeColorPicker(self, "Range Indicator Color:", "rangeIndicatorColor", y)
+		local rangeLbl, rangeBtn, newY = MakeColorPicker(contentFrame, "Range Indicator Color:", "rangeIndicatorColor", y)
 		y = newY
 		widgets.rangeLbl = rangeLbl
 		widgets.rangeBtn = rangeBtn
 		
 		-- Cooldown Fade section
 		y = y - 10
-		local cooldownCb, newY = MakeCheckbox(self, "Fade On Cooldown", "Add a dark overlay to buttons while on cooldown", "fadeCooldown", y)
+		local cooldownCb, newY = MakeCheckbox(contentFrame, "Fade On Cooldown", "Add a dark overlay to buttons while on cooldown", "fadeCooldown", y)
 		y = newY
 		widgets.cooldownCb = cooldownCb
 		
-		local cooldownLbl, cooldownBtn, newY = MakeColorPicker(self, "Cooldown Overlay Color:", "cooldownColor", y)
+		local cooldownLbl, cooldownBtn, newY = MakeColorPicker(contentFrame, "Cooldown Overlay Color:", "cooldownColor", y)
 		y = newY
 		widgets.cooldownLbl = cooldownLbl
 		widgets.cooldownBtn = cooldownBtn
@@ -414,65 +586,113 @@ function zBBG.BuildOptionsPanels()
 			end
 		end)
 		
-		-- Reset Options button
-		y = y - 40
-		local resetBtn = CreateFrame("Button", nil, self, "UIPanelButtonTemplate")
-		resetBtn:SetPoint("TOPLEFT", 16, y)
-		resetBtn:SetSize(120, 25)
-		resetBtn:SetText("Reset Options")
-		resetBtn:SetScript("OnClick", function()
-			-- Show confirmation dialog
-			StaticPopupDialogs["ZBARBUTTONBG_RESET_CONFIRM"] = {
-				text = "Are you sure you want to reset all zBarButtonBG settings to their defaults?",
-				button1 = "Yes",
-				button2 = "No",
-				OnAccept = function()
-					-- Reset all settings to defaults
-					for key, value in pairs(zBBG.defaultSettings) do
-						if type(value) == "table" then
-							-- Deep copy color tables
-							zBBG.charSettings[key] = {}
-							for k, v in pairs(value) do
-								zBBG.charSettings[key][k] = v
-							end
-						else
-							zBBG.charSettings[key] = value
-						end
-					end
-					
-					-- Trigger setting changes to update UI and rebuild
-					zBBG.Events:Trigger("SETTING_CHANGED", "enabled", zBBG.charSettings.enabled)
-					zBBG.Events:Trigger("SETTING_CHANGED", "squareButtons", zBBG.charSettings.squareButtons)
-					zBBG.Events:Trigger("SETTING_CHANGED", "showBorder", zBBG.charSettings.showBorder)
-					zBBG.Events:Trigger("SETTING_CHANGED", "showBackdrop", zBBG.charSettings.showBackdrop)
-					zBBG.Events:Trigger("SETTING_CHANGED", "showSlotBackground", zBBG.charSettings.showSlotBackground)
-					zBBG.Events:Trigger("SETTING_CHANGED", "outerColor", zBBG.charSettings.outerColor)
-					zBBG.Events:Trigger("SETTING_CHANGED", "innerColor", zBBG.charSettings.innerColor)
-					zBBG.Events:Trigger("SETTING_CHANGED", "borderColor", zBBG.charSettings.borderColor)
-					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorBorder", zBBG.charSettings.useClassColorBorder)
-					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorOuter", zBBG.charSettings.useClassColorOuter)
-					zBBG.Events:Trigger("SETTING_CHANGED", "useClassColorInner", zBBG.charSettings.useClassColorInner)
-					zBBG.Events:Trigger("SETTING_CHANGED", "showRangeIndicator", zBBG.charSettings.showRangeIndicator)
-					zBBG.Events:Trigger("SETTING_CHANGED", "rangeIndicatorColor", zBBG.charSettings.rangeIndicatorColor)
-					zBBG.Events:Trigger("SETTING_CHANGED", "fadeCooldown", zBBG.charSettings.fadeCooldown)
-					zBBG.Events:Trigger("SETTING_CHANGED", "cooldownColor", zBBG.charSettings.cooldownColor)
-					
-					zBBG.print("Settings reset to defaults!")
-				end,
-				timeout = 0,
-				whileDead = true,
-				hideOnEscape = true,
-				preferredIndex = 3,
-			}
-			StaticPopup_Show("ZBARBUTTONBG_RESET_CONFIRM")
+		-- Font Settings section
+		y = y - 10
+		local fontHeader = contentFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+		fontHeader:SetPoint("TOPLEFT", 16, y)
+		fontHeader:SetText("Font Settings")
+		y = y - 30
+
+		-- Font options
+		local fontOptions = {
+			{text = "Default UI Font", value = "Fonts\\FRIZQT__.TTF"},
+			{text = "Arial Bold", value = "Fonts\\ARIALN.TTF"},
+			{text = "Morpheus", value = "Fonts\\MORPHEUS.TTF"},
+			{text = "Skurri", value = "Fonts\\skurri.TTF"},
+			{text = "Custom Path", value = "CUSTOM"}
+		}
+
+		-- Font flag options  
+		local fontFlagOptions = {
+			{text = "None", value = ""},
+			{text = "Outline", value = "OUTLINE"},
+			{text = "Thick Outline", value = "THICKOUTLINE"},
+			{text = "Monochrome", value = "MONOCHROME"}
+		}
+		
+		-- Macro Name Font settings
+		local macroFontDropdown, newY = MakeDropdown(contentFrame, "Macro Name Font:", "macroNameFont", fontOptions, y)
+		y = newY
+		
+		local macroFontSizeSlider, newY = MakeSlider(contentFrame, "Macro Name Font Size", "macroNameFontSize", 6, 24, y)
+		y = newY
+		
+		local macroFontFlagsDropdown, newY = MakeDropdown(contentFrame, "Macro Name Font Style:", "macroNameFontFlags", fontFlagOptions, y)
+		y = newY
+		
+		local macroWidthSlider, newY = MakeSlider(contentFrame, "Macro Name Width", "macroNameWidth", 20, 200, y)
+		y = newY
+		
+		local macroHeightSlider, newY = MakeSlider(contentFrame, "Macro Name Height", "macroNameHeight", 8, 50, y)
+		y = newY
+		
+		local macroColorLbl, macroColorBtn, newY = MakeColorPicker(contentFrame, "Macro Name Color:", "macroNameColor", y)
+		y = newY
+		
+		-- Add custom font path input (initially hidden)
+		local macroCustomFontInput, newY = MakeTextInput(contentFrame, "Custom Font Path:", "macroNameFont", 250, y)
+		y = newY
+		macroCustomFontInput:Hide() -- Hidden by default
+		
+		-- Show/hide custom input based on dropdown selection
+		local function UpdateMacroFontVisibility()
+			if zBBG.charSettings.macroNameFont == "CUSTOM" then
+				macroCustomFontInput:Show()
+			else
+				macroCustomFontInput:Hide()
+			end
+		end
+		UpdateMacroFontVisibility()
+		
+		zBBG.Events:Register("SETTING_CHANGED", function(k, val)
+			if k == "macroNameFont" then
+				UpdateMacroFontVisibility()
+			end
 		end)
-		resetBtn:SetScript("OnEnter", function(btn)
-			GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
-			GameTooltip:SetText("Reset Options")
-			GameTooltip:AddLine("Reset all settings to their default values", 1, 1, 1, true)
-			GameTooltip:Show()
+		
+		y = y - 10 -- Add some space
+		
+		-- Count Font settings
+		local countFontDropdown, newY = MakeDropdown(contentFrame, "Count/Charge Font:", "countFont", fontOptions, y)
+		y = newY
+		
+		local countFontSizeSlider, newY = MakeSlider(contentFrame, "Count Font Size", "countFontSize", 6, 24, y)
+		y = newY
+		
+		local countFontFlagsDropdown, newY = MakeDropdown(contentFrame, "Count Font Style:", "countFontFlags", fontFlagOptions, y)
+		y = newY
+		
+		local countWidthSlider, newY = MakeSlider(contentFrame, "Count Width", "countWidth", 10, 100, y)
+		y = newY
+		
+		local countHeightSlider, newY = MakeSlider(contentFrame, "Count Height", "countHeight", 8, 50, y)
+		y = newY
+		
+		local countColorLbl, countColorBtn, newY = MakeColorPicker(contentFrame, "Count Color:", "countColor", y)
+		y = newY
+		
+		-- Add custom font path input for count font (initially hidden)
+		local countCustomFontInput, newY = MakeTextInput(contentFrame, "Custom Font Path:", "countFont", 250, y)
+		y = newY
+		countCustomFontInput:Hide() -- Hidden by default
+		
+		-- Show/hide custom input based on dropdown selection
+		local function UpdateCountFontVisibility()
+			if zBBG.charSettings.countFont == "CUSTOM" then
+				countCustomFontInput:Show()
+			else
+				countCustomFontInput:Hide()
+			end
+		end
+		UpdateCountFontVisibility()
+		
+		zBBG.Events:Register("SETTING_CHANGED", function(k, val)
+			if k == "countFont" then
+				UpdateCountFontVisibility()
+			end
 		end)
-		resetBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+
 	end)
 	
 	-- Register parent

@@ -17,6 +17,19 @@ zBarButtonBG.defaultSettings = {
 	rangeIndicatorColor = { r = .42, g = 0.07, b = .12, a = 0.75 }, -- Dark red at 75% opacity
 	fadeCooldown = false,
 	cooldownColor = { r = 0, g = 0, b = 0, a = 0.5 }, -- Black at 50% opacity
+	-- Font settings
+	macroNameFont = "Fonts\\FRIZQT__.TTF", -- Default UI font
+	macroNameFontSize = 10,
+	macroNameFontFlags = "OUTLINE",
+	macroNameWidth = 60, -- Width of macro name text frame
+	macroNameHeight = 12, -- Height of macro name text frame
+	macroNameColor = { r = 1, g = 1, b = 1, a = 1 }, -- White text
+	countFont = "Fonts\\FRIZQT__.TTF", -- Default UI font  
+	countFontSize = 12,
+	countFontFlags = "OUTLINE",
+	countWidth = 20, -- Width of count text frame
+	countHeight = 15, -- Height of count text frame
+	countColor = { r = 1, g = 1, b = 1, a = 1 } -- White text
 }
 
 -- ############################################################
@@ -192,6 +205,49 @@ function zBarButtonBG.updateColors()
 			-- Update cooldown overlay color
 			if data.button._zBBG_cooldownOverlay then
 				data.button._zBBG_cooldownOverlay:SetColorTexture(cooldownColor.r, cooldownColor.g, cooldownColor.b, cooldownColor.a)
+			end
+		end
+	end
+end
+
+-- Update fonts on existing buttons without rebuilding everything
+function zBarButtonBG.updateFonts()
+	if not zBarButtonBG.enabled then return end
+
+	for buttonName, data in pairs(zBarButtonBG.frames) do
+		if data and data.button then
+			-- Update macro name font and size (button.Name)
+			if data.button.Name then
+				data.button.Name:SetFont(
+					zBarButtonBG.charSettings.macroNameFont,
+					zBarButtonBG.charSettings.macroNameFontSize,
+					zBarButtonBG.charSettings.macroNameFontFlags
+				)
+				-- Set text frame dimensions
+				data.button.Name:SetSize(
+					zBarButtonBG.charSettings.macroNameWidth,
+					zBarButtonBG.charSettings.macroNameHeight
+				)
+				-- Set text color
+				local c = zBarButtonBG.charSettings.macroNameColor
+				data.button.Name:SetTextColor(c.r, c.g, c.b, c.a)
+			end
+
+			-- Update count/charge font and size (button.Count)
+			if data.button.Count then
+				data.button.Count:SetFont(
+					zBarButtonBG.charSettings.countFont,
+					zBarButtonBG.charSettings.countFontSize,
+					zBarButtonBG.charSettings.countFontFlags
+				)
+				-- Set text frame dimensions
+				data.button.Count:SetSize(
+					zBarButtonBG.charSettings.countWidth,
+					zBarButtonBG.charSettings.countHeight
+				)
+				-- Set text color
+				local c = zBarButtonBG.charSettings.countColor
+				data.button.Count:SetTextColor(c.r, c.g, c.b, c.a)
 			end
 		end
 	end
@@ -480,6 +536,38 @@ function zBarButtonBG.createActionBarBackgrounds()
 						customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 					end
 
+					-- Apply custom fonts to button text elements
+					if button.Name then
+						button.Name:SetFont(
+							zBarButtonBG.charSettings.macroNameFont,
+							zBarButtonBG.charSettings.macroNameFontSize,
+							zBarButtonBG.charSettings.macroNameFontFlags
+						)
+						-- Set text frame dimensions
+						button.Name:SetSize(
+							zBarButtonBG.charSettings.macroNameWidth,
+							zBarButtonBG.charSettings.macroNameHeight
+						)
+						-- Set text color
+						local c = zBarButtonBG.charSettings.macroNameColor
+						button.Name:SetTextColor(c.r, c.g, c.b, c.a)
+					end
+					if button.Count then
+						button.Count:SetFont(
+							zBarButtonBG.charSettings.countFont,
+							zBarButtonBG.charSettings.countFontSize,
+							zBarButtonBG.charSettings.countFontFlags
+						)
+						-- Set text frame dimensions
+						button.Count:SetSize(
+							zBarButtonBG.charSettings.countWidth,
+							zBarButtonBG.charSettings.countHeight
+						)
+						-- Set text color
+						local c = zBarButtonBG.charSettings.countColor
+						button.Count:SetTextColor(c.r, c.g, c.b, c.a)
+					end
+
 					-- Store references to everything we created so we can update or remove it later
 					zBarButtonBG.frames[buttonName] = {
 						outerFrame = outerFrame,
@@ -637,6 +725,38 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					if data.bg then
 						data.bg:SetColorTexture(innerColor.r, innerColor.g, innerColor.b, innerColor.a)
+					end
+
+					-- Update fonts in case they changed
+					if button.Name then
+						button.Name:SetFont(
+							zBarButtonBG.charSettings.macroNameFont,
+							zBarButtonBG.charSettings.macroNameFontSize,
+							zBarButtonBG.charSettings.macroNameFontFlags
+						)
+						-- Set text frame dimensions
+						button.Name:SetSize(
+							zBarButtonBG.charSettings.macroNameWidth,
+							zBarButtonBG.charSettings.macroNameHeight
+						)
+						-- Set text color
+						local c = zBarButtonBG.charSettings.macroNameColor
+						button.Name:SetTextColor(c.r, c.g, c.b, c.a)
+					end
+					if button.Count then
+						button.Count:SetFont(
+							zBarButtonBG.charSettings.countFont,
+							zBarButtonBG.charSettings.countFontSize,
+							zBarButtonBG.charSettings.countFontFlags
+						)
+						-- Set text frame dimensions
+						button.Count:SetSize(
+							zBarButtonBG.charSettings.countWidth,
+							zBarButtonBG.charSettings.countHeight
+						)
+						-- Set text color
+						local c = zBarButtonBG.charSettings.countColor
+						button.Count:SetTextColor(c.r, c.g, c.b, c.a)
 					end
 
 					-- Handle border updates
@@ -949,6 +1069,41 @@ SlashCmdList["ZBARBUTTONBG"] = function(msg)
 	elseif msg == "gcdtest" then
 		print("zBarButtonBG: GCD debug mode toggled")
 		zBarButtonBG._debugGCD = not zBarButtonBG._debugGCD
+	elseif msg == "fonttest" then
+		-- Test fonts by cycling through different sizes on ActionButton1
+		local button = ActionButton1
+		if button and button.Name and button.Count then
+			local newSize = (button.Count._testSize or 12) + 2
+			if newSize > 20 then newSize = 8 end
+			button.Count._testSize = newSize
+			button.Name._testSize = newSize
+			
+			button.Name:SetFont("Fonts\\FRIZQT__.TTF", newSize, "OUTLINE")
+			button.Count:SetFont("Fonts\\FRIZQT__.TTF", newSize, "OUTLINE")
+			print("Font size changed to:", newSize)
+		end
+	elseif msg == "colortest" then
+		-- Test colors by cycling through different colors on ActionButton1
+		local button = ActionButton1
+		if button and button.Name and button.Count then
+			local colors = {
+				{1, 1, 1, 1}, -- White
+				{1, 0, 0, 1}, -- Red
+				{0, 1, 0, 1}, -- Green
+				{0, 0, 1, 1}, -- Blue
+				{1, 1, 0, 1}, -- Yellow
+				{1, 0, 1, 1}, -- Magenta
+				{0, 1, 1, 1}  -- Cyan
+			}
+			local colorIndex = (button._testColorIndex or 0) + 1
+			if colorIndex > #colors then colorIndex = 1 end
+			button._testColorIndex = colorIndex
+			
+			local color = colors[colorIndex]
+			button.Name:SetTextColor(color[1], color[2], color[3], color[4])
+			button.Count:SetTextColor(color[1], color[2], color[3], color[4])
+			print("Font color changed to:", color[1], color[2], color[3], color[4])
+		end
 		--]]
 	end
 end
