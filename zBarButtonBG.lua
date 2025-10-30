@@ -39,11 +39,115 @@ local aceDefaults = {
 }
 
 function zBarButtonBGAce:OnInitialize()
-	-- Initialize AceDB
+	-- Initialize AceDB with profile support
 	self.db = LibStub("AceDB-3.0"):New("zBarButtonBGDB", aceDefaults, true)
 	
 	-- Make Ace the single source of truth - native system points to Ace profile
 	zBarButtonBG.charSettings = self.db.profile
+	
+	-- Ensure default profile exists
+	if not self.db.profiles["Default"] then
+		self.db:SetProfile("Default")
+	end
+end
+
+-- Profile management functions
+function zBarButtonBGAce:CreateNewProfile(profileName)
+	if not profileName or profileName == "" then
+		return false, "Profile name cannot be empty"
+	end
+	
+	if self.db.profiles[profileName] then
+		return false, "Profile already exists"
+	end
+	
+	-- Create new profile and switch to it
+	self.db:SetProfile(profileName)
+	zBarButtonBG.charSettings = self.db.profile
+	
+	-- Update the action bars
+	if zBarButtonBG.enabled then
+		zBarButtonBG.removeActionBarBackgrounds()
+		zBarButtonBG.createActionBarBackgrounds()
+	end
+	
+	return true, "Profile created successfully"
+end
+
+function zBarButtonBGAce:SwitchToProfile(profileName)
+	if not profileName or not self.db.profiles[profileName] then
+		return false, "Profile does not exist"
+	end
+	
+	-- Switch to profile
+	self.db:SetProfile(profileName)
+	zBarButtonBG.charSettings = self.db.profile
+	
+	-- Update the action bars
+	if zBarButtonBG.enabled then
+		zBarButtonBG.removeActionBarBackgrounds()
+		zBarButtonBG.createActionBarBackgrounds()
+	end
+	
+	return true, "Switched to profile: " .. profileName
+end
+
+function zBarButtonBGAce:CopyProfile(sourceProfile, targetProfile)
+	if not sourceProfile or not self.db.profiles[sourceProfile] then
+		return false, "Source profile does not exist"
+	end
+	
+	if not targetProfile or targetProfile == "" then
+		targetProfile = self.db:GetCurrentProfile()
+	end
+	
+	-- Copy profile data
+	self.db:CopyProfile(sourceProfile, targetProfile)
+	zBarButtonBG.charSettings = self.db.profile
+	
+	-- Update the action bars
+	if zBarButtonBG.enabled then
+		zBarButtonBG.removeActionBarBackgrounds()
+		zBarButtonBG.createActionBarBackgrounds()
+	end
+	
+	return true, "Profile copied successfully"
+end
+
+function zBarButtonBGAce:DeleteProfile(profileName)
+	if not profileName or profileName == "Default" then
+		return false, "Cannot delete Default profile"
+	end
+	
+	if not self.db.profiles[profileName] then
+		return false, "Profile does not exist"
+	end
+	
+	if self.db:GetCurrentProfile() == profileName then
+		-- Switch to Default before deleting
+		self.db:SetProfile("Default")
+		zBarButtonBG.charSettings = self.db.profile
+		
+		-- Update the action bars
+		if zBarButtonBG.enabled then
+			zBarButtonBG.removeActionBarBackgrounds()
+			zBarButtonBG.createActionBarBackgrounds()
+		end
+	end
+	
+	-- Delete the profile
+	self.db:DeleteProfile(profileName, true)
+	
+	return true, "Profile deleted successfully"
+end
+
+function zBarButtonBGAce:GetProfileList()
+	local profiles = {}
+	for name, _ in pairs(self.db.profiles) do
+		table.insert(profiles, name)
+	end
+	table.sort(profiles)
+	return profiles
 end
 
 function zBarButtonBGAce:InitializeOptions()

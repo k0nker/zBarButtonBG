@@ -1,25 +1,97 @@
 -- Options.lua - Ace3 Configuration following SorhaQuestLog pattern
 
+-- Function to show new profile dialog using AceGUI
+function zBarButtonBGAce:ShowNewProfileDialog()
+	local AceGUI = LibStub("AceGUI-3.0")
+	
+	-- Create the frame
+	local frame = AceGUI:Create("Frame")
+	frame:SetTitle("Create New Profile")
+	frame:SetStatusText("Enter a name for the new profile")
+	frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
+	frame:SetLayout("Flow")
+	frame:SetWidth(350)
+	frame:SetHeight(150)
+	
+	-- Create the editbox
+	local editbox = AceGUI:Create("EditBox")
+	editbox:SetLabel("Profile Name:")
+	editbox:SetWidth(250)
+	editbox:SetCallback("OnEnterPressed", function(widget)
+		local profileName = widget:GetText()
+		if profileName and profileName ~= "" then
+			local success, message = self:CreateNewProfile(profileName)
+			if success then
+				zBarButtonBG.print("Profile '" .. profileName .. "' created and activated!")
+				-- Refresh the config to update dropdowns
+				LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
+				frame:Hide()
+			else
+				zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
+			end
+		end
+	end)
+	frame:AddChild(editbox)
+	
+	-- Create buttons group
+	local buttonGroup = AceGUI:Create("SimpleGroup")
+	buttonGroup:SetLayout("Flow")
+	buttonGroup:SetWidth(250)
+	frame:AddChild(buttonGroup)
+	
+	-- Create button
+	local createButton = AceGUI:Create("Button")
+	createButton:SetText("Create")
+	createButton:SetWidth(80)
+	createButton:SetCallback("OnClick", function()
+		local profileName = editbox:GetText()
+		if profileName and profileName ~= "" then
+			local success, message = self:CreateNewProfile(profileName)
+			if success then
+				zBarButtonBG.print("Profile '" .. profileName .. "' created and activated!")
+				-- Refresh the config to update dropdowns
+				LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
+				frame:Hide()
+			else
+				zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
+			end
+		end
+	end)
+	buttonGroup:AddChild(createButton)
+	
+	-- Cancel button
+	local cancelButton = AceGUI:Create("Button")
+	cancelButton:SetText("Cancel")
+	cancelButton:SetWidth(80)
+	cancelButton:SetCallback("OnClick", function()
+		frame:Hide()
+	end)
+	buttonGroup:AddChild(cancelButton)
+	
+	-- Focus the editbox
+	editbox:SetFocus()
+end
+
 function zBarButtonBGAce:GetOptionsTable()
 	local options = {
 		type = "group",
 		name = "zBarButtonBG",
 		args = {
-			buttonSettings = {
+			general = {
 				order = 1,
 				type = "group",
-				name = "Button Settings",
+				name = "General",
 				args = {
 					header = {
 						order = 1,
 						type = "header",
-						name = "Button Background Settings",
+						name = "General Settings",
 					},
 					enabled = {
 						order = 2,
 						type = "toggle",
-						name = "Enable Action Bar Backgrounds",
-						desc = "Toggle action bar backgrounds on/off. Note: /reload may be required when disabling to restore default borders.",
+						name = "Enable Skinning",
+						desc = "Toggle action bar skinning on/off. Note: /reload may be required when disabling to restore default borders.",
 						get = function() return self.db.profile.enabled end,
 						set = function(_, value) 
 							self.db.profile.enabled = value
@@ -36,13 +108,160 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					spacer1 = {
+					resetButton = {
 						order = 3,
+						type = "execute",
+						name = "Reset to Default",
+						desc = "Reset the currently selected profile to default values",
+						func = function()
+							-- Reset current profile to defaults
+							self.db:ResetProfile()
+							zBarButtonBG.charSettings = self.db.profile
+							-- Trigger rebuild
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+							zBarButtonBG.print("Current profile reset to defaults!")
+						end,
+					},
+					spacer1 = {
+						order = 4,
 						type = "description",
 						name = " ",
 					},
+					profilesHeader = {
+						order = 5,
+						type = "header",
+						name = "Profiles",
+					},
+					selectedProfile = {
+						order = 6,
+						type = "select",
+						name = "Active Profile",
+						desc = "Choose the active profile. Changing this will switch to that profile's settings.",
+						values = function()
+							local profiles = {}
+							for name, _ in pairs(self.db.profiles) do
+								profiles[name] = name
+							end
+							return profiles
+						end,
+						get = function() 
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(_, value) 
+							-- Switch to the selected profile
+							self.db:SetProfile(value)
+							zBarButtonBG.charSettings = self.db.profile
+							-- Rebuild action bars with new settings
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+							zBarButtonBG.print("Switched to profile: |cFF00FF00" .. value .. "|r")
+						end,
+					},
+					createProfile = {
+						order = 7,
+						type = "execute",
+						name = "New Profile",
+						desc = "Create a new profile with default settings",
+						func = function()
+							self:ShowNewProfileDialog()
+						end,
+					},
+					spacer2 = {
+						order = 9,
+						type = "description",
+						name = " ",
+					},
+					spacer3 = {
+						order = 10,
+						type = "description",
+						name = "Modify Profiles",
+					},
+					chooseProfile = {
+						order = 11,
+						type = "select",
+						name = "Choose Profile",
+						desc = "Select a profile for copy/delete operations",
+						values = function()
+							local profiles = {}
+							for name, _ in pairs(self.db.profiles) do
+								if name ~= self.db:GetCurrentProfile() then
+									profiles[name] = name
+								end
+							end
+							return profiles
+						end,
+						get = function() return self.selectedProfileForActions end,
+						set = function(_, value) self.selectedProfileForActions = value end,
+					},
+					copyProfile = {
+						order = 13,
+						type = "execute",
+						name = "Copy Profile",
+						desc = "Copy settings from the chosen profile to the current profile",
+						disabled = function() return not self.selectedProfileForActions end,
+						confirm = function() 
+							return "Copy settings from '" .. (self.selectedProfileForActions or "") .. "' to '" .. self.db:GetCurrentProfile() .. "'?\n\nThis will overwrite all current settings!"
+						end,
+						func = function()
+							local success, message = self:CopyProfile(self.selectedProfileForActions, self.db:GetCurrentProfile())
+							if success then
+								zBarButtonBG.print("Settings copied from '" .. self.selectedProfileForActions .. "' to '" .. self.db:GetCurrentProfile() .. "'!")
+								-- Rebuild action bars with updated settings
+								if zBarButtonBG.enabled then
+									zBarButtonBG.removeActionBarBackgrounds()
+									zBarButtonBG.createActionBarBackgrounds()
+								end
+							else
+								zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
+							end
+						end,
+					},
+					deleteProfile = {
+						order = 14,
+						type = "execute",
+						name = "Delete Profile",
+						desc = "Delete the chosen profile",
+						disabled = function() 
+							return not self.selectedProfileForActions or self.selectedProfileForActions == "Default" 
+						end,
+						confirm = function() 
+							return "Are you sure you want to delete the profile '" .. (self.selectedProfileForActions or "") .. "'?\n\nThis action cannot be undone!"
+						end,
+						func = function()
+							local profileToDelete = self.selectedProfileForActions
+							local success, message = self:DeleteProfile(profileToDelete)
+							if success then
+								zBarButtonBG.print("Profile '" .. profileToDelete .. "' deleted!")
+								self.selectedProfileForActions = nil
+							else
+								zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
+							end
+						end,
+					},
+					spacer4 = {
+						order = 13,
+						type = "description",
+						name = " ",
+					},
+				},
+			},
+			buttonSettings = {
+				order = 2,
+				type = "group",
+				name = "Button Settings",
+				args = {
+					header = {
+						order = 1,
+						type = "header",
+						name = "Button Background Settings",
+					},
 					squareButtons = {
-						order = 4,
+						order = 2,
 						type = "toggle",
 						name = "Square Buttons",
 						desc = "Make action buttons square instead of rounded",
@@ -57,7 +276,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					showBackdrop = {
-						order = 5,
+						order = 3,
 						type = "toggle",
 						name = "Show Backdrop",
 						desc = "Show the outer backdrop frame behind each button",
@@ -72,7 +291,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					useClassColorOuter = {
-						order = 6,
+						order = 4,
 						type = "toggle",
 						name = "Use Class Color for Backdrop",
 						desc = "Use your class color for the outer backdrop",
@@ -87,7 +306,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					outerColor = {
-						order = 7,
+						order = 5,
 						type = "color",
 						name = "Backdrop Color",
 						desc = "Color of the outer backdrop frame",
@@ -106,12 +325,12 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer2 = {
-						order = 8,
+						order = 6,
 						type = "description",
 						name = " ",
 					},
 					showSlotBackground = {
-						order = 9,
+						order = 7,
 						type = "toggle",
 						name = "Show Slot Background",
 						desc = "Show the slot background fill behind each button icon",
@@ -126,7 +345,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					useClassColorInner = {
-						order = 10,
+						order = 8,
 						type = "toggle",
 						name = "Use Class Color for Button Background",
 						desc = "Use your class color for the button background",
@@ -141,7 +360,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					innerColor = {
-						order = 11,
+						order = 9,
 						type = "color",
 						name = "Button Background Color",
 						desc = "Color of the button slot background",
@@ -237,7 +456,7 @@ function zBarButtonBGAce:GetOptionsTable()
 				},
 			},
 			indicators = {
-				order = 2,
+				order = 3,
 				type = "group",
 				name = "Indicators",
 				args = {
@@ -322,7 +541,7 @@ function zBarButtonBGAce:GetOptionsTable()
 				},
 			},
 			textSettings = {
-				order = 3,
+				order = 4,
 				type = "group",
 				name = "Text Settings",
 				args = {
@@ -387,8 +606,25 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					macroNameColor = {
+					macroNameFontSize = {
 						order = 5,
+						type = "range",
+						name = "Macro Name Font Size",
+						desc = "Size of the macro name text",
+						min = 6,
+						max = 24,
+						step = 1,
+						get = function() return self.db.profile.macroNameFontSize end,
+						set = function(_, value) 
+							self.db.profile.macroNameFontSize = value
+							zBarButtonBG.charSettings.macroNameFontSize = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					macroNameColor = {
+						order = 6,
 						type = "color",
 						name = "Macro Name Color",
 						desc = "Color of the macro name text",
@@ -400,23 +636,6 @@ function zBarButtonBGAce:GetOptionsTable()
 						set = function(_, r, g, b, a) 
 							self.db.profile.macroNameColor = {r = r, g = g, b = b, a = a}
 							zBarButtonBG.charSettings.macroNameColor = {r = r, g = g, b = b, a = a}
-							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
-								zBarButtonBG.updateFonts()
-							end
-						end,
-					},
-					macroNameFontSize = {
-						order = 6,
-						type = "range",
-						name = "Macro Name Font Size",
-						desc = "Size of the macro name text",
-						min = 6,
-						max = 24,
-						step = 1,
-						get = function() return self.db.profile.macroNameFontSize end,
-						set = function(_, value) 
-							self.db.profile.macroNameFontSize = value
-							zBarButtonBG.charSettings.macroNameFontSize = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
 								zBarButtonBG.updateFonts()
 							end
@@ -557,25 +776,8 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					countFontSize = {
-						order = 14,
-						type = "range",
-						name = "Count Font Size",
-						desc = "Size of the count/charge text",
-						min = 6,
-						max = 24,
-						step = 1,
-						get = function() return self.db.profile.countFontSize end,
-						set = function(_, value) 
-							self.db.profile.countFontSize = value
-							zBarButtonBG.charSettings.countFontSize = value
-							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
-								zBarButtonBG.updateFonts()
-							end
-						end,
-					},
 					countFontFlags = {
-						order = 15,
+						order = 14,
 						type = "select",
 						name = "Count Font Style",
 						desc = "Font style flags for count/charge numbers",
@@ -594,8 +796,43 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					countWidth = {
+					countFontSize = {
+						order = 15,
+						type = "range",
+						name = "Count Font Size",
+						desc = "Size of the count/charge text",
+						min = 6,
+						max = 24,
+						step = 1,
+						get = function() return self.db.profile.countFontSize end,
+						set = function(_, value) 
+							self.db.profile.countFontSize = value
+							zBarButtonBG.charSettings.countFontSize = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					countColor = {
 						order = 16,
+						type = "color",
+						name = "Count Color",
+						desc = "Color of the count/charge text",
+						hasAlpha = true,
+						get = function() 
+							local c = self.db.profile.countColor
+							return c.r, c.g, c.b, c.a
+						end,
+						set = function(_, r, g, b, a) 
+							self.db.profile.countColor = {r = r, g = g, b = b, a = a}
+							zBarButtonBG.charSettings.countColor = {r = r, g = g, b = b, a = a}
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					countWidth = {
+						order = 17,
 						type = "range",
 						name = "Count Width",
 						desc = "Width of the count text frame",
@@ -612,7 +849,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countHeight = {
-						order = 17,
+						order = 18,
 						type = "range",
 						name = "Count Height",
 						desc = "Height of the count text frame",
@@ -623,24 +860,6 @@ function zBarButtonBGAce:GetOptionsTable()
 						set = function(_, value) 
 							self.db.profile.countHeight = value
 							zBarButtonBG.charSettings.countHeight = value
-							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
-								zBarButtonBG.updateFonts()
-							end
-						end,
-					},
-					countColor = {
-						order = 18,
-						type = "color",
-						name = "Count Color",
-						desc = "Color of the count/charge text",
-						hasAlpha = true,
-						get = function() 
-							local c = self.db.profile.countColor
-							return c.r, c.g, c.b, c.a
-						end,
-						set = function(_, r, g, b, a) 
-							self.db.profile.countColor = {r = r, g = g, b = b, a = a}
-							zBarButtonBG.charSettings.countColor = {r = r, g = g, b = b, a = a}
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
 								zBarButtonBG.updateFonts()
 							end
