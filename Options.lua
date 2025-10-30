@@ -3,7 +3,7 @@
 -- Function to show new profile dialog using AceGUI
 function zBarButtonBGAce:ShowNewProfileDialog()
 	local AceGUI = LibStub("AceGUI-3.0")
-	
+
 	-- Create the frame
 	local frame = AceGUI:Create("Frame")
 	frame:SetTitle("Create New Profile")
@@ -12,7 +12,7 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 	frame:SetLayout("Flow")
 	frame:SetWidth(350)
 	frame:SetHeight(150)
-	
+
 	-- Create the editbox
 	local editbox = AceGUI:Create("EditBox")
 	editbox:SetLabel("Profile Name:")
@@ -32,13 +32,13 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 		end
 	end)
 	frame:AddChild(editbox)
-	
+
 	-- Create buttons group
 	local buttonGroup = AceGUI:Create("SimpleGroup")
 	buttonGroup:SetLayout("Flow")
 	buttonGroup:SetWidth(250)
 	frame:AddChild(buttonGroup)
-	
+
 	-- Create button
 	local createButton = AceGUI:Create("Button")
 	createButton:SetText("Create")
@@ -58,7 +58,7 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 		end
 	end)
 	buttonGroup:AddChild(createButton)
-	
+
 	-- Cancel button
 	local cancelButton = AceGUI:Create("Button")
 	cancelButton:SetText("Cancel")
@@ -67,7 +67,7 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 		frame:Hide()
 	end)
 	buttonGroup:AddChild(cancelButton)
-	
+
 	-- Focus the editbox
 	editbox:SetFocus()
 end
@@ -91,9 +91,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = 2,
 						type = "toggle",
 						name = "Enable Skinning",
-						desc = "Toggle action bar skinning on/off. Note: /reload may be required when disabling to restore default borders.",
+						desc =
+						"Toggle action bar skinning on/off. Note: /reload may be required when disabling to restore default borders.",
 						get = function() return self.db.profile.enabled end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.enabled = value
 							-- Update native system
 							zBarButtonBG.charSettings.enabled = value
@@ -147,10 +148,10 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 							return profiles
 						end,
-						get = function() 
+						get = function()
 							return self.db:GetCurrentProfile()
 						end,
-						set = function(_, value) 
+						set = function(_, value)
 							-- Switch to the selected profile
 							self.db:SetProfile(value)
 							zBarButtonBG.charSettings = self.db.profile
@@ -204,13 +205,17 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = "Copy Profile",
 						desc = "Copy settings from the chosen profile to the current profile",
 						disabled = function() return not self.selectedProfileForActions end,
-						confirm = function() 
-							return "Copy settings from '" .. (self.selectedProfileForActions or "") .. "' to '" .. self.db:GetCurrentProfile() .. "'?\n\nThis will overwrite all current settings!"
+						confirm = function()
+							return "Copy settings from '" ..
+							(self.selectedProfileForActions or "") ..
+							"' to '" .. self.db:GetCurrentProfile() .. "'?\n\nThis will overwrite all current settings!"
 						end,
 						func = function()
-							local success, message = self:CopyProfile(self.selectedProfileForActions, self.db:GetCurrentProfile())
+							local success, message = self:CopyProfile(self.selectedProfileForActions,
+								self.db:GetCurrentProfile())
 							if success then
-								zBarButtonBG.print("Settings copied from '" .. self.selectedProfileForActions .. "' to '" .. self.db:GetCurrentProfile() .. "'!")
+								zBarButtonBG.print("Settings copied from '" ..
+								self.selectedProfileForActions .. "' to '" .. self.db:GetCurrentProfile() .. "'!")
 								-- Rebuild action bars with updated settings
 								if zBarButtonBG.enabled then
 									zBarButtonBG.removeActionBarBackgrounds()
@@ -226,11 +231,12 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "execute",
 						name = "Delete Profile",
 						desc = "Delete the chosen profile",
-						disabled = function() 
-							return not self.selectedProfileForActions or self.selectedProfileForActions == "Default" 
+						disabled = function()
+							return not self.selectedProfileForActions or self.selectedProfileForActions == "Default"
 						end,
-						confirm = function() 
-							return "Are you sure you want to delete the profile '" .. (self.selectedProfileForActions or "") .. "'?\n\nThis action cannot be undone!"
+						confirm = function()
+							return "Are you sure you want to delete the profile '" ..
+							(self.selectedProfileForActions or "") .. "'?\n\nThis action cannot be undone!"
 						end,
 						func = function()
 							local profileToDelete = self.selectedProfileForActions
@@ -266,7 +272,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = "Square Buttons",
 						desc = "Make action buttons square instead of rounded",
 						get = function() return self.db.profile.squareButtons end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.squareButtons = value
 							zBarButtonBG.charSettings.squareButtons = value
 							if zBarButtonBG.enabled then
@@ -281,7 +287,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = "Show Backdrop",
 						desc = "Show the outer backdrop frame behind each button",
 						get = function() return self.db.profile.showBackdrop end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.showBackdrop = value
 							zBarButtonBG.charSettings.showBackdrop = value
 							if zBarButtonBG.enabled then
@@ -297,7 +303,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						desc = "Use your class color for the outer backdrop",
 						disabled = function() return not self.db.profile.showBackdrop end,
 						get = function() return self.db.profile.useClassColorOuter end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.useClassColorOuter = value
 							zBarButtonBG.charSettings.useClassColorOuter = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
@@ -310,15 +316,16 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "color",
 						name = "Backdrop Color",
 						desc = "Color of the outer backdrop frame",
-						disabled = function() return not self.db.profile.showBackdrop or self.db.profile.useClassColorOuter end,
+						disabled = function() return not self.db.profile.showBackdrop or
+							self.db.profile.useClassColorOuter end,
 						hasAlpha = true,
-						get = function() 
+						get = function()
 							local c = self.db.profile.outerColor
 							return c.r, c.g, c.b, c.a
 						end,
-						set = function(_, r, g, b, a) 
-							self.db.profile.outerColor = {r = r, g = g, b = b, a = a}
-							zBarButtonBG.charSettings.outerColor = {r = r, g = g, b = b, a = a}
+						set = function(_, r, g, b, a)
+							self.db.profile.outerColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.outerColor = { r = r, g = g, b = b, a = a }
 							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
 								zBarButtonBG.updateColors()
 							end
@@ -335,7 +342,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = "Show Slot Background",
 						desc = "Show the slot background fill behind each button icon",
 						get = function() return self.db.profile.showSlotBackground end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.showSlotBackground = value
 							zBarButtonBG.charSettings.showSlotBackground = value
 							if zBarButtonBG.enabled then
@@ -351,7 +358,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						desc = "Use your class color for the button background",
 						disabled = function() return not self.db.profile.showSlotBackground end,
 						get = function() return self.db.profile.useClassColorInner end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.useClassColorInner = value
 							zBarButtonBG.charSettings.useClassColorInner = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
@@ -364,15 +371,16 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "color",
 						name = "Button Background Color",
 						desc = "Color of the button slot background",
-						disabled = function() return not self.db.profile.showSlotBackground or self.db.profile.useClassColorInner end,
+						disabled = function() return not self.db.profile.showSlotBackground or
+							self.db.profile.useClassColorInner end,
 						hasAlpha = true,
-						get = function() 
+						get = function()
 							local c = self.db.profile.innerColor
 							return c.r, c.g, c.b, c.a
 						end,
-						set = function(_, r, g, b, a) 
-							self.db.profile.innerColor = {r = r, g = g, b = b, a = a}
-							zBarButtonBG.charSettings.innerColor = {r = r, g = g, b = b, a = a}
+						set = function(_, r, g, b, a)
+							self.db.profile.innerColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.innerColor = { r = r, g = g, b = b, a = a }
 							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
 								zBarButtonBG.updateColors()
 							end
@@ -389,7 +397,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = "Enable Button Border",
 						desc = "Add a border around each action button icon",
 						get = function() return self.db.profile.showBorder end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.showBorder = value
 							zBarButtonBG.charSettings.showBorder = value
 							if zBarButtonBG.enabled then
@@ -405,7 +413,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						desc = "Use your class color for the icon border",
 						disabled = function() return not self.db.profile.showBorder end,
 						get = function() return self.db.profile.useClassColorBorder end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.useClassColorBorder = value
 							zBarButtonBG.charSettings.useClassColorBorder = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
@@ -418,15 +426,16 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "color",
 						name = "Button Border Color",
 						desc = "Color of the button icon border",
-						disabled = function() return not self.db.profile.showBorder or self.db.profile.useClassColorBorder end,
+						disabled = function() return not self.db.profile.showBorder or
+							self.db.profile.useClassColorBorder end,
 						hasAlpha = true,
-						get = function() 
+						get = function()
 							local c = self.db.profile.borderColor
 							return c.r, c.g, c.b, c.a
 						end,
-						set = function(_, r, g, b, a) 
-							self.db.profile.borderColor = {r = r, g = g, b = b, a = a}
-							zBarButtonBG.charSettings.borderColor = {r = r, g = g, b = b, a = a}
+						set = function(_, r, g, b, a)
+							self.db.profile.borderColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.borderColor = { r = r, g = g, b = b, a = a }
 							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
 								zBarButtonBG.updateColors()
 							end
@@ -471,7 +480,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = "Show Out-of-Range Highlight",
 						desc = "Show a colored overlay on buttons when the ability is out of range",
 						get = function() return self.db.profile.showRangeIndicator end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.showRangeIndicator = value
 							zBarButtonBG.charSettings.showRangeIndicator = value
 							if zBarButtonBG.enabled then
@@ -487,13 +496,13 @@ function zBarButtonBGAce:GetOptionsTable()
 						desc = "Color of the out-of-range overlay",
 						disabled = function() return not self.db.profile.showRangeIndicator end,
 						hasAlpha = true,
-						get = function() 
+						get = function()
 							local c = self.db.profile.rangeIndicatorColor
 							return c.r, c.g, c.b, c.a
 						end,
-						set = function(_, r, g, b, a) 
-							self.db.profile.rangeIndicatorColor = {r = r, g = g, b = b, a = a}
-							zBarButtonBG.charSettings.rangeIndicatorColor = {r = r, g = g, b = b, a = a}
+						set = function(_, r, g, b, a)
+							self.db.profile.rangeIndicatorColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.rangeIndicatorColor = { r = r, g = g, b = b, a = a }
 							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
 								zBarButtonBG.updateColors()
 							end
@@ -510,7 +519,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = "Fade On Cooldown",
 						desc = "Add a dark overlay to buttons while on cooldown",
 						get = function() return self.db.profile.fadeCooldown end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.fadeCooldown = value
 							zBarButtonBG.charSettings.fadeCooldown = value
 							if zBarButtonBG.enabled then
@@ -526,13 +535,13 @@ function zBarButtonBGAce:GetOptionsTable()
 						desc = "Color of the cooldown overlay",
 						disabled = function() return not self.db.profile.fadeCooldown end,
 						hasAlpha = true,
-						get = function() 
+						get = function()
 							local c = self.db.profile.cooldownColor
 							return c.r, c.g, c.b, c.a
 						end,
-						set = function(_, r, g, b, a) 
-							self.db.profile.cooldownColor = {r = r, g = g, b = b, a = a}
-							zBarButtonBG.charSettings.cooldownColor = {r = r, g = g, b = b, a = a}
+						set = function(_, r, g, b, a)
+							self.db.profile.cooldownColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.cooldownColor = { r = r, g = g, b = b, a = a }
 							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
 								zBarButtonBG.updateColors()
 							end
@@ -560,25 +569,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "select",
 						name = "Macro Name Font",
 						desc = "Font family for macro names",
-						values = {
-							["Fonts\\FRIZQT__.TTF"] = "Friz Quadrata (Default)",
-							["Fonts\\ARIALN.TTF"] = "Arial Narrow",
-							["Fonts\\skurri.ttf"] = "Skurri",
-							["Fonts\\MORPHEUS.ttf"] = "Morpheus",
-							["Fonts\\NIM_____.ttf"] = "Nimrod MT",
-							["Fonts\\FRIENDS.TTF"] = "Friends",
-							["Interface\\AddOns\\SharedMedia\\fonts\\DIABLO.TTF"] = "Diablo (if available)",
-							["Fonts\\2002.TTF"] = "2002",
-							["Fonts\\2002B.TTF"] = "2002 Bold",
-							["Fonts\\ARKAI_T.ttf"] = "AR Kai",
-							["Fonts\\bHEI00M.ttf"] = "BHei",
-							["Fonts\\bKAI00M.ttf"] = "BKai",
-							["Fonts\\bLEI00D.ttf"] = "BLei",
-							["Fonts\\K_Damage.TTF"] = "Damage Font",
-							["Fonts\\K_Pagetext.TTF"] = "Page Text",
-						},
+						dialogControl = 'LSM30_Font',
+						values = AceGUIWidgetLSMlists.font,
 						get = function() return self.db.profile.macroNameFont end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.macroNameFont = value
 							zBarButtonBG.charSettings.macroNameFont = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
@@ -598,7 +592,7 @@ function zBarButtonBGAce:GetOptionsTable()
 							["MONOCHROME"] = "Monochrome",
 						},
 						get = function() return self.db.profile.macroNameFontFlags end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.macroNameFontFlags = value
 							zBarButtonBG.charSettings.macroNameFontFlags = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
@@ -615,7 +609,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						max = 24,
 						step = 1,
 						get = function() return self.db.profile.macroNameFontSize end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.macroNameFontSize = value
 							zBarButtonBG.charSettings.macroNameFontSize = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
@@ -629,13 +623,13 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = "Macro Name Color",
 						desc = "Color of the macro name text",
 						hasAlpha = true,
-						get = function() 
+						get = function()
 							local c = self.db.profile.macroNameColor
 							return c.r, c.g, c.b, c.a
 						end,
-						set = function(_, r, g, b, a) 
-							self.db.profile.macroNameColor = {r = r, g = g, b = b, a = a}
-							zBarButtonBG.charSettings.macroNameColor = {r = r, g = g, b = b, a = a}
+						set = function(_, r, g, b, a)
+							self.db.profile.macroNameColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.macroNameColor = { r = r, g = g, b = b, a = a }
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
 								zBarButtonBG.updateFonts()
 							end
@@ -650,7 +644,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						max = 200,
 						step = 1,
 						get = function() return self.db.profile.macroNameWidth end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.macroNameWidth = value
 							zBarButtonBG.charSettings.macroNameWidth = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
@@ -667,7 +661,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						max = 50,
 						step = 1,
 						get = function() return self.db.profile.macroNameHeight end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.macroNameHeight = value
 							zBarButtonBG.charSettings.macroNameHeight = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
@@ -685,7 +679,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						step = 1,
 						bigStep = 5,
 						get = function() return self.db.profile.macroNameOffsetX end,
-						set = function(_, value) 
+						set = function(_, value)
 							-- Clamp value to valid range
 							value = math.max(-50, math.min(50, tonumber(value) or 0))
 							self.db.profile.macroNameOffsetX = value
@@ -715,7 +709,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						step = 1,
 						bigStep = 5,
 						get = function() return self.db.profile.macroNameOffsetY end,
-						set = function(_, value) 
+						set = function(_, value)
 							-- Clamp value to valid range
 							value = math.max(-50, math.min(50, tonumber(value) or 0))
 							self.db.profile.macroNameOffsetY = value
@@ -750,25 +744,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "select",
 						name = "Count Font",
 						desc = "Font family for count/charge numbers",
-						values = {
-							["Fonts\\FRIZQT__.TTF"] = "Friz Quadrata (Default)",
-							["Fonts\\ARIALN.TTF"] = "Arial Narrow",
-							["Fonts\\skurri.ttf"] = "Skurri",
-							["Fonts\\MORPHEUS.ttf"] = "Morpheus",
-							["Fonts\\NIM_____.ttf"] = "Nimrod MT",
-							["Fonts\\FRIENDS.TTF"] = "Friends",
-							["Interface\\AddOns\\SharedMedia\\fonts\\DIABLO.TTF"] = "Diablo (if available)",
-							["Fonts\\2002.TTF"] = "2002",
-							["Fonts\\2002B.TTF"] = "2002 Bold",
-							["Fonts\\ARKAI_T.ttf"] = "AR Kai",
-							["Fonts\\bHEI00M.ttf"] = "BHei",
-							["Fonts\\bKAI00M.ttf"] = "BKai",
-							["Fonts\\bLEI00D.ttf"] = "BLei",
-							["Fonts\\K_Damage.TTF"] = "Damage Font",
-							["Fonts\\K_Pagetext.TTF"] = "Page Text",
-						},
+						dialogControl = 'LSM30_Font',
+						values = AceGUIWidgetLSMlists.font,
 						get = function() return self.db.profile.countFont end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.countFont = value
 							zBarButtonBG.charSettings.countFont = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
@@ -788,7 +767,7 @@ function zBarButtonBGAce:GetOptionsTable()
 							["MONOCHROME"] = "Monochrome",
 						},
 						get = function() return self.db.profile.countFontFlags end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.countFontFlags = value
 							zBarButtonBG.charSettings.countFontFlags = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
@@ -805,7 +784,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						max = 24,
 						step = 1,
 						get = function() return self.db.profile.countFontSize end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.countFontSize = value
 							zBarButtonBG.charSettings.countFontSize = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
@@ -819,13 +798,13 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = "Count Color",
 						desc = "Color of the count/charge text",
 						hasAlpha = true,
-						get = function() 
+						get = function()
 							local c = self.db.profile.countColor
 							return c.r, c.g, c.b, c.a
 						end,
-						set = function(_, r, g, b, a) 
-							self.db.profile.countColor = {r = r, g = g, b = b, a = a}
-							zBarButtonBG.charSettings.countColor = {r = r, g = g, b = b, a = a}
+						set = function(_, r, g, b, a)
+							self.db.profile.countColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.countColor = { r = r, g = g, b = b, a = a }
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
 								zBarButtonBG.updateFonts()
 							end
@@ -840,7 +819,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						max = 100,
 						step = 1,
 						get = function() return self.db.profile.countWidth end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.countWidth = value
 							zBarButtonBG.charSettings.countWidth = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
@@ -857,7 +836,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						max = 50,
 						step = 1,
 						get = function() return self.db.profile.countHeight end,
-						set = function(_, value) 
+						set = function(_, value)
 							self.db.profile.countHeight = value
 							zBarButtonBG.charSettings.countHeight = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
@@ -875,7 +854,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						step = 1,
 						bigStep = 5,
 						get = function() return self.db.profile.countOffsetX end,
-						set = function(_, value) 
+						set = function(_, value)
 							-- Clamp value to valid range
 							value = math.max(-50, math.min(50, tonumber(value) or 0))
 							self.db.profile.countOffsetX = value
@@ -905,7 +884,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						step = 1,
 						bigStep = 5,
 						get = function() return self.db.profile.countOffsetY end,
-						set = function(_, value) 
+						set = function(_, value)
 							-- Clamp value to valid range
 							value = math.max(-50, math.min(50, tonumber(value) or 0))
 							self.db.profile.countOffsetY = value
@@ -925,10 +904,185 @@ function zBarButtonBGAce:GetOptionsTable()
 							return true
 						end,
 					},
+					spacer4 = {
+						order = 21,
+						type = "description",
+						name = " ",
+					},
+					keybindHeader = {
+						order = 22,
+						type = "header",
+						name = "Keybind/Hotkey Font",
+					},
+					keybindFont = {
+						order = 23,
+						type = "select",
+						name = "Keybind Font",
+						desc = "Font family for keybind/hotkey text",
+						dialogControl = 'LSM30_Font',
+						values = AceGUIWidgetLSMlists.font,
+						get = function() return self.db.profile.keybindFont end,
+						set = function(_, value)
+							self.db.profile.keybindFont = value
+							zBarButtonBG.charSettings.keybindFont = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					keybindFontFlags = {
+						order = 24,
+						type = "select",
+						name = "Keybind Font Style",
+						desc = "Font style flags for keybind/hotkey text",
+						values = {
+							[""] = "None",
+							["OUTLINE"] = "Outline",
+							["THICKOUTLINE"] = "Thick Outline",
+							["MONOCHROME"] = "Monochrome",
+						},
+						get = function() return self.db.profile.keybindFontFlags end,
+						set = function(_, value)
+							self.db.profile.keybindFontFlags = value
+							zBarButtonBG.charSettings.keybindFontFlags = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					keybindFontSize = {
+						order = 25,
+						type = "range",
+						name = "Keybind Font Size",
+						desc = "Size of the keybind/hotkey text",
+						min = 6,
+						max = 24,
+						step = 1,
+						get = function() return self.db.profile.keybindFontSize end,
+						set = function(_, value)
+							self.db.profile.keybindFontSize = value
+							zBarButtonBG.charSettings.keybindFontSize = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					keybindColor = {
+						order = 26,
+						type = "color",
+						name = "Keybind Text Color",
+						desc = "Color of the keybind/hotkey text",
+						hasAlpha = true,
+						get = function()
+							local c = self.db.profile.keybindColor
+							return c.r, c.g, c.b, c.a
+						end,
+						set = function(_, r, g, b, a)
+							self.db.profile.keybindColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.keybindColor = { r = r, g = g, b = b, a = a }
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					keybindWidth = {
+						order = 27,
+						type = "range",
+						name = "Keybind Width",
+						desc = "Width of the keybind text frame",
+						min = 10,
+						max = 100,
+						step = 1,
+						get = function() return self.db.profile.keybindWidth end,
+						set = function(_, value)
+							self.db.profile.keybindWidth = value
+							zBarButtonBG.charSettings.keybindWidth = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					keybindHeight = {
+						order = 28,
+						type = "range",
+						name = "Keybind Height",
+						desc = "Height of the keybind text frame",
+						min = 8,
+						max = 50,
+						step = 1,
+						get = function() return self.db.profile.keybindHeight end,
+						set = function(_, value)
+							self.db.profile.keybindHeight = value
+							zBarButtonBG.charSettings.keybindHeight = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					keybindOffsetX = {
+						order = 29,
+						type = "range",
+						name = "Keybind X Offset",
+						desc = "Horizontal positioning offset for keybind/hotkey text",
+						min = -50,
+						max = 50,
+						step = 1,
+						bigStep = 5,
+						get = function() return self.db.profile.keybindOffsetX end,
+						set = function(_, value)
+							-- Clamp value to valid range
+							value = math.max(-50, math.min(50, tonumber(value) or 0))
+							self.db.profile.keybindOffsetX = value
+							zBarButtonBG.charSettings.keybindOffsetX = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+						validate = function(_, value)
+							local num = tonumber(value)
+							if not num then
+								return "Value must be a number"
+							end
+							if num < -50 or num > 50 then
+								return "Value must be between -50 and 50"
+							end
+							return true
+						end,
+					},
+					keybindOffsetY = {
+						order = 30,
+						type = "range",
+						name = "Keybind Y Offset",
+						desc = "Vertical positioning offset for keybind/hotkey text",
+						min = -50,
+						max = 50,
+						step = 1,
+						bigStep = 5,
+						get = function() return self.db.profile.keybindOffsetY end,
+						set = function(_, value)
+							-- Clamp value to valid range
+							value = math.max(-50, math.min(50, tonumber(value) or 0))
+							self.db.profile.keybindOffsetY = value
+							zBarButtonBG.charSettings.keybindOffsetY = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+						validate = function(_, value)
+							local num = tonumber(value)
+							if not num then
+								return "Value must be a number"
+							end
+							if num < -50 or num > 50 then
+								return "Value must be between -50 and 50"
+							end
+							return true
+						end,
+					},
 				},
 			},
 		},
 	}
-	
+
 	return options
 end

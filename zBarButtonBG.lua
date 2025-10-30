@@ -34,7 +34,15 @@ local aceDefaults = {
 		countHeight = 15,
 		countColor = { r = 1, g = 1, b = 1, a = 1 },
 		countOffsetX = 0,
-		countOffsetY = 0
+		countOffsetY = 0,
+		keybindFont = "Fonts\\FRIZQT__.TTF",
+		keybindFontSize = 10,
+		keybindFontFlags = "OUTLINE",
+		keybindWidth = 30,
+		keybindHeight = 12,
+		keybindColor = { r = 1, g = 1, b = 1, a = 1 },
+		keybindOffsetX = 0,
+		keybindOffsetY = 0
 	}
 }
 
@@ -158,8 +166,13 @@ function zBarButtonBGAce:InitializeOptions()
 	-- Register slash command to open options
 	SLASH_ZBARBUTTONBGOPTIONS1 = "/zbg"
 	SlashCmdList["ZBARBUTTONBGOPTIONS"] = function(msg)
-		-- Open the options panel using Ace Config Dialog
-		LibStub("AceConfigDialog-3.0"):Open("zBarButtonBG")
+		if msg == "debug" then
+			zBarButtonBG._debugGCD = not zBarButtonBG._debugGCD
+			print("zBarButtonBG: GCD debug", zBarButtonBG._debugGCD and "enabled" or "disabled")
+		else
+			-- Open the options panel using Ace Config Dialog
+			LibStub("AceConfigDialog-3.0"):Open("zBarButtonBG")
+		end
 	end
 end
 
@@ -321,6 +334,15 @@ function zBarButtonBG.updateColors()
 	end
 end
 
+-- Helper function to get font path from LibSharedMedia
+local function getFontPath(fontName)
+	local LSM = LibStub("LibSharedMedia-3.0", true)
+	if LSM then
+		return LSM:Fetch("font", fontName) or fontName
+	end
+	return fontName
+end
+
 -- Update fonts on existing buttons without rebuilding everything
 function zBarButtonBG.updateFonts()
 	if not zBarButtonBG.enabled then return end
@@ -330,7 +352,7 @@ function zBarButtonBG.updateFonts()
 			-- Update macro name font and size (button.Name)
 			if data.button.Name then
 				data.button.Name:SetFont(
-					zBarButtonBG.charSettings.macroNameFont,
+					getFontPath(zBarButtonBG.charSettings.macroNameFont),
 					zBarButtonBG.charSettings.macroNameFontSize,
 					zBarButtonBG.charSettings.macroNameFontFlags
 				)
@@ -356,7 +378,7 @@ function zBarButtonBG.updateFonts()
 			-- Update count/charge font and size (button.Count)
 			if data.button.Count then
 				data.button.Count:SetFont(
-					zBarButtonBG.charSettings.countFont,
+					getFontPath(zBarButtonBG.charSettings.countFont),
 					zBarButtonBG.charSettings.countFontSize,
 					zBarButtonBG.charSettings.countFontFlags
 				)
@@ -376,6 +398,32 @@ function zBarButtonBG.updateFonts()
 					-- Clear existing points and reposition with offset
 					data.button.Count:ClearAllPoints()
 					data.button.Count:SetPoint("TOPRIGHT", data.button, "TOPRIGHT", -2 + xOffset, -2 + yOffset)
+				end
+			end
+
+			-- Update keybind/hotkey font and size (button.HotKey)
+			if data.button.HotKey then
+				data.button.HotKey:SetFont(
+					getFontPath(zBarButtonBG.charSettings.keybindFont),
+					zBarButtonBG.charSettings.keybindFontSize,
+					zBarButtonBG.charSettings.keybindFontFlags
+				)
+				-- Set text frame dimensions
+				data.button.HotKey:SetSize(
+					zBarButtonBG.charSettings.keybindWidth,
+					zBarButtonBG.charSettings.keybindHeight
+				)
+				-- Set text color
+				local c = zBarButtonBG.charSettings.keybindColor
+				data.button.HotKey:SetTextColor(c.r, c.g, c.b, c.a)
+				
+				-- Apply position offset if offsets are non-zero
+				local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
+				local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
+				if xOffset ~= 0 or yOffset ~= 0 then
+					-- Clear existing points and reposition with offset
+					data.button.HotKey:ClearAllPoints()
+					data.button.HotKey:SetPoint("TOPLEFT", data.button, "TOPLEFT", 2 + xOffset, -2 + yOffset)
 				end
 			end
 		end
@@ -700,7 +748,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Apply custom fonts to button text elements
 					if button.Name then
 						button.Name:SetFont(
-							zBarButtonBG.charSettings.macroNameFont,
+							getFontPath(zBarButtonBG.charSettings.macroNameFont),
 							zBarButtonBG.charSettings.macroNameFontSize,
 							zBarButtonBG.charSettings.macroNameFontFlags
 						)
@@ -715,7 +763,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					if button.Count then
 						button.Count:SetFont(
-							zBarButtonBG.charSettings.countFont,
+							getFontPath(zBarButtonBG.charSettings.countFont),
 							zBarButtonBG.charSettings.countFontSize,
 							zBarButtonBG.charSettings.countFontFlags
 						)
@@ -727,6 +775,21 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Set text color
 						local c = zBarButtonBG.charSettings.countColor
 						button.Count:SetTextColor(c.r, c.g, c.b, c.a)
+					end
+					if button.HotKey then
+						button.HotKey:SetFont(
+							getFontPath(zBarButtonBG.charSettings.keybindFont),
+							zBarButtonBG.charSettings.keybindFontSize,
+							zBarButtonBG.charSettings.keybindFontFlags
+						)
+						-- Set text frame dimensions
+						button.HotKey:SetSize(
+							zBarButtonBG.charSettings.keybindWidth,
+							zBarButtonBG.charSettings.keybindHeight
+						)
+						-- Set text color
+						local c = zBarButtonBG.charSettings.keybindColor
+						button.HotKey:SetTextColor(c.r, c.g, c.b, c.a)
 					end
 
 					-- Store references to everything we created so we can update or remove it later
@@ -891,7 +954,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Update fonts in case they changed
 					if button.Name then
 						button.Name:SetFont(
-							zBarButtonBG.charSettings.macroNameFont,
+							getFontPath(zBarButtonBG.charSettings.macroNameFont),
 							zBarButtonBG.charSettings.macroNameFontSize,
 							zBarButtonBG.charSettings.macroNameFontFlags
 						)
@@ -906,7 +969,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					if button.Count then
 						button.Count:SetFont(
-							zBarButtonBG.charSettings.countFont,
+							getFontPath(zBarButtonBG.charSettings.countFont),
 							zBarButtonBG.charSettings.countFontSize,
 							zBarButtonBG.charSettings.countFontFlags
 						)
@@ -918,6 +981,21 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Set text color
 						local c = zBarButtonBG.charSettings.countColor
 						button.Count:SetTextColor(c.r, c.g, c.b, c.a)
+					end
+					if button.HotKey then
+						button.HotKey:SetFont(
+							getFontPath(zBarButtonBG.charSettings.keybindFont),
+							zBarButtonBG.charSettings.keybindFontSize,
+							zBarButtonBG.charSettings.keybindFontFlags
+						)
+						-- Set text frame dimensions
+						button.HotKey:SetSize(
+							zBarButtonBG.charSettings.keybindWidth,
+							zBarButtonBG.charSettings.keybindHeight
+						)
+						-- Set text color
+						local c = zBarButtonBG.charSettings.keybindColor
+						button.HotKey:SetTextColor(c.r, c.g, c.b, c.a)
 					end
 
 					-- Handle border updates
@@ -1045,33 +1123,33 @@ function zBarButtonBG.createActionBarBackgrounds()
 				if zBarButtonBG.charSettings.fadeCooldown and button.cooldown then
 					local start, duration = button.cooldown:GetCooldownTimes()
 					if start and duration and start > 0 and duration > 0 then
-						-- Try to get GCD info - try both old and new API
-						local gcdStart, gcdDuration = 0, 0
+						-- Convert to seconds for easier comparison (GetCooldownTimes returns milliseconds)
+						local durationSec = duration / 1000
 						
-						-- Try the old API first (might still exist)
-						if GetSpellCooldown then
-							gcdStart, gcdDuration = GetSpellCooldown(61304)
-							-- Old API returns seconds, convert to milliseconds to match button cooldown
-							gcdDuration = gcdDuration * 1000
-						else
+						-- Get GCD duration in seconds
+						local gcdDuration = 0
+						if C_Spell and C_Spell.GetSpellCooldown then
 							-- Use new API
 							local gcdInfo = C_Spell.GetSpellCooldown(61304)
-							if gcdInfo then
-								gcdStart = gcdInfo.startTime or 0
-								gcdDuration = (gcdInfo.duration or 0) * 1000 -- Convert seconds to milliseconds
+							if gcdInfo and gcdInfo.duration then
+								gcdDuration = gcdInfo.duration
 							end
+						elseif GetSpellCooldown then
+							-- Fallback to old API
+							local gcdStart, gcdDur = GetSpellCooldown(61304)
+							gcdDuration = gcdDur or 0
 						end
 						
 						-- Debug: Add a test command to see what's happening
 						if button == ActionButton1 and zBarButtonBG._debugGCD then
-							print("Button CD:", duration, "GCD:", gcdDuration, "Diff:", math.abs(duration - gcdDuration))
+							print("Button CD (sec):", durationSec, "GCD (sec):", gcdDuration, "Diff:", math.abs(durationSec - gcdDuration))
 						end
 						
 						-- Check if this looks like GCD by duration comparison
-						-- GCD is typically 1000-1500ms, so if duration is close to that range and matches GCD, hide it
-						if gcdDuration > 0 and duration > 800 and duration < 2000 then
+						-- GCD is typically 1.0-1.5 seconds, so if duration is close to that range and matches GCD, hide it
+						if gcdDuration > 0 and durationSec > 0.8 and durationSec < 2.0 then
 							-- This could be GCD - check if duration is very close to GCD duration
-							if math.abs(duration - gcdDuration) < 50 then -- Tighter tolerance (50ms)
+							if math.abs(durationSec - gcdDuration) < 0.05 then -- 50ms tolerance
 								-- Duration matches GCD closely - hide overlay (just GCD)
 								button._zBBG_cooldownOverlay:Hide()
 							else
