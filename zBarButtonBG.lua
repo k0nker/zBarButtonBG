@@ -1,5 +1,5 @@
 -- Initialize Ace addon for options only
-zBarButtonBGAce = LibStub("AceAddon-3.0"):NewAddon("zBarButtonBG", "AceConsole-3.0")
+zBarButtonBGAce = LibStub("AceAddon-3.0"):NewAddon("zBarButtonBG")
 
 -- AceDB defaults structure
 local aceDefaults = {
