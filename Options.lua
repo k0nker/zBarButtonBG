@@ -261,13 +261,8 @@ function zBarButtonBGAce:GetOptionsTable()
 				type = "group",
 				name = "Button Settings",
 				args = {
-					header = {
-						order = 1,
-						type = "header",
-						name = "Button Background Settings",
-					},
 					squareButtons = {
-						order = 2,
+						order = 1,
 						type = "toggle",
 						name = "Square Buttons",
 						desc = "Make action buttons square instead of rounded",
@@ -281,8 +276,18 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					showBackdrop = {
+					spacer1 = {
+						order = 2,
+						type = "description",
+						name = " ",
+					},
+					header = {
 						order = 3,
+						type = "header",
+						name = "Button Background Settings",
+					},
+					showBackdrop = {
+						order = 4,
 						type = "toggle",
 						name = "Show Backdrop",
 						desc = "Show the outer backdrop frame behind each button",
@@ -296,23 +301,13 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					useClassColorOuter = {
-						order = 4,
-						type = "toggle",
-						name = "Use Class Color for Backdrop",
-						desc = "Use your class color for the outer backdrop",
-						disabled = function() return not self.db.profile.showBackdrop end,
-						get = function() return self.db.profile.useClassColorOuter end,
-						set = function(_, value)
-							self.db.profile.useClassColorOuter = value
-							zBarButtonBG.charSettings.useClassColorOuter = value
-							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
-								zBarButtonBG.updateColors()
-							end
-						end,
+					spacer2 = {
+						order = 5,
+						type = "description",
+						name = " ",
 					},
 					outerColor = {
-						order = 5,
+						order = 6,
 						type = "color",
 						name = "Backdrop Color",
 						desc = "Color of the outer backdrop frame",
@@ -331,13 +326,28 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					spacer2 = {
-						order = 6,
+					useClassColorOuter = {
+						order = 7,
+						type = "toggle",
+						name = "Use Class Color for Backdrop",
+						desc = "Use your class color for the outer backdrop",
+						disabled = function() return not self.db.profile.showBackdrop end,
+						get = function() return self.db.profile.useClassColorOuter end,
+						set = function(_, value)
+							self.db.profile.useClassColorOuter = value
+							zBarButtonBG.charSettings.useClassColorOuter = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
+								zBarButtonBG.updateColors()
+							end
+						end,
+					},
+					spacer3 = {
+						order = 8,
 						type = "description",
 						name = " ",
 					},
 					showSlotBackground = {
-						order = 7,
+						order = 9,
 						type = "toggle",
 						name = "Show Slot Background",
 						desc = "Show the slot background fill behind each button icon",
@@ -351,23 +361,13 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					useClassColorInner = {
-						order = 8,
-						type = "toggle",
-						name = "Use Class Color for Button Background",
-						desc = "Use your class color for the button background",
-						disabled = function() return not self.db.profile.showSlotBackground end,
-						get = function() return self.db.profile.useClassColorInner end,
-						set = function(_, value)
-							self.db.profile.useClassColorInner = value
-							zBarButtonBG.charSettings.useClassColorInner = value
-							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
-								zBarButtonBG.updateColors()
-							end
-						end,
+					spacer4 = {
+						order = 10,
+						type = "description",
+						name = " ",
 					},
 					innerColor = {
-						order = 9,
+						order = 11,
 						type = "color",
 						name = "Button Background Color",
 						desc = "Color of the button slot background",
@@ -386,13 +386,28 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					spacer3 = {
+					useClassColorInner = {
 						order = 12,
+						type = "toggle",
+						name = "Use Class Color for Button Background",
+						desc = "Use your class color for the button background",
+						disabled = function() return not self.db.profile.showSlotBackground end,
+						get = function() return self.db.profile.useClassColorInner end,
+						set = function(_, value)
+							self.db.profile.useClassColorInner = value
+							zBarButtonBG.charSettings.useClassColorInner = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
+								zBarButtonBG.updateColors()
+							end
+						end,
+					},
+					spacer5 = {
+						order = 13,
 						type = "description",
 						name = " ",
 					},
 					showBorder = {
-						order = 13,
+						order = 14,
 						type = "toggle",
 						name = "Enable Button Border",
 						desc = "Add a border around each action button icon",
@@ -406,23 +421,13 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					useClassColorBorder = {
-						order = 14,
-						type = "toggle",
-						name = "Use Class Color for Button Border",
-						desc = "Use your class color for the icon border",
-						disabled = function() return not self.db.profile.showBorder end,
-						get = function() return self.db.profile.useClassColorBorder end,
-						set = function(_, value)
-							self.db.profile.useClassColorBorder = value
-							zBarButtonBG.charSettings.useClassColorBorder = value
-							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
-								zBarButtonBG.updateColors()
-							end
-						end,
+					spacer6 = {
+						order = 15,
+						type = "description",
+						name = " ",
 					},
 					borderColor = {
-						order = 15,
+						order = 16,
 						type = "color",
 						name = "Button Border Color",
 						desc = "Color of the button icon border",
@@ -441,25 +446,19 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					spacer4 = {
-						order = 16,
-						type = "description",
-						name = " ",
-					},
-					resetButton = {
+					useClassColorBorder = {
 						order = 17,
-						type = "execute",
-						name = "Reset to Defaults",
-						desc = "Reset all settings to their default values",
-						func = function()
-							-- Reset profile to defaults (zBarButtonBG.charSettings points to profile, so it updates automatically)
-							self.db:ResetProfile()
-							-- Trigger rebuild
-							if zBarButtonBG.enabled then
-								zBarButtonBG.removeActionBarBackgrounds()
-								zBarButtonBG.createActionBarBackgrounds()
+						type = "toggle",
+						name = "Use Class Color for Button Border",
+						desc = "Use your class color for the icon border",
+						disabled = function() return not self.db.profile.showBorder end,
+						get = function() return self.db.profile.useClassColorBorder end,
+						set = function(_, value)
+							self.db.profile.useClassColorBorder = value
+							zBarButtonBG.charSettings.useClassColorBorder = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
+								zBarButtonBG.updateColors()
 							end
-							zBarButtonBG.print("Settings reset to defaults!")
 						end,
 					},
 				},

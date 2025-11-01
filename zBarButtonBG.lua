@@ -296,7 +296,7 @@ end
 function zBarButtonBG.updateColors()
 	if not zBarButtonBG.enabled then return end
 
-	-- Get color tables once using helpers
+	-- Get color tables once using helpers to eliminate repetitive calls
 	local outerColor = getColorTable("outerColor", "useClassColorOuter")
 	local innerColor = getColorTable("innerColor", "useClassColorInner")
 	local borderColor = getColorTable("borderColor", "useClassColorBorder")
@@ -343,82 +343,133 @@ local function getFontPath(fontName)
 	return fontName
 end
 
+-- ############################################################
+-- Helper Functions to Eliminate Duplication
+-- ############################################################
+
+-- Apply macro name text styling (extracted from repeated pattern)
+local function applyMacroNameStyling(button)
+	if not button or not button.Name then return end
+	
+	button.Name:SetFont(
+		getFontPath(zBarButtonBG.charSettings.macroNameFont),
+		zBarButtonBG.charSettings.macroNameFontSize,
+		zBarButtonBG.charSettings.macroNameFontFlags
+	)
+	button.Name:SetSize(
+		zBarButtonBG.charSettings.macroNameWidth,
+		zBarButtonBG.charSettings.macroNameHeight
+	)
+	local c = zBarButtonBG.charSettings.macroNameColor
+	button.Name:SetTextColor(c.r, c.g, c.b, c.a)
+	local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
+	local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
+	button.Name:ClearAllPoints()
+	button.Name:SetPoint("BOTTOM", button, "BOTTOM", 0 + xOffset, 2 + yOffset)
+end
+
+-- Apply count text styling (extracted from repeated pattern)
+local function applyCountStyling(button)
+	if not button or not button.Count then return end
+	
+	button.Count:SetFont(
+		getFontPath(zBarButtonBG.charSettings.countFont),
+		zBarButtonBG.charSettings.countFontSize,
+		zBarButtonBG.charSettings.countFontFlags
+	)
+	button.Count:SetSize(
+		zBarButtonBG.charSettings.countWidth,
+		zBarButtonBG.charSettings.countHeight
+	)
+	local c = zBarButtonBG.charSettings.countColor
+	button.Count:SetTextColor(c.r, c.g, c.b, c.a)
+	local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
+	local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
+	button.Count:ClearAllPoints()
+	button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0 + xOffset, 3 + yOffset)
+end
+
+-- Apply keybind text styling (extracted from repeated pattern)
+local function applyKeybindStyling(button)
+	if not button or not button.HotKey then return end
+	
+	button.HotKey:SetFont(
+		getFontPath(zBarButtonBG.charSettings.keybindFont),
+		zBarButtonBG.charSettings.keybindFontSize,
+		zBarButtonBG.charSettings.keybindFontFlags
+	)
+	button.HotKey:SetSize(
+		zBarButtonBG.charSettings.keybindWidth,
+		zBarButtonBG.charSettings.keybindHeight
+	)
+	local c = zBarButtonBG.charSettings.keybindColor
+	button.HotKey:SetTextColor(c.r, c.g, c.b, c.a)
+	local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
+	local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
+	button.HotKey:ClearAllPoints()
+	button.HotKey:SetPoint("TOPRIGHT", button, "TOPRIGHT", -1 + xOffset, -2 + yOffset)
+end
+
+-- Apply all text styling to a button (eliminates 60+ lines of duplication)
+local function applyAllTextStyling(button)
+	if not button then return end
+	
+	applyMacroNameStyling(button)
+	applyCountStyling(button)
+	applyKeybindStyling(button)
+end
+
+-- Manage NormalTexture consistently (extracted from repeated calls)
+local function updateButtonNormalTexture(button)
+	if not button or not button.NormalTexture then return end
+	
+	-- Always keep it transparent for our custom styling
+	button.NormalTexture:SetAlpha(0)
+end
+
+-- Apply text positioning with offsets (eliminates repetitive positioning code)
+local function applyTextPositioning(button)
+	if not button then return end
+	
+	-- Apply text positioning after button data is stored
+	if button.Name then
+		local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
+		local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
+		button.Name:ClearAllPoints()
+		button.Name:SetPoint("BOTTOM", button, "BOTTOM", 0 + xOffset, 2 + yOffset)
+	end
+	if button.Count then
+		local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
+		local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
+		button.Count:ClearAllPoints()
+		button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0 + xOffset, 3 + yOffset)
+	end
+	if button.HotKey then
+		local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
+		local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
+		button.HotKey:ClearAllPoints()
+		button.HotKey:SetPoint("TOPRIGHT", button, "TOPRIGHT", -1 + xOffset, -2 + yOffset)
+	end
+end
+
 -- Update fonts on existing buttons without rebuilding everything
 function zBarButtonBG.updateFonts()
 	if not zBarButtonBG.enabled then return end
 
 	for buttonName, data in pairs(zBarButtonBG.frames) do
 		if data and data.button then
-			-- Update macro name font and size (button.Name)
-			if data.button.Name then
-				data.button.Name:SetFont(
-					getFontPath(zBarButtonBG.charSettings.macroNameFont),
-					zBarButtonBG.charSettings.macroNameFontSize,
-					zBarButtonBG.charSettings.macroNameFontFlags
-				)
-				-- Set text frame dimensions
-				data.button.Name:SetSize(
-					zBarButtonBG.charSettings.macroNameWidth,
-					zBarButtonBG.charSettings.macroNameHeight
-				)
-				-- Set text color
-				local c = zBarButtonBG.charSettings.macroNameColor
-				data.button.Name:SetTextColor(c.r, c.g, c.b, c.a)
-				-- Set position with offset
-				local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
-				local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
-				data.button.Name:ClearAllPoints()
-				data.button.Name:SetPoint("BOTTOM", data.button, "BOTTOM", 0 + xOffset, 2 + yOffset)
-			end
-
-			-- Update count/charge font and size (button.Count)
-			if data.button.Count then
-				data.button.Count:SetFont(
-					getFontPath(zBarButtonBG.charSettings.countFont),
-					zBarButtonBG.charSettings.countFontSize,
-					zBarButtonBG.charSettings.countFontFlags
-				)
-				-- Set text frame dimensions
-				data.button.Count:SetSize(
-					zBarButtonBG.charSettings.countWidth,
-					zBarButtonBG.charSettings.countHeight
-				)
-				-- Set text color
-				local c = zBarButtonBG.charSettings.countColor
-				data.button.Count:SetTextColor(c.r, c.g, c.b, c.a)
-				-- Set position with offset
-				local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
-				local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
-				data.button.Count:ClearAllPoints()
-				data.button.Count:SetPoint("BOTTOMRIGHT", data.button, "BOTTOMRIGHT", 0 + xOffset, 3 + yOffset)
-			end
-
-			-- Update keybind/hotkey font and size (button.HotKey)
-			if data.button.HotKey then
-				data.button.HotKey:SetFont(
-					getFontPath(zBarButtonBG.charSettings.keybindFont),
-					zBarButtonBG.charSettings.keybindFontSize,
-					zBarButtonBG.charSettings.keybindFontFlags
-				)
-				-- Set text frame dimensions
-				data.button.HotKey:SetSize(
-					zBarButtonBG.charSettings.keybindWidth,
-					zBarButtonBG.charSettings.keybindHeight
-				)
-				-- Set text color
-				local c = zBarButtonBG.charSettings.keybindColor
-				data.button.HotKey:SetTextColor(c.r, c.g, c.b, c.a)
-				-- Set position with offset
-				local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
-				local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
-				data.button.HotKey:ClearAllPoints()
-				data.button.HotKey:SetPoint("TOPRIGHT", data.button, "TOPRIGHT", -1 + xOffset, -2 + yOffset)
-			end
+			-- Use helper function to eliminate 60+ lines of duplicated code
+			applyAllTextStyling(data.button)
 		end
 	end
 end
 
 function zBarButtonBG.createActionBarBackgrounds()
+	-- Get colors once at the top to eliminate repeated getColorTable calls
+	local outerColor = getColorTable("outerColor", "useClassColorOuter")
+	local innerColor = getColorTable("innerColor", "useClassColorInner")
+	local borderColor = getColorTable("borderColor", "useClassColorBorder")
+
 	-- All the different types of action bar buttons we want to modify
 	local buttonBases = {
 		"ActionButton",        -- Main action bar (1-12)
@@ -450,9 +501,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 					-- Handle the default border texture based on settings
 					-- Always make Blizzard's NormalTexture fully transparent so it never shows
-					if button.NormalTexture then
-						button.NormalTexture:SetAlpha(0)
-					end
+					updateButtonNormalTexture(button)
 
 					-- Apply icon styling based on square/round mode
 
@@ -686,7 +735,6 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Fill it with black (or class color if that's enabled)
 						outerBg = outerFrame:CreateTexture(nil, "BACKGROUND", nil, -8)
 						outerBg:SetAllPoints(outerFrame)
-						local outerColor = getColorTable("outerColor", "useClassColorOuter")
 						outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
 					end
 
@@ -701,7 +749,6 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Fill it with dark grey (or class color)
 						bg = bgFrame:CreateTexture(nil, "BACKGROUND", nil, -7)
 						bg:SetAllPoints(bgFrame)
-						local innerColor = getColorTable("innerColor", "useClassColorInner")
 						bg:SetColorTexture(innerColor.r, innerColor.g, innerColor.b, innerColor.a)
 
 						-- Apply appropriate mask to inner background
@@ -728,74 +775,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Use ADD blend mode which treats black as transparent
 						customBorderTexture:SetBlendMode("ADD")
 
-						-- Figure out what color to use for the border
-						local borderColor = getColorTable("borderColor", "useClassColorBorder")
-
 						-- Use color picker's alpha for overall border transparency (ADD mode handles black=transparent)
 						customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 					end
 
-					-- Apply custom fonts to button text elements
-					if button.Name then
-						button.Name:SetFont(
-							getFontPath(zBarButtonBG.charSettings.macroNameFont),
-							zBarButtonBG.charSettings.macroNameFontSize,
-							zBarButtonBG.charSettings.macroNameFontFlags
-						)
-						-- Set text frame dimensions
-						button.Name:SetSize(
-							zBarButtonBG.charSettings.macroNameWidth,
-							zBarButtonBG.charSettings.macroNameHeight
-						)
-						-- Set text color
-						local c = zBarButtonBG.charSettings.macroNameColor
-						button.Name:SetTextColor(c.r, c.g, c.b, c.a)
-						-- Set position with offset
-						local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
-						local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
-						button.Name:ClearAllPoints()
-						button.Name:SetPoint("BOTTOM", button, "BOTTOM", 0 + xOffset, 2 + yOffset)
-					end
-					if button.Count then
-						button.Count:SetFont(
-							getFontPath(zBarButtonBG.charSettings.countFont),
-							zBarButtonBG.charSettings.countFontSize,
-							zBarButtonBG.charSettings.countFontFlags
-						)
-						-- Set text frame dimensions
-						button.Count:SetSize(
-							zBarButtonBG.charSettings.countWidth,
-							zBarButtonBG.charSettings.countHeight
-						)
-						-- Set text color
-						local c = zBarButtonBG.charSettings.countColor
-						button.Count:SetTextColor(c.r, c.g, c.b, c.a)
-						-- Set position with offset
-						local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
-						local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
-						button.Count:ClearAllPoints()
-						button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0 + xOffset, 3 + yOffset)
-					end
-					if button.HotKey then
-						button.HotKey:SetFont(
-							getFontPath(zBarButtonBG.charSettings.keybindFont),
-							zBarButtonBG.charSettings.keybindFontSize,
-							zBarButtonBG.charSettings.keybindFontFlags
-						)
-						-- Set text frame dimensions
-						button.HotKey:SetSize(
-							zBarButtonBG.charSettings.keybindWidth,
-							zBarButtonBG.charSettings.keybindHeight
-						)
-						-- Set text color
-						local c = zBarButtonBG.charSettings.keybindColor
-						button.HotKey:SetTextColor(c.r, c.g, c.b, c.a)
-						-- Set position with offset
-						local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
-						local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
-						button.HotKey:ClearAllPoints()
-						button.HotKey:SetPoint("TOPRIGHT", button, "TOPRIGHT", -1 + xOffset, -2 + yOffset)
-					end
+					-- Apply custom fonts to button text elements using helper
+					applyAllTextStyling(button)
 
 					-- Store references to everything we created so we can update or remove it later
 					zBarButtonBG.frames[buttonName] = {
@@ -808,25 +793,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button = button
 					}
 					
-					-- Apply text positioning after button data is stored
-					if button.Name then
-						local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
-						local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
-						button.Name:ClearAllPoints()
-						button.Name:SetPoint("BOTTOM", button, "BOTTOM", 0 + xOffset, 2 + yOffset)
-					end
-					if button.Count then
-						local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
-						local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
-						button.Count:ClearAllPoints()
-						button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0 + xOffset, 3 + yOffset)
-					end
-					if button.HotKey then
-						local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
-						local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
-						button.HotKey:ClearAllPoints()
-						button.HotKey:SetPoint("TOPRIGHT", button, "TOPRIGHT", -1 + xOffset, -2 + yOffset)
-					end
+					-- Apply text positioning after button data is stored using helper
+					applyTextPositioning(button)
 					
 					-- Make sure the mask stays removed
 					if button.icon and button.IconMask then
@@ -837,9 +805,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					local data = zBarButtonBG.frames[buttonName]
 
 					-- Handle NormalTexture - always keep it transparent
-					if button.NormalTexture then
-						button.NormalTexture:SetAlpha(0)
-					end
+					updateButtonNormalTexture(button)
 
 					-- Update icon mask when switching modes
 					if button.icon then
@@ -967,8 +933,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 
 					-- Update the colors (might have changed in settings or toggled class colors)
-					local outerColor = getColorTable("outerColor", "useClassColorOuter")
-					local innerColor = getColorTable("innerColor", "useClassColorInner")
+					-- Use colors already calculated at function start
 
 					if data.outerBg then
 						data.outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
@@ -977,57 +942,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 						data.bg:SetColorTexture(innerColor.r, innerColor.g, innerColor.b, innerColor.a)
 					end
 
-					-- Update fonts in case they changed
-					if button.Name then
-						button.Name:SetFont(
-							getFontPath(zBarButtonBG.charSettings.macroNameFont),
-							zBarButtonBG.charSettings.macroNameFontSize,
-							zBarButtonBG.charSettings.macroNameFontFlags
-						)
-						-- Set text frame dimensions
-						button.Name:SetSize(
-							zBarButtonBG.charSettings.macroNameWidth,
-							zBarButtonBG.charSettings.macroNameHeight
-						)
-						-- Set text color
-						local c = zBarButtonBG.charSettings.macroNameColor
-						button.Name:SetTextColor(c.r, c.g, c.b, c.a)
-					end
-					if button.Count then
-						button.Count:SetFont(
-							getFontPath(zBarButtonBG.charSettings.countFont),
-							zBarButtonBG.charSettings.countFontSize,
-							zBarButtonBG.charSettings.countFontFlags
-						)
-						-- Set text frame dimensions
-						button.Count:SetSize(
-							zBarButtonBG.charSettings.countWidth,
-							zBarButtonBG.charSettings.countHeight
-						)
-						-- Set text color
-						local c = zBarButtonBG.charSettings.countColor
-						button.Count:SetTextColor(c.r, c.g, c.b, c.a)
-					end
-					if button.HotKey then
-						button.HotKey:SetFont(
-							getFontPath(zBarButtonBG.charSettings.keybindFont),
-							zBarButtonBG.charSettings.keybindFontSize,
-							zBarButtonBG.charSettings.keybindFontFlags
-						)
-						-- Set text frame dimensions
-						button.HotKey:SetSize(
-							zBarButtonBG.charSettings.keybindWidth,
-							zBarButtonBG.charSettings.keybindHeight
-						)
-						-- Set text color
-						local c = zBarButtonBG.charSettings.keybindColor
-						button.HotKey:SetTextColor(c.r, c.g, c.b, c.a)
-					end
+					-- Update fonts in case they changed using helper
+					applyAllTextStyling(button)
 
 					-- Handle border updates
 					if zBarButtonBG.charSettings.showBorder and button.icon then
-						-- Figure out the border color
-						local borderColor = getColorTable("borderColor", "useClassColorBorder")
+						-- Use border color already calculated at function start
 
 						if not data.customBorderTexture then
 							-- Border wasn't created initially, make it now
@@ -1109,7 +1029,6 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Round buttons with borders: make visible and color it
 					button.NormalTexture:Show()
 					button.NormalTexture:SetAlpha(1)
-					local borderColor = getColorTable("borderColor", "useClassColorBorder")
 					button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 				else
 					-- Round buttons without borders: make it transparent
