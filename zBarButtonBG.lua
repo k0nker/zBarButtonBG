@@ -364,15 +364,11 @@ function zBarButtonBG.updateFonts()
 				-- Set text color
 				local c = zBarButtonBG.charSettings.macroNameColor
 				data.button.Name:SetTextColor(c.r, c.g, c.b, c.a)
-				
-				-- Apply position offset if offsets are non-zero
+				-- Set position with offset
 				local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
 				local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
-				if xOffset ~= 0 or yOffset ~= 0 then
-					-- Clear existing points and reposition with offset
-					data.button.Name:ClearAllPoints()
-					data.button.Name:SetPoint("BOTTOM", data.button, "BOTTOM", xOffset, 2 + yOffset)
-				end
+				data.button.Name:ClearAllPoints()
+				data.button.Name:SetPoint("BOTTOM", data.button, "BOTTOM", 0 + xOffset, 2 + yOffset)
 			end
 
 			-- Update count/charge font and size (button.Count)
@@ -390,15 +386,11 @@ function zBarButtonBG.updateFonts()
 				-- Set text color
 				local c = zBarButtonBG.charSettings.countColor
 				data.button.Count:SetTextColor(c.r, c.g, c.b, c.a)
-				
-				-- Apply position offset if offsets are non-zero
+				-- Set position with offset
 				local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
 				local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
-				if xOffset ~= 0 or yOffset ~= 0 then
-					-- Clear existing points and reposition with offset
-					data.button.Count:ClearAllPoints()
-					data.button.Count:SetPoint("TOPRIGHT", data.button, "TOPRIGHT", -2 + xOffset, -2 + yOffset)
-				end
+				data.button.Count:ClearAllPoints()
+				data.button.Count:SetPoint("BOTTOMRIGHT", data.button, "BOTTOMRIGHT", 0 + xOffset, 3 + yOffset)
 			end
 
 			-- Update keybind/hotkey font and size (button.HotKey)
@@ -416,15 +408,11 @@ function zBarButtonBG.updateFonts()
 				-- Set text color
 				local c = zBarButtonBG.charSettings.keybindColor
 				data.button.HotKey:SetTextColor(c.r, c.g, c.b, c.a)
-				
-				-- Apply position offset if offsets are non-zero
+				-- Set position with offset
 				local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
 				local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
-				if xOffset ~= 0 or yOffset ~= 0 then
-					-- Clear existing points and reposition with offset
-					data.button.HotKey:ClearAllPoints()
-					data.button.HotKey:SetPoint("TOPLEFT", data.button, "TOPLEFT", 2 + xOffset, -2 + yOffset)
-				end
+				data.button.HotKey:ClearAllPoints()
+				data.button.HotKey:SetPoint("TOPRIGHT", data.button, "TOPRIGHT", -1 + xOffset, -2 + yOffset)
 			end
 		end
 	end
@@ -628,7 +616,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button:HookScript("OnMouseUp", function(self)
 							if self._zBBG_customHighlight then
 								-- Keep showing if mouse is still over button, hide otherwise
-								if not self:IsMouseOver() then
+								-- Also hide if cursor is in a drag state (fixes stuck highlights during icon dragging)
+								local cursorType = GetCursorInfo()
+								if not self:IsMouseOver() or cursorType then
 									self._zBBG_customHighlight:Hide()
 								end
 							end
@@ -760,6 +750,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Set text color
 						local c = zBarButtonBG.charSettings.macroNameColor
 						button.Name:SetTextColor(c.r, c.g, c.b, c.a)
+						-- Set position with offset
+						local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
+						local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
+						button.Name:ClearAllPoints()
+						button.Name:SetPoint("BOTTOM", button, "BOTTOM", 0 + xOffset, 2 + yOffset)
 					end
 					if button.Count then
 						button.Count:SetFont(
@@ -775,6 +770,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Set text color
 						local c = zBarButtonBG.charSettings.countColor
 						button.Count:SetTextColor(c.r, c.g, c.b, c.a)
+						-- Set position with offset
+						local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
+						local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
+						button.Count:ClearAllPoints()
+						button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0 + xOffset, 3 + yOffset)
 					end
 					if button.HotKey then
 						button.HotKey:SetFont(
@@ -790,6 +790,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Set text color
 						local c = zBarButtonBG.charSettings.keybindColor
 						button.HotKey:SetTextColor(c.r, c.g, c.b, c.a)
+						-- Set position with offset
+						local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
+						local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
+						button.HotKey:ClearAllPoints()
+						button.HotKey:SetPoint("TOPRIGHT", button, "TOPRIGHT", -1 + xOffset, -2 + yOffset)
 					end
 
 					-- Store references to everything we created so we can update or remove it later
@@ -802,6 +807,27 @@ function zBarButtonBG.createActionBarBackgrounds()
 						customBorderTexture = customBorderTexture,
 						button = button
 					}
+					
+					-- Apply text positioning after button data is stored
+					if button.Name then
+						local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
+						local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
+						button.Name:ClearAllPoints()
+						button.Name:SetPoint("BOTTOM", button, "BOTTOM", 0 + xOffset, 2 + yOffset)
+					end
+					if button.Count then
+						local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
+						local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
+						button.Count:ClearAllPoints()
+						button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0 + xOffset, 3 + yOffset)
+					end
+					if button.HotKey then
+						local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
+						local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
+						button.HotKey:ClearAllPoints()
+						button.HotKey:SetPoint("TOPRIGHT", button, "TOPRIGHT", -1 + xOffset, -2 + yOffset)
+					end
+					
 					-- Make sure the mask stays removed
 					if button.icon and button.IconMask then
 						button.icon:RemoveMaskTexture(button.IconMask)
@@ -1043,10 +1069,32 @@ function zBarButtonBG.createActionBarBackgrounds()
 		local updateFrame = CreateFrame("Frame")
 		updateFrame:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
 		updateFrame:RegisterEvent("UPDATE_BINDINGS")
+		updateFrame:RegisterEvent("CURSOR_CHANGED")
+		updateFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+		updateFrame:RegisterEvent("ACTIONBAR_UPDATE_USABLE")
 		updateFrame:SetScript("OnEvent", function(self, event)
 			if zBarButtonBG.enabled then
-				-- Only rebuild on page changes and binding updates, not on grid show/hide
-				zBarButtonBG.createActionBarBackgrounds()
+				if event == "CURSOR_CHANGED" then
+					-- Clear any stuck highlights when cursor changes (e.g., during drag operations)
+					local cursorType = GetCursorInfo()
+					if cursorType then -- Cursor has something (drag operation started)
+						for buttonName, data in pairs(zBarButtonBG.frames) do
+							if data and data.button and data.button._zBBG_customHighlight then
+								data.button._zBBG_customHighlight:Hide()
+							end
+						end
+					end
+				elseif event == "PLAYER_TARGET_CHANGED" or event == "ACTIONBAR_UPDATE_USABLE" then
+					-- Update range overlays when target changes or usability updates
+					for buttonName, data in pairs(zBarButtonBG.frames) do
+						if data and data.button and data.button._zBBG_rangeOverlay then
+							zBarButtonBG.updateRangeOverlay(data.button)
+						end
+					end
+				else
+					-- Only rebuild on page changes and binding updates, not on grid show/hide
+					zBarButtonBG.createActionBarBackgrounds()
+				end
 			end
 		end)
 
@@ -1074,48 +1122,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 		hooksecurefunc("ActionButton_UpdateRangeIndicator", manageNormalTexture)
 
 		-- Hook range indicator to show/hide range overlay
-		local function updateRangeOverlay(button)
-			if not button or not button._zBBG_rangeOverlay or not button._zBBG_styled or not zBarButtonBG.enabled then
-				return
-			end
-			
-			if not zBarButtonBG.charSettings.showRangeIndicator then
-				button._zBBG_rangeOverlay:Hide()
-				return
-			end
-			
-			-- Check if there's a valid target
-			local hasTarget = UnitExists("target")
-			if not hasTarget then
-				button._zBBG_rangeOverlay:Hide()
-				return
-			end
-			
-			-- Check range based on button type
-			local inRange = nil
-			if button.action then
-				-- Regular action buttons - check range against current target
-				inRange = IsActionInRange(button.action, "target")
-			elseif button.GetAction then
-				-- Try to get action from the button
-				local action = button:GetAction()
-				if action then
-					inRange = IsActionInRange(action, "target")
-				end
-			end
-			
-			-- inRange: true = in range, nil = out of range (when target exists)
-			if inRange == false then
-				-- Out of range - show overlay
-				local c = zBarButtonBG.charSettings.rangeIndicatorColor
-				button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
-				button._zBBG_rangeOverlay:Show()
-			else
-				-- In range - hide overlay
-				button._zBBG_rangeOverlay:Hide()
-			end
-		end
-		hooksecurefunc("ActionButton_UpdateRangeIndicator", updateRangeOverlay)
+		hooksecurefunc("ActionButton_UpdateRangeIndicator", zBarButtonBG.updateRangeOverlay)
 
 		-- Hook cooldown to show/hide cooldown fade overlay
 		local function updateCooldownOverlay(button)
@@ -1177,6 +1184,51 @@ function zBarButtonBG.createActionBarBackgrounds()
 		end)
 
 		zBarButtonBG.hookInstalled = true
+	end
+end
+
+-- ############################################################
+-- Range Overlay Update Function
+-- ############################################################
+function zBarButtonBG.updateRangeOverlay(button)
+	if not button or not button._zBBG_rangeOverlay or not button._zBBG_styled or not zBarButtonBG.enabled then
+		return
+	end
+	
+	if not zBarButtonBG.charSettings.showRangeIndicator then
+		button._zBBG_rangeOverlay:Hide()
+		return
+	end
+	
+	-- Check if there's a valid target
+	local hasTarget = UnitExists("target")
+	if not hasTarget then
+		button._zBBG_rangeOverlay:Hide()
+		return
+	end
+	
+	-- Check range based on button type
+	local inRange = nil
+	if button.action then
+		-- Regular action buttons - check range against current target
+		inRange = IsActionInRange(button.action, "target")
+	elseif button.GetAction then
+		-- Try to get action from the button
+		local action = button:GetAction()
+		if action then
+			inRange = IsActionInRange(action, "target")
+		end
+	end
+	
+	-- inRange: true = in range, nil = out of range (when target exists)
+	if inRange == false then
+		-- Out of range - show overlay
+		local c = zBarButtonBG.charSettings.rangeIndicatorColor
+		button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+		button._zBBG_rangeOverlay:Show()
+	else
+		-- In range - hide overlay
+		button._zBBG_rangeOverlay:Hide()
 	end
 end
 
