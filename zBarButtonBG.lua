@@ -1012,43 +1012,52 @@ function zBarButtonBG.createActionBarBackgrounds()
 		end
 	end
 
-	-- Hook into action bar events so we can update when buttons change
+	-- Hook into action bar stuff so we know when buttons change
 	if not zBarButtonBG.hookInstalled then
-		-- Listen for action bar changes and reapply our backgrounds
+		-- Listen for the important action bar changes - no more spam than we need
 		local updateFrame = CreateFrame("Frame")
 		updateFrame:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
 		updateFrame:RegisterEvent("UPDATE_BINDINGS")
 		updateFrame:RegisterEvent("CURSOR_CHANGED")
-		updateFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-		updateFrame:RegisterEvent("ACTIONBAR_UPDATE_USABLE")
+		-- These fire when mounting/dismounting messes with the action bars
+		updateFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+		updateFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
 		updateFrame:SetScript("OnEvent", function(self, event)
 			if zBarButtonBG.enabled then
 				if event == "CURSOR_CHANGED" then
-					-- Clear any stuck highlights when cursor changes (e.g., during drag operations)
+					-- Clear stuck highlights when dragging stuff around
 					local cursorType = GetCursorInfo()
-					if cursorType then -- Cursor has something (drag operation started)
+					if cursorType then -- Cursor picked something up
 						for buttonName, data in pairs(zBarButtonBG.frames) do
 							if data and data.button and data.button._zBBG_customHighlight then
 								data.button._zBBG_customHighlight:Hide()
 							end
 						end
 					end
-				elseif event == "PLAYER_TARGET_CHANGED" or event == "ACTIONBAR_UPDATE_USABLE" then
-					-- Update range overlays when target changes or usability updates
+				elseif event == "ACTIONBAR_PAGE_CHANGED" or event == "ACTIONBAR_SLOT_CHANGED" or event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
+					-- Action bars changed - need to update our range overlays since buttons might have different spells now
+					if zBarButtonBG._debug then
+						zBarButtonBG.print("Action bar changed (" .. event .. ") - fixing up range overlays")
+					end
+					if event == "ACTIONBAR_PAGE_CHANGED" or event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
+						-- Page changes and mounting need a full rebuild
+						zBarButtonBG.createActionBarBackgrounds()
+					end
+					-- Update range overlays since buttons probably have different actions now
 					for buttonName, data in pairs(zBarButtonBG.frames) do
 						if data and data.button and data.button._zBBG_rangeOverlay then
 							zBarButtonBG.updateRangeOverlay(data.button)
 						end
 					end
 				else
-					-- Only rebuild on page changes and binding updates, not on grid show/hide
+					-- Just keybinding changes, rebuild everything
 					zBarButtonBG.createActionBarBackgrounds()
 				end
 			end
 		end)
 
-		-- Hook into various action button update functions to manage NormalTexture
-		-- This keeps it transparent when we want it hidden, or properly colored when we're using it
+		-- Hook the button update functions so we can mess with NormalTexture
+		-- Keep it invisible when we want square buttons, or color it when we need borders
 		local function manageNormalTexture(button)
 			if button and button.NormalTexture and button._zBBG_styled and zBarButtonBG.enabled then
 				if zBarButtonBG.charSettings.squareButtons then
@@ -1066,72 +1075,146 @@ function zBarButtonBG.createActionBarBackgrounds()
 			end
 		end
 
-		-- Hook the range indicator update (this one definitely exists)
+		-- Hook the range indicator function - this runs whenever WoW checks range
 		hooksecurefunc("ActionButton_UpdateRangeIndicator", manageNormalTexture)
 
-		-- Hook range indicator to show/hide range overlay
-		hooksecurefunc("ActionButton_UpdateRangeIndicator", zBarButtonBG.updateRangeOverlay)
-
-		-- Hook cooldown to show/hide cooldown fade overlay
-		local function updateCooldownOverlay(button)
-			if button and button._zBBG_cooldownOverlay and button._zBBG_styled and zBarButtonBG.enabled then
-				if zBarButtonBG.charSettings.fadeCooldown and button.cooldown then
-					local start, duration = button.cooldown:GetCooldownTimes()
-					if start and duration and start > 0 and duration > 0 then
-						-- Convert to seconds for easier comparison (GetCooldownTimes returns milliseconds)
-						local durationSec = duration / 1000
-						
-						-- Get GCD duration in seconds
-						local gcdDuration = 0
-						if C_Spell and C_Spell.GetSpellCooldown then
-							-- Use new API
-							local gcdInfo = C_Spell.GetSpellCooldown(61304)
-							if gcdInfo and gcdInfo.duration then
-								gcdDuration = gcdInfo.duration
-							end
-						elseif GetSpellCooldown then
-							-- Fallback to old API
-							local gcdStart, gcdDur = GetSpellCooldown(61304)
-							gcdDuration = gcdDur or 0
-						end
-						
-						-- Debug: Add a test command to see what's happening
-						if button == ActionButton1 and zBarButtonBG._debugGCD then
-							print("Button CD (sec):", durationSec, "GCD (sec):", gcdDuration, "Diff:", math.abs(durationSec - gcdDuration))
-						end
-						
-						-- Check if this looks like GCD by duration comparison
-						-- GCD is typically 1.0-1.5 seconds, so if duration is close to that range and matches GCD, hide it
-						if gcdDuration > 0 and durationSec > 0.8 and durationSec < 2.0 then
-							-- This could be GCD - check if duration is very close to GCD duration
-							if math.abs(durationSec - gcdDuration) < 0.05 then -- 50ms tolerance
-								-- Duration matches GCD closely - hide overlay (just GCD)
-								button._zBBG_cooldownOverlay:Hide()
-							else
-								-- Duration doesn't match GCD - show overlay (real cooldown)
-								button._zBBG_cooldownOverlay:Show()
-							end
-						else
-							-- Duration is outside GCD range or no GCD detected - show overlay
-							button._zBBG_cooldownOverlay:Show()
-						end
-					else
-						-- Not on cooldown - hide overlay
-						button._zBBG_cooldownOverlay:Hide()
-					end
-				else
-					button._zBBG_cooldownOverlay:Hide()
+		-- Piggyback on WoW's range checking instead of doing our own
+		hooksecurefunc("ActionButton_UpdateRangeIndicator", function(button)
+			if button and button._zBBG_styled and zBarButtonBG.enabled then
+				-- Debug spam to see what's happening
+				if zBarButtonBG._debug then
+					local buttonName = button:GetName() or "Unknown"
+					local hasTarget = UnitExists("target")
+					local action = button.action
+					local inRange = action and IsActionInRange(action, "target")
+					zBarButtonBG.print("Range update for " .. buttonName .. " - Target: " .. tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
 				end
-			end
-		end
-		hooksecurefunc("ActionButton_UpdateCooldown", updateCooldownOverlay)
-		hooksecurefunc("CooldownFrame_Set", function(cooldown)
-			if cooldown and cooldown:GetParent() and cooldown:GetParent()._zBBG_styled then
-				updateCooldownOverlay(cooldown:GetParent())
+				zBarButtonBG.updateRangeOverlay(button)
 			end
 		end)
 
+		-- Hook cooldown updates so we can show/hide our fade overlay
+		hooksecurefunc("ActionButton_UpdateCooldown", function(button)
+			if button and button._zBBG_cooldownOverlay and button._zBBG_styled and zBarButtonBG.enabled then
+				zBarButtonBG.updateCooldownOverlay(button)
+			end
+		end)
+		
+		-- Also catch the general cooldown frame stuff
+		hooksecurefunc("CooldownFrame_Set", function(cooldown, start, duration, enable, forceShowDrawEdge, modRate)
+			if cooldown and cooldown:GetParent() and cooldown:GetParent()._zBBG_styled and zBarButtonBG.enabled then
+				zBarButtonBG.updateCooldownOverlay(cooldown:GetParent())
+			end
+		end)
+		
+		-- Hook usability updates - way better than spamming events everywhere
+		-- WoW calls this when stuff like mana or range changes
+		if ActionButton_UpdateUsable then
+			hooksecurefunc("ActionButton_UpdateUsable", function(button)
+				if button and button._zBBG_styled and zBarButtonBG.enabled then
+					-- Fix range overlay when usability changes
+					if button._zBBG_rangeOverlay then
+						zBarButtonBG.updateRangeOverlay(button)
+					end
+					-- Keep normal texture in line
+					manageNormalTexture(button)
+				end
+			end)
+		end
+		
+		-- Hook main action updates - catches when buttons get new spells (like mounting)
+		if ActionButton_Update then
+			hooksecurefunc("ActionButton_Update", function(button)
+				if button and button._zBBG_styled and zBarButtonBG.enabled then
+					-- Update range overlay since the action probably changed
+					if button._zBBG_rangeOverlay then
+						zBarButtonBG.updateRangeOverlay(button)
+					end
+					-- Fix normal texture too
+					manageNormalTexture(button)
+				end
+			end)
+		end
+		
+		-- Hook state updates for better highlight management
+		if ActionButton_UpdateState then
+			hooksecurefunc("ActionButton_UpdateState", function(button)
+				if button and button._zBBG_styled and zBarButtonBG.enabled then
+					manageNormalTexture(button)
+				end
+			end)
+		end
+		
+		-- Hook the main action button update function to catch page changes
+		-- This should be called whenever a button's action changes
+		if ActionButton_OnEvent then
+			hooksecurefunc("ActionButton_OnEvent", function(button, event, ...)
+				if button and button._zBBG_styled and zBarButtonBG.enabled then
+					if event == "ACTIONBAR_SLOT_CHANGED" or event == "UPDATE_BINDINGS" then
+						-- Update range when the button's action or bindings change
+						if button._zBBG_rangeOverlay then
+							zBarButtonBG.updateRangeOverlay(button)
+						end
+						manageNormalTexture(button)
+					end
+				end
+			end)
+		end
+
 		zBarButtonBG.hookInstalled = true
+	end
+end
+
+-- ############################################################
+-- Cooldown Overlay Update Function
+-- ############################################################
+function zBarButtonBG.updateCooldownOverlay(button)
+	if not button or not button._zBBG_cooldownOverlay or not button._zBBG_styled or not zBarButtonBG.enabled then
+		return
+	end
+	
+	if not zBarButtonBG.charSettings.fadeCooldown or not button.cooldown then
+		button._zBBG_cooldownOverlay:Hide()
+		return
+	end
+	
+	local start, duration = button.cooldown:GetCooldownTimes()
+	if start and duration and start > 0 and duration > 0 then
+		-- Convert to seconds for easier comparison (GetCooldownTimes returns milliseconds)
+		local durationSec = duration / 1000
+		
+		-- Get GCD duration in seconds
+		local gcdDuration = 0
+		if C_Spell and C_Spell.GetSpellCooldown then
+			-- Use new API
+			local gcdInfo = C_Spell.GetSpellCooldown(61304)
+			if gcdInfo and gcdInfo.duration then
+				gcdDuration = gcdInfo.duration
+			end
+		elseif GetSpellCooldown then
+			-- Fallback to old API
+			local gcdStart, gcdDur = GetSpellCooldown(61304)
+			gcdDuration = gcdDur or 0
+		end
+		
+		-- Check if this looks like GCD by duration comparison
+		-- GCD is typically 1.0-1.5 seconds, so if duration is close to that range and matches GCD, hide it
+		if gcdDuration > 0 and durationSec > 0.8 and durationSec < 2.0 then
+			-- This could be GCD - check if duration is very close to GCD duration
+			if math.abs(durationSec - gcdDuration) < 0.05 then -- 50ms tolerance
+				-- Duration matches GCD closely - hide overlay (just GCD)
+				button._zBBG_cooldownOverlay:Hide()
+			else
+				-- Duration doesn't match GCD - show overlay (real cooldown)
+				button._zBBG_cooldownOverlay:Show()
+			end
+		else
+			-- Duration is outside GCD range or no GCD detected - show overlay
+			button._zBBG_cooldownOverlay:Show()
+		end
+	else
+		-- Not on cooldown - hide overlay
+		button._zBBG_cooldownOverlay:Hide()
 	end
 end
 
@@ -1148,35 +1231,99 @@ function zBarButtonBG.updateRangeOverlay(button)
 		return
 	end
 	
-	-- Check if there's a valid target
-	local hasTarget = UnitExists("target")
-	if not hasTarget then
+	-- Check if we have a valid target first
+	if not UnitExists("target") then
 		button._zBBG_rangeOverlay:Hide()
 		return
 	end
 	
-	-- Check range based on button type
 	local inRange = nil
-	if button.action then
-		-- Regular action buttons - check range against current target
-		inRange = IsActionInRange(button.action, "target")
+	
+	-- Get the action from the button - this is key!
+	local action = button.action
+	if action and action > 0 then
+		-- Regular action buttons - use WoW's native range checking
+		inRange = IsActionInRange(action, "target")
+		
+		if zBarButtonBG._debug then
+			local actionType, id = GetActionInfo(action)
+			zBarButtonBG.print("Button: " .. (button:GetName() or "Unknown") .. ", Action: " .. action .. ", Type: " .. tostring(actionType) .. ", ID: " .. tostring(id) .. ", InRange: " .. tostring(inRange))
+		end
 	elseif button.GetAction then
-		-- Try to get action from the button
-		local action = button:GetAction()
-		if action then
+		-- Try to get action from the button (some addon buttons)
+		action = button:GetAction()
+		if action and action > 0 then
 			inRange = IsActionInRange(action, "target")
+		end
+	elseif button.spellID then
+		-- Direct spell buttons
+		if IsSpellInRange then
+			inRange = IsSpellInRange(button.spellID, "target")
 		end
 	end
 	
-	-- inRange: true = in range, nil = out of range (when target exists)
+	-- IsActionInRange returns: true = in range, false = out of range, nil = no target/not applicable
 	if inRange == false then
 		-- Out of range - show overlay
-		local c = zBarButtonBG.charSettings.rangeIndicatorColor
-		button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
 		button._zBBG_rangeOverlay:Show()
+		if zBarButtonBG._debug then
+			zBarButtonBG.print("Showing range overlay for " .. (button:GetName() or "Unknown"))
+		end
 	else
-		-- In range - hide overlay
+		-- In range or no valid range check - hide overlay  
 		button._zBBG_rangeOverlay:Hide()
+		if zBarButtonBG._debug and inRange == true then
+			zBarButtonBG.print("Hiding range overlay for " .. (button:GetName() or "Unknown") .. " (in range)")
+		end
+	end
+end
+
+-- Debug command to test the new efficient hooking
+SLASH_ZBBGDEBUG1 = "/zbbg"
+SlashCmdList["ZBBGDEBUG"] = function(msg)
+	if msg == "debug" then
+		zBarButtonBG._debug = not zBarButtonBG._debug
+		zBarButtonBG.print("Debug mode " .. (zBarButtonBG._debug and "|cFF00FF00enabled|r" or "|cFFFF0000disabled|r"))
+	elseif msg == "hooks" then
+		zBarButtonBG.print("Hook status: " .. (zBarButtonBG.hookInstalled and "|cFF00FF00installed|r" or "|cFFFF0000not installed|r"))
+		local count = 0
+		for _ in pairs(zBarButtonBG.frames) do count = count + 1 end
+		zBarButtonBG.print("Styled buttons: " .. count)
+	elseif msg == "range" then
+		local button = ActionButton1
+		if button and button._zBBG_styled then
+			zBarButtonBG.print("Testing range on ActionButton1...")
+			local hasTarget = UnitExists("target")
+			local action = button.action
+			local inRange = action and IsActionInRange(action, "target")
+			zBarButtonBG.print("Target exists: " .. tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
+			
+			if button._zBBG_rangeOverlay then
+				local points = button._zBBG_rangeOverlay:GetNumPoints()
+				local alpha = button._zBBG_rangeOverlay:GetAlpha()
+				local shown = button._zBBG_rangeOverlay:IsShown()
+				zBarButtonBG.print("Overlay - Points: " .. points .. ", Alpha: " .. alpha .. ", Shown: " .. tostring(shown))
+				
+				-- Force update
+				zBarButtonBG.updateRangeOverlay(button)
+				zBarButtonBG.print("After update - Shown: " .. tostring(button._zBBG_rangeOverlay:IsShown()))
+			else
+				zBarButtonBG.print("Range overlay not created!")
+			end
+		else
+			zBarButtonBG.print("ActionButton1 not styled or not found")
+		end
+	elseif msg == "cooldown" then
+		local button = ActionButton1
+		if button and button._zBBG_styled then
+			zBarButtonBG.print("Testing cooldown on ActionButton1...")
+			zBarButtonBG.updateCooldownOverlay(button)
+			zBarButtonBG.print("Cooldown overlay: " .. (button._zBBG_cooldownOverlay and (button._zBBG_cooldownOverlay:IsShown() and "shown" or "hidden") or "not created"))
+		else
+			zBarButtonBG.print("ActionButton1 not styled or not found")
+		end
+	else
+		zBarButtonBG.print("Usage: /zbbg debug|hooks|range|cooldown|reload")
 	end
 end
 
@@ -1184,56 +1331,56 @@ end
 function zBarButtonBG.removeActionBarBackgrounds()
 	for buttonName, data in pairs(zBarButtonBG.frames) do
 		if data then
-			-- Clear the styling flag so the button can show its default textures
+			-- Remove our styling flag so the button goes back to normal
 			if data.button then
 				data.button._zBBG_styled = nil
 			end
 
-			-- Hide our custom background frames
+			-- Hide our background stuff
 			if data.outerFrame then
 				data.outerFrame:Hide()
 			end
 			if data.frame then
 				data.frame:Hide()
 			end
-			-- Hide the border frame if it exists
+			-- Get rid of border frame too
 			if data.borderFrame then data.borderFrame:Hide() end
 
-			-- Put the default border texture back and restore its alpha
+			-- Put the normal border back how it was
 			if data.button and data.button.NormalTexture then
 				data.button.NormalTexture:SetAlpha(1)
 				data.button.NormalTexture:Show()
 			end
 
-			-- Restore the default SlotBackground texture
+			-- Fix the slot background back to normal
 			if data.button and data.button.SlotBackground then
 				data.button.SlotBackground:SetTexture(nil)
 				data.button.SlotBackground:SetVertexColor(1, 1, 1, 1)
 				data.button.SlotBackground:SetDrawLayer("BACKGROUND", 0)
-				-- Remove our custom masking
+				-- Undo our custom masking
 				if data.button._zBBG_customMask then
 					removeMaskFromTexture(data.button.SlotBackground)
 				end
 			end
 
-			-- Remove mask from inner background
+			-- Fix mask on inner background too
 			if data.bg and data.button and data.button._zBBG_customMask then
 				removeMaskFromTexture(data.bg)
 			end
 
-			-- Remove custom mask from highlight
+			-- Fix highlight mask too
 			if data.button and data.button._zBBG_customHighlight and data.button._zBBG_customMask then
 				removeMaskFromTexture(data.button._zBBG_customHighlight)
 			end
 
-			-- Reset the icon back to normal size and coords
+			-- Put icon back to normal size
 			if data.button and data.button.icon then
 				data.button.icon:SetScale(1.0)
 				data.button.icon:SetTexCoord(0, 1, 0, 1)
-				-- Remove our custom mask and restore Blizzard's mask
+				-- Undo our mask and put Blizzard's back
 				if data.button._zBBG_customMask then
 					removeMaskFromTexture(data.button.icon)
-					-- Destroy the mask object completely so it gets recreated fresh
+					-- Nuke the mask so it gets made fresh next time
 					data.button._zBBG_customMask = nil
 				end
 				if data.button.IconMask then
