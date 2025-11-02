@@ -97,7 +97,7 @@ function zBarButtonBGAce:GetOptionsTable()
 					header = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "General Settings",
+						name = "General",
 					},
 					enabled = {
 						order = nextOrderNumber(),
@@ -271,8 +271,13 @@ function zBarButtonBGAce:GetOptionsTable()
 			buttonSettings = {
 				order = 2,
 				type = "group",
-				name = "Button Settings",
+				name = "Buttons",
 				args = {
+					header0 = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = "Button Shape",
+					},
 					squareButtons = {
 						order = nextOrderNumber(),
 						type = "toggle",
@@ -293,10 +298,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "description",
 						name = " ",
 					},
-					header = {
+					header1 = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Button Background Settings",
+						name = "Backdrop",
 					},
 					showBackdrop = {
 						order = nextOrderNumber(),
@@ -353,10 +358,101 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
+					spacerBackdrop1 = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
+					},
+					backdropTopAdjustment = {
+						order = nextOrderNumber(),
+						type = "range",
+						name = "Top Size",
+						desc = "How far the backdrop extends above the button (in pixels)",
+						disabled = function() return not self.db.profile.showBackdrop end,
+						min = 0,
+						max = 20,
+						step = 1,
+						get = function() return self.db.profile.backdropTopAdjustment end,
+						set = function(_, value)
+							self.db.profile.backdropTopAdjustment = value
+							zBarButtonBG.charSettings.backdropTopAdjustment = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					backdropBottomAdjustment = {
+						order = nextOrderNumber(),
+						type = "range",
+						name = "Bottom Size",
+						desc = "How far the backdrop extends below the button (in pixels)",
+						disabled = function() return not self.db.profile.showBackdrop end,
+						min = 0,
+						max = 20,
+						step = 1,
+						get = function() return self.db.profile.backdropBottomAdjustment end,
+						set = function(_, value)
+							self.db.profile.backdropBottomAdjustment = value
+							zBarButtonBG.charSettings.backdropBottomAdjustment = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					spacerBackdrop2 = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
+					},
+					backdropLeftAdjustment = {
+						order = nextOrderNumber(),
+						type = "range",
+						name = "Left Size",
+						desc = "How far the backdrop extends to the left of the button (in pixels)",
+						disabled = function() return not self.db.profile.showBackdrop end,
+						min = 0,
+						max = 20,
+						step = 1,
+						get = function() return self.db.profile.backdropLeftAdjustment end,
+						set = function(_, value)
+							self.db.profile.backdropLeftAdjustment = value
+							zBarButtonBG.charSettings.backdropLeftAdjustment = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					backdropRightAdjustment = {
+						order = nextOrderNumber(),
+						type = "range",
+						name = "Right Size",
+						desc = "How far the backdrop extends to the right of the button (in pixels)",
+						disabled = function() return not self.db.profile.showBackdrop end,
+						min = 0,
+						max = 20,
+						step = 1,
+						get = function() return self.db.profile.backdropRightAdjustment end,
+						set = function(_, value)
+							self.db.profile.backdropRightAdjustment = value
+							zBarButtonBG.charSettings.backdropRightAdjustment = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
 					spacer3 = {
 						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
+					},
+					header2 = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = "Slot Background",
 					},
 					showSlotBackground = {
 						order = nextOrderNumber(),
@@ -417,6 +513,11 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
+					},
+					header3 = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = "Border",
 					},
 					showBorder = {
 						order = nextOrderNumber(),
@@ -563,17 +664,12 @@ function zBarButtonBGAce:GetOptionsTable()
 			textSettings = {
 				order = 4,
 				type = "group",
-				name = "Text Settings",
+				name = "Text Fields",
 				args = {
-					header = {
-						order = nextOrderNumber(),
-						type = "header",
-						name = "Font and Text Configuration",
-					},
 					macroNameHeader = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Macro Name Font",
+						name = "Macro Name",
 					},
 					macroNameFont = {
 						order = nextOrderNumber(),
@@ -791,7 +887,7 @@ function zBarButtonBGAce:GetOptionsTable()
 					countHeader = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Count/Charge Font",
+						name = "Count/Charge",
 					},
 					countFont = {
 						order = nextOrderNumber(),
@@ -966,7 +1062,7 @@ function zBarButtonBGAce:GetOptionsTable()
 					keybindHeader = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Keybind/Hotkey Font",
+						name = "Keybind/Hotkey",
 					},
 					keybindFont = {
 						order = nextOrderNumber(),

@@ -12,6 +12,10 @@ local aceDefaults = {
 		showBackdrop = true,
 		outerColor = { r = 0.08, g = 0.08, b = 0.08, a = 1 },
 		useClassColorOuter = false,
+		backdropTopAdjustment = 5,
+		backdropBottomAdjustment = 5,
+		backdropLeftAdjustment = 5,
+		backdropRightAdjustment = 5,
 		showSlotBackground = true,
 		innerColor = { r = 0.1, g = 0.1, b = 0.1, a = 1 },
 		useClassColorInner = false,
@@ -431,6 +435,20 @@ local function updateButtonNormalTexture(button)
 	button.NormalTexture:SetAlpha(0)
 end
 
+-- Apply backdrop positioning with adjustable offsets
+local function applyBackdropPositioning(outerFrame, button)
+	if not outerFrame or not button then return end
+	
+	local topAdj = zBarButtonBG.charSettings.backdropTopAdjustment or 5
+	local bottomAdj = zBarButtonBG.charSettings.backdropBottomAdjustment or 5
+	local leftAdj = zBarButtonBG.charSettings.backdropLeftAdjustment or 5
+	local rightAdj = zBarButtonBG.charSettings.backdropRightAdjustment or 5
+	
+	outerFrame:ClearAllPoints()
+	outerFrame:SetPoint("TOPLEFT", button, "TOPLEFT", -leftAdj, topAdj)
+	outerFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", rightAdj, -bottomAdj)
+end
+
 -- Apply text positioning with offsets (eliminates repetitive positioning code)
 local function applyTextPositioning(button)
 	if not button then return end
@@ -733,8 +751,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					local outerFrame, outerBg
 					if zBarButtonBG.charSettings.showBackdrop then
 						outerFrame = CreateFrame("Frame", nil, button)
-						outerFrame:SetPoint("TOPLEFT", button, "TOPLEFT", -5, 5)
-						outerFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 5, -5)
+						applyBackdropPositioning(outerFrame, button)
 						outerFrame:SetFrameLevel(0)
 						outerFrame:SetFrameStrata("BACKGROUND")
 
@@ -926,6 +943,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if data.outerFrame then
 						if zBarButtonBG.charSettings.showBackdrop then
 							data.outerFrame:Show()
+							-- Update backdrop positioning in case adjustments changed
+							applyBackdropPositioning(data.outerFrame, button)
 						else
 							data.outerFrame:Hide()
 						end
