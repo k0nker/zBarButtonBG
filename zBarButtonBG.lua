@@ -6,45 +6,45 @@ local aceDefaults = {
 	profile = {
 		enabled = true,
 		squareButtons = true,
-		showBorder = true,
+		showBorder = false,
 		borderColor = { r = 0.2, g = 0.2, b = 0.2, a = 1 },
 		useClassColorBorder = false,
 		showBackdrop = true,
 		outerColor = { r = 0.08, g = 0.08, b = 0.08, a = 1 },
 		useClassColorOuter = false,
-		backdropTopAdjustment = 5,
-		backdropBottomAdjustment = 5,
-		backdropLeftAdjustment = 5,
-		backdropRightAdjustment = 5,
+		backdropTopAdjustment = 3,
+		backdropBottomAdjustment = 3,
+		backdropLeftAdjustment = 3,
+		backdropRightAdjustment = 3,
 		showSlotBackground = true,
 		innerColor = { r = 0.1, g = 0.1, b = 0.1, a = 1 },
 		useClassColorInner = false,
-		showRangeIndicator = false,
+		showRangeIndicator = true,
 		rangeIndicatorColor = { r = .42, g = 0.07, b = .12, a = 0.75 },
 		fadeCooldown = false,
 		cooldownColor = { r = 0, g = 0, b = 0, a = 0.5 },
 		macroNameFont = "Friz Quadrata TT",
-		macroNameFontSize = 10,
+		macroNameFontSize = 12,
 		macroNameFontFlags = "OUTLINE",
-		macroNameWidth = 45,
-		macroNameHeight = 12,
+		macroNameWidth = 42,
+		macroNameHeight = 30,
 		macroNameColor = { r = 1, g = 1, b = 1, a = 1 },
-		macroNameJustification = "CENTER",
-		macroNamePosition = "MIDDLE",
+		macroNameJustification = "LEFT",
+		macroNamePosition = "BOTTOM",
 		macroNameOffsetX = 0,
 		macroNameOffsetY = 0,
 		countFont = "Friz Quadrata TT",
-		countFontSize = 12,
+		countFontSize = 16,
 		countFontFlags = "OUTLINE",
-		countWidth = 40,
+		countWidth = 42,
 		countHeight = 15,
 		countColor = { r = 1, g = 1, b = 1, a = 1 },
 		countOffsetX = 0,
 		countOffsetY = 0,
 		keybindFont = "Friz Quadrata TT",
-		keybindFontSize = 10,
+		keybindFontSize = 12,
 		keybindFontFlags = "OUTLINE",
-		keybindWidth = 40,
+		keybindWidth = 42,
 		keybindHeight = 12,
 		keybindColor = { r = 1, g = 1, b = 1, a = 1 },
 		keybindOffsetX = 0,
@@ -59,10 +59,8 @@ function zBarButtonBGAce:OnInitialize()
 	-- Make Ace the single source of truth - native system points to Ace profile
 	zBarButtonBG.charSettings = self.db.profile
 	
-	-- Ensure default profile exists
-	if not self.db.profiles["Default"] then
-		self.db:SetProfile("Default")
-	end
+	-- AceDB automatically handles profile creation and management
+	-- No need to force creation of "Default" profile - let AceDB handle it naturally
 end
 
 -- Profile management functions
@@ -138,8 +136,20 @@ function zBarButtonBGAce:DeleteProfile(profileName)
 	end
 	
 	if self.db:GetCurrentProfile() == profileName then
-		-- Switch to Default before deleting
-		self.db:SetProfile("Default")
+		-- Switch to a safe profile before deleting
+		-- Try to find an existing profile to switch to, preferring "Default"
+		local targetProfile = "Default"
+		if not self.db.profiles["Default"] then
+			-- If no Default profile exists, find any other existing profile
+			for existingProfile, _ in pairs(self.db.profiles) do
+				if existingProfile ~= profileName then
+					targetProfile = existingProfile
+					break
+				end
+			end
+		end
+		
+		self.db:SetProfile(targetProfile)
 		zBarButtonBG.charSettings = self.db.profile
 		
 		-- Update the action bars
