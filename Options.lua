@@ -764,6 +764,25 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
+					macroNamePosition = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = "Macro Text Position",
+						desc = "Vertical position of macro text within the text frame",
+						values = {
+							["TOP"] = "Top",
+							["MIDDLE"] = "Center",
+							["BOTTOM"] = "Bottom",
+						},
+						get = function() return self.db.profile.macroNamePosition end,
+						set = function(_, value)
+							self.db.profile.macroNamePosition = value
+							zBarButtonBG.charSettings.macroNamePosition = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
 					spacer1a = {
 						order = nextOrderNumber(),
 						type = "description",
