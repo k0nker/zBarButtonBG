@@ -25,6 +25,7 @@ local aceDefaults = {
 		macroNameWidth = 60,
 		macroNameHeight = 12,
 		macroNameColor = { r = 1, g = 1, b = 1, a = 1 },
+		macroNameJustification = "CENTER",
 		macroNameOffsetX = 0,
 		macroNameOffsetY = 0,
 		countFont = "Fonts\\FRIZQT__.TTF",
@@ -362,6 +363,7 @@ local function applyMacroNameStyling(button)
 	)
 	local c = zBarButtonBG.charSettings.macroNameColor
 	button.Name:SetTextColor(c.r, c.g, c.b, c.a)
+	button.Name:SetJustifyH(zBarButtonBG.charSettings.macroNameJustification or "CENTER")
 	local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
 	local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
 	button.Name:ClearAllPoints()
@@ -433,6 +435,7 @@ local function applyTextPositioning(button)
 	
 	-- Apply text positioning after button data is stored
 	if button.Name then
+		button.Name:SetJustifyH(zBarButtonBG.charSettings.macroNameJustification or "CENTER")
 		local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
 		local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
 		button.Name:ClearAllPoints()

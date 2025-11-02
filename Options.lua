@@ -1,5 +1,17 @@
 -- Options.lua - Ace3 Configuration following SorhaQuestLog pattern
 
+-- Order number helper function for dynamic ordering
+local orderCounter = 0
+local function nextOrderNumber()
+	orderCounter = orderCounter + 1
+	return orderCounter
+end
+
+-- Reset order counter (useful for different sections)
+local function resetOrderCounter()
+	orderCounter = 0
+end
+
 -- Function to show new profile dialog using AceGUI
 function zBarButtonBGAce:ShowNewProfileDialog()
 	local AceGUI = LibStub("AceGUI-3.0")
@@ -83,12 +95,12 @@ function zBarButtonBGAce:GetOptionsTable()
 				name = "General",
 				args = {
 					header = {
-						order = 1,
+						order = nextOrderNumber(),
 						type = "header",
 						name = "General Settings",
 					},
 					enabled = {
-						order = 2,
+						order = nextOrderNumber(),
 						type = "toggle",
 						name = "Enable Skinning",
 						desc =
@@ -110,7 +122,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					resetButton = {
-						order = 3,
+						order = nextOrderNumber(),
 						type = "execute",
 						name = "Reset to Default",
 						desc = "Reset the currently selected profile to default values",
@@ -127,17 +139,17 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer1 = {
-						order = 4,
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					profilesHeader = {
-						order = 5,
+						order = nextOrderNumber(),
 						type = "header",
 						name = "Profiles",
 					},
 					selectedProfile = {
-						order = 6,
+						order = nextOrderNumber(),
 						type = "select",
 						name = "Active Profile",
 						desc = "Choose the active profile. Changing this will switch to that profile's settings.",
@@ -164,7 +176,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					createProfile = {
-						order = 7,
+						order = nextOrderNumber(),
 						type = "execute",
 						name = "New Profile",
 						desc = "Create a new profile with default settings",
@@ -173,17 +185,17 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer2 = {
-						order = 9,
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					spacer3 = {
-						order = 10,
+						order = nextOrderNumber(),
 						type = "description",
 						name = "Modify Profiles",
 					},
 					chooseProfile = {
-						order = 11,
+						order = nextOrderNumber(),
 						type = "select",
 						name = "Choose Profile",
 						desc = "Select a profile for copy/delete operations",
@@ -199,8 +211,13 @@ function zBarButtonBGAce:GetOptionsTable()
 						get = function() return self.selectedProfileForActions end,
 						set = function(_, value) self.selectedProfileForActions = value end,
 					},
+					spacer4 = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
+					},
 					copyProfile = {
-						order = 13,
+						order = nextOrderNumber(),
 						type = "execute",
 						name = "Copy Profile",
 						desc = "Copy settings from the chosen profile to the current profile",
@@ -227,7 +244,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					deleteProfile = {
-						order = 14,
+						order = nextOrderNumber(),
 						type = "execute",
 						name = "Delete Profile",
 						desc = "Delete the chosen profile",
@@ -249,11 +266,6 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 						end,
 					},
-					spacer4 = {
-						order = 13,
-						type = "description",
-						name = " ",
-					},
 				},
 			},
 			buttonSettings = {
@@ -262,7 +274,7 @@ function zBarButtonBGAce:GetOptionsTable()
 				name = "Button Settings",
 				args = {
 					squareButtons = {
-						order = 1,
+						order = nextOrderNumber(),
 						type = "toggle",
 						name = "Square Buttons",
 						desc = "Make action buttons square instead of rounded",
@@ -277,17 +289,17 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer1 = {
-						order = 2,
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					header = {
-						order = 3,
+						order = nextOrderNumber(),
 						type = "header",
 						name = "Button Background Settings",
 					},
 					showBackdrop = {
-						order = 4,
+						order = nextOrderNumber(),
 						type = "toggle",
 						name = "Show Backdrop",
 						desc = "Show the outer backdrop frame behind each button",
@@ -302,12 +314,12 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer2 = {
-						order = 5,
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					outerColor = {
-						order = 6,
+						order = nextOrderNumber(),
 						type = "color",
 						name = "Backdrop Color",
 						desc = "Color of the outer backdrop frame",
@@ -327,9 +339,9 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					useClassColorOuter = {
-						order = 7,
+						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Use Class Color for Backdrop",
+						name = "Use Class Color",
 						desc = "Use your class color for the outer backdrop",
 						disabled = function() return not self.db.profile.showBackdrop end,
 						get = function() return self.db.profile.useClassColorOuter end,
@@ -342,12 +354,12 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer3 = {
-						order = 8,
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					showSlotBackground = {
-						order = 9,
+						order = nextOrderNumber(),
 						type = "toggle",
 						name = "Show Slot Background",
 						desc = "Show the slot background fill behind each button icon",
@@ -362,12 +374,12 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer4 = {
-						order = 10,
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					innerColor = {
-						order = 11,
+						order = nextOrderNumber(),
 						type = "color",
 						name = "Button Background Color",
 						desc = "Color of the button slot background",
@@ -387,9 +399,9 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					useClassColorInner = {
-						order = 12,
+						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Use Class Color for Button Background",
+						name = "Use Class Color",
 						desc = "Use your class color for the button background",
 						disabled = function() return not self.db.profile.showSlotBackground end,
 						get = function() return self.db.profile.useClassColorInner end,
@@ -402,12 +414,12 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer5 = {
-						order = 13,
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					showBorder = {
-						order = 14,
+						order = nextOrderNumber(),
 						type = "toggle",
 						name = "Enable Button Border",
 						desc = "Add a border around each action button icon",
@@ -422,12 +434,12 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer6 = {
-						order = 15,
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					borderColor = {
-						order = 16,
+						order = nextOrderNumber(),
 						type = "color",
 						name = "Button Border Color",
 						desc = "Color of the button icon border",
@@ -447,9 +459,9 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					useClassColorBorder = {
-						order = 17,
+						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Use Class Color for Button Border",
+						name = "Use Class Color",
 						desc = "Use your class color for the icon border",
 						disabled = function() return not self.db.profile.showBorder end,
 						get = function() return self.db.profile.useClassColorBorder end,
@@ -469,12 +481,12 @@ function zBarButtonBGAce:GetOptionsTable()
 				name = "Indicators",
 				args = {
 					header = {
-						order = 1,
+						order = nextOrderNumber(),
 						type = "header",
 						name = "Visual Indicators",
 					},
 					showRangeIndicator = {
-						order = 2,
+						order = nextOrderNumber(),
 						type = "toggle",
 						name = "Show Out-of-Range Highlight",
 						desc = "Show a colored overlay on buttons when the ability is out of range",
@@ -489,7 +501,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					rangeIndicatorColor = {
-						order = 3,
+						order = nextOrderNumber(),
 						type = "color",
 						name = "Range Indicator Color",
 						desc = "Color of the out-of-range overlay",
@@ -508,12 +520,12 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer1 = {
-						order = 4,
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					fadeCooldown = {
-						order = 5,
+						order = nextOrderNumber(),
 						type = "toggle",
 						name = "Fade On Cooldown",
 						desc = "Add a dark overlay to buttons while on cooldown",
@@ -528,7 +540,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					cooldownColor = {
-						order = 6,
+						order = nextOrderNumber(),
 						type = "color",
 						name = "Cooldown Overlay Color",
 						desc = "Color of the cooldown overlay",
@@ -554,17 +566,17 @@ function zBarButtonBGAce:GetOptionsTable()
 				name = "Text Settings",
 				args = {
 					header = {
-						order = 1,
+						order = nextOrderNumber(),
 						type = "header",
 						name = "Font and Text Configuration",
 					},
 					macroNameHeader = {
-						order = 2,
+						order = nextOrderNumber(),
 						type = "header",
 						name = "Macro Name Font",
 					},
 					macroNameFont = {
-						order = 3,
+						order = nextOrderNumber(),
 						type = "select",
 						name = "Macro Name Font",
 						desc = "Font family for macro names",
@@ -580,7 +592,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					macroNameFontFlags = {
-						order = 4,
+						order = nextOrderNumber(),
 						type = "select",
 						name = "Macro Name Font Style",
 						desc = "Font style flags for macro names",
@@ -600,7 +612,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					macroNameFontSize = {
-						order = 5,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Macro Name Font Size",
 						desc = "Size of the macro name text",
@@ -617,7 +629,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					macroNameColor = {
-						order = 6,
+						order = nextOrderNumber(),
 						type = "color",
 						name = "Macro Name Color",
 						desc = "Color of the macro name text",
@@ -635,7 +647,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					macroNameWidth = {
-						order = 7,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Macro Name Width",
 						desc = "Width of the macro name text frame",
@@ -652,7 +664,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					macroNameHeight = {
-						order = 8,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Macro Name Height",
 						desc = "Height of the macro name text frame",
@@ -669,7 +681,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					macroNameOffsetX = {
-						order = 9,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Macro Name X Offset",
 						desc = "Horizontal positioning offset for macro name text",
@@ -699,7 +711,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					macroNameOffsetY = {
-						order = 10,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Macro Name Y Offset",
 						desc = "Vertical positioning offset for macro name text",
@@ -729,17 +741,41 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer1 = {
-						order = 11,
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
+					},
+					macroNameJustification = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = "Macro Text Justification",
+						desc = "Text alignment for macro names",
+						values = {
+							["LEFT"] = "Left",
+							["CENTER"] = "Center", 
+							["RIGHT"] = "Right",
+						},
+						get = function() return self.db.profile.macroNameJustification end,
+						set = function(_, value)
+							self.db.profile.macroNameJustification = value
+							zBarButtonBG.charSettings.macroNameJustification = value
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+						end,
+					},
+					spacer1a = {
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					countHeader = {
-						order = 12,
+						order = nextOrderNumber(),
 						type = "header",
 						name = "Count/Charge Font",
 					},
 					countFont = {
-						order = 13,
+						order = nextOrderNumber(),
 						type = "select",
 						name = "Count Font",
 						desc = "Font family for count/charge numbers",
@@ -755,7 +791,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countFontFlags = {
-						order = 14,
+						order = nextOrderNumber(),
 						type = "select",
 						name = "Count Font Style",
 						desc = "Font style flags for count/charge numbers",
@@ -775,7 +811,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countFontSize = {
-						order = 15,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Count Font Size",
 						desc = "Size of the count/charge text",
@@ -792,7 +828,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countColor = {
-						order = 16,
+						order = nextOrderNumber(),
 						type = "color",
 						name = "Count Color",
 						desc = "Color of the count/charge text",
@@ -810,7 +846,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countWidth = {
-						order = 17,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Count Width",
 						desc = "Width of the count text frame",
@@ -827,7 +863,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countHeight = {
-						order = 18,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Count Height",
 						desc = "Height of the count text frame",
@@ -844,7 +880,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countOffsetX = {
-						order = 19,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Count X Offset",
 						desc = "Horizontal positioning offset for count/charge text",
@@ -874,7 +910,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					countOffsetY = {
-						order = 20,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Count Y Offset",
 						desc = "Vertical positioning offset for count/charge text",
@@ -904,17 +940,17 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					spacer4 = {
-						order = 21,
+						order = nextOrderNumber(),
 						type = "description",
 						name = " ",
 					},
 					keybindHeader = {
-						order = 22,
+						order = nextOrderNumber(),
 						type = "header",
 						name = "Keybind/Hotkey Font",
 					},
 					keybindFont = {
-						order = 23,
+						order = nextOrderNumber(),
 						type = "select",
 						name = "Keybind Font",
 						desc = "Font family for keybind/hotkey text",
@@ -930,7 +966,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					keybindFontFlags = {
-						order = 24,
+						order = nextOrderNumber(),
 						type = "select",
 						name = "Keybind Font Style",
 						desc = "Font style flags for keybind/hotkey text",
@@ -950,7 +986,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					keybindFontSize = {
-						order = 25,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Keybind Font Size",
 						desc = "Size of the keybind/hotkey text",
@@ -967,7 +1003,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					keybindColor = {
-						order = 26,
+						order = nextOrderNumber(),
 						type = "color",
 						name = "Keybind Text Color",
 						desc = "Color of the keybind/hotkey text",
@@ -985,7 +1021,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					keybindWidth = {
-						order = 27,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Keybind Width",
 						desc = "Width of the keybind text frame",
@@ -1002,7 +1038,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					keybindHeight = {
-						order = 28,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Keybind Height",
 						desc = "Height of the keybind text frame",
@@ -1019,7 +1055,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					keybindOffsetX = {
-						order = 29,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Keybind X Offset",
 						desc = "Horizontal positioning offset for keybind/hotkey text",
@@ -1049,7 +1085,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 					},
 					keybindOffsetY = {
-						order = 30,
+						order = nextOrderNumber(),
 						type = "range",
 						name = "Keybind Y Offset",
 						desc = "Vertical positioning offset for keybind/hotkey text",
