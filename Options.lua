@@ -1,5 +1,20 @@
 -- Options.lua - Ace3 Configuration following SorhaQuestLog pattern
 
+-- Register custom fonts with LibSharedMedia
+local LSM = LibStub("LibSharedMedia-3.0")
+if LSM then
+	-- Register default WoW fonts if not already registered (ensures dropdown works)
+	if not LSM:IsValid("font", "Friz Quadrata TT") then
+		LSM:Register("font", "Friz Quadrata TT", [[Fonts\FRIZQT__.TTF]])
+	end
+	if not LSM:IsValid("font", "Arial Narrow") then
+		LSM:Register("font", "Arial Narrow", [[Fonts\ARIALN.TTF]])
+	end
+	if not LSM:IsValid("font", "Skurri") then
+		LSM:Register("font", "Skurri", [[Fonts\skurri.ttf]])
+	end
+end
+
 -- Order number helper function for dynamic ordering
 local orderCounter = 0
 local function nextOrderNumber()
