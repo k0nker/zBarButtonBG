@@ -273,6 +273,46 @@ function zBarButtonBGAce:GetOptionsTable()
 				type = "group",
 				name = "Buttons",
 				args = {
+					resetButtonSettings = {
+						order = nextOrderNumber(),
+						type = "execute",
+						name = "Reset Button Settings",
+						desc = "Reset all button-related settings to default values",
+						confirm = function()
+							return "Are you sure you want to reset all button settings to default values?\n\nThis will reset button shape, backdrop, slot background, and border settings.\n\nThis action cannot be undone!"
+						end,
+						func = function()
+							-- Reset button-specific settings to defaults from aceDefaults table
+							local defaults = zBarButtonBGAce.db.defaults.profile
+							self.db.profile.squareButtons = defaults.squareButtons
+							self.db.profile.showBorder = defaults.showBorder
+							self.db.profile.borderColor = {r = defaults.borderColor.r, g = defaults.borderColor.g, b = defaults.borderColor.b, a = defaults.borderColor.a}
+							self.db.profile.useClassColorBorder = defaults.useClassColorBorder
+							self.db.profile.showBackdrop = defaults.showBackdrop
+							self.db.profile.outerColor = {r = defaults.outerColor.r, g = defaults.outerColor.g, b = defaults.outerColor.b, a = defaults.outerColor.a}
+							self.db.profile.useClassColorOuter = defaults.useClassColorOuter
+							self.db.profile.backdropTopAdjustment = defaults.backdropTopAdjustment
+							self.db.profile.backdropBottomAdjustment = defaults.backdropBottomAdjustment
+							self.db.profile.backdropLeftAdjustment = defaults.backdropLeftAdjustment
+							self.db.profile.backdropRightAdjustment = defaults.backdropRightAdjustment
+							self.db.profile.showSlotBackground = defaults.showSlotBackground
+							self.db.profile.innerColor = {r = defaults.innerColor.r, g = defaults.innerColor.g, b = defaults.innerColor.b, a = defaults.innerColor.a}
+							self.db.profile.useClassColorInner = defaults.useClassColorInner
+							-- Update native settings
+							zBarButtonBG.charSettings = self.db.profile
+							-- Trigger rebuild
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+							zBarButtonBG.print("Button settings reset to defaults!")
+						end,
+					},
+					spacer0a = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
+					},
 					header0 = {
 						order = nextOrderNumber(),
 						type = "header",
@@ -581,6 +621,36 @@ function zBarButtonBGAce:GetOptionsTable()
 				type = "group",
 				name = "Indicators",
 				args = {
+					resetIndicatorSettings = {
+						order = nextOrderNumber(),
+						type = "execute",
+						name = "Reset Indicator Settings",
+						desc = "Reset all indicator-related settings to default values",
+						confirm = function()
+							return "Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator and cooldown fade settings.\n\nThis action cannot be undone!"
+						end,
+						func = function()
+							-- Reset indicator-specific settings to defaults from aceDefaults table
+							local defaults = zBarButtonBGAce.db.defaults.profile
+							self.db.profile.showRangeIndicator = defaults.showRangeIndicator
+							self.db.profile.rangeIndicatorColor = {r = defaults.rangeIndicatorColor.r, g = defaults.rangeIndicatorColor.g, b = defaults.rangeIndicatorColor.b, a = defaults.rangeIndicatorColor.a}
+							self.db.profile.fadeCooldown = defaults.fadeCooldown
+							self.db.profile.cooldownColor = {r = defaults.cooldownColor.r, g = defaults.cooldownColor.g, b = defaults.cooldownColor.b, a = defaults.cooldownColor.a}
+							-- Update native settings
+							zBarButtonBG.charSettings = self.db.profile
+							-- Trigger rebuild
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+							zBarButtonBG.print("Indicator settings reset to defaults!")
+						end,
+					},
+					spacer0a = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
+					},
 					header = {
 						order = nextOrderNumber(),
 						type = "header",
@@ -670,6 +740,41 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = nextOrderNumber(),
 						type = "header",
 						name = "Macro Name",
+					},
+					resetMacroSettings = {
+						order = nextOrderNumber(),
+						type = "execute",
+						name = "Reset Macro Settings",
+						desc = "Reset macro name text settings to default values",
+						confirm = function()
+							return "Are you sure you want to reset all macro text settings to default values?\n\nThis will reset font, size, color, positioning, and justification settings for macro names.\n\nThis action cannot be undone!"
+						end,
+						func = function()
+							-- Reset macro-specific settings to defaults from aceDefaults table
+							local defaults = zBarButtonBGAce.db.defaults.profile
+							self.db.profile.macroNameFont = defaults.macroNameFont
+							self.db.profile.macroNameFontSize = defaults.macroNameFontSize
+							self.db.profile.macroNameFontFlags = defaults.macroNameFontFlags
+							self.db.profile.macroNameWidth = defaults.macroNameWidth
+							self.db.profile.macroNameHeight = defaults.macroNameHeight
+							self.db.profile.macroNameColor = {r = defaults.macroNameColor.r, g = defaults.macroNameColor.g, b = defaults.macroNameColor.b, a = defaults.macroNameColor.a}
+							self.db.profile.macroNameJustification = defaults.macroNameJustification
+							self.db.profile.macroNamePosition = defaults.macroNamePosition
+							self.db.profile.macroNameOffsetX = defaults.macroNameOffsetX
+							self.db.profile.macroNameOffsetY = defaults.macroNameOffsetY
+							-- Update native settings
+							zBarButtonBG.charSettings = self.db.profile
+							-- Trigger font update
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+							zBarButtonBG.print("Macro text settings reset to defaults!")
+						end,
+					},
+					spacerReset1 = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
 					},
 					macroNameFont = {
 						order = nextOrderNumber(),
@@ -889,6 +994,39 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "header",
 						name = "Count/Charge",
 					},
+					resetCountSettings = {
+						order = nextOrderNumber(),
+						type = "execute",
+						name = "Reset Count Settings",
+						desc = "Reset count/charge text settings to default values",
+						confirm = function()
+							return "Are you sure you want to reset all count/charge text settings to default values?\n\nThis will reset font, size, color, and positioning settings for count/charge numbers.\n\nThis action cannot be undone!"
+						end,
+						func = function()
+							-- Reset count-specific settings to defaults from aceDefaults table
+							local defaults = zBarButtonBGAce.db.defaults.profile
+							self.db.profile.countFont = defaults.countFont
+							self.db.profile.countFontSize = defaults.countFontSize
+							self.db.profile.countFontFlags = defaults.countFontFlags
+							self.db.profile.countWidth = defaults.countWidth
+							self.db.profile.countHeight = defaults.countHeight
+							self.db.profile.countColor = {r = defaults.countColor.r, g = defaults.countColor.g, b = defaults.countColor.b, a = defaults.countColor.a}
+							self.db.profile.countOffsetX = defaults.countOffsetX
+							self.db.profile.countOffsetY = defaults.countOffsetY
+							-- Update native settings
+							zBarButtonBG.charSettings = self.db.profile
+							-- Trigger font update
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+							zBarButtonBG.print("Count text settings reset to defaults!")
+						end,
+					},
+					spacerReset2 = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
+					},
 					countFont = {
 						order = nextOrderNumber(),
 						type = "select",
@@ -1063,6 +1201,39 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = nextOrderNumber(),
 						type = "header",
 						name = "Keybind/Hotkey",
+					},
+					resetKeybindSettings = {
+						order = nextOrderNumber(),
+						type = "execute",
+						name = "Reset Keybind Settings",
+						desc = "Reset keybind/hotkey text settings to default values",
+						confirm = function()
+							return "Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, and positioning settings for keybind/hotkey text.\n\nThis action cannot be undone!"
+						end,
+						func = function()
+							-- Reset keybind-specific settings to defaults from aceDefaults table
+							local defaults = zBarButtonBGAce.db.defaults.profile
+							self.db.profile.keybindFont = defaults.keybindFont
+							self.db.profile.keybindFontSize = defaults.keybindFontSize
+							self.db.profile.keybindFontFlags = defaults.keybindFontFlags
+							self.db.profile.keybindWidth = defaults.keybindWidth
+							self.db.profile.keybindHeight = defaults.keybindHeight
+							self.db.profile.keybindColor = {r = defaults.keybindColor.r, g = defaults.keybindColor.g, b = defaults.keybindColor.b, a = defaults.keybindColor.a}
+							self.db.profile.keybindOffsetX = defaults.keybindOffsetX
+							self.db.profile.keybindOffsetY = defaults.keybindOffsetY
+							-- Update native settings
+							zBarButtonBG.charSettings = self.db.profile
+							-- Trigger font update
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								zBarButtonBG.updateFonts()
+							end
+							zBarButtonBG.print("Keybind text settings reset to defaults!")
+						end,
+					},
+					spacerReset3 = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
 					},
 					keybindFont = {
 						order = nextOrderNumber(),

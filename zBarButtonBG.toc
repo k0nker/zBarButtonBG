@@ -2,7 +2,7 @@
 ## Title: zBarButtonBG
 ## Notes: Adds customizable backgrounds to action bar buttons
 ## Author: k0nker
-## Version: 1.7
+## Version: 1.7.03
 ## SavedVariables: zBarButtonBGDB
 ## Category: Action Bars
 ## Category-enUS: Action Bars
