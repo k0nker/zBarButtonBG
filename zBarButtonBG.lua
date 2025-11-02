@@ -370,6 +370,8 @@ local function applyMacroNameStyling(button)
 	button.Name:SetTextColor(c.r, c.g, c.b, c.a)
 	button.Name:SetJustifyH(zBarButtonBG.charSettings.macroNameJustification or "CENTER")
 	button.Name:SetJustifyV(zBarButtonBG.charSettings.macroNamePosition or "MIDDLE")
+	-- Set draw layer to appear behind Blizzard's cooldown text
+	button.Name:SetDrawLayer("BORDER", 1)
 	local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
 	local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
 	button.Name:ClearAllPoints()
@@ -457,6 +459,8 @@ local function applyTextPositioning(button)
 	if button.Name then
 		button.Name:SetJustifyH(zBarButtonBG.charSettings.macroNameJustification or "CENTER")
 		button.Name:SetJustifyV(zBarButtonBG.charSettings.macroNamePosition or "MIDDLE")
+		-- Set draw layer to appear behind Blizzard's cooldown text
+		button.Name:SetDrawLayer("BORDER", 1)
 		local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
 		local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
 		button.Name:ClearAllPoints()
