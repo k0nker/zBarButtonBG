@@ -2,7 +2,7 @@
 ## Title: zBarButtonBG
 ## Notes: Adds customizable backgrounds to action bar buttons
 ## Author: k0nker
-## Version: 2025.1102.01
+## Version: 2025.1102.02
 ## SavedVariables: zBarButtonBGDB
 ## Category: Action Bars
 ## Category-enUS: Action Bars
@@ -25,8 +25,20 @@ Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceLocale-3.0\AceLocale-3.0.xml
 Libs\LibSharedMedia-3.0\lib.xml
 Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
+
+# Localization files
+Locales\enUS.lua
+Locales\deDE.lua
+Locales\esES.lua
+Locales\frFR.lua
+Locales\koKR.lua
+Locales\ptBR.lua
+Locales\ruRU.lua
+Locales\zhCN.lua
+Locales\zhTW.lua
 
 zBarButtonBG.lua
 Options.lua

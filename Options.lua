@@ -1,5 +1,8 @@
 -- Options.lua - Ace3 Configuration following SorhaQuestLog pattern
 
+-- Get localization table
+local L = LibStub("AceLocale-3.0"):GetLocale("zBarButtonBG")
+
 -- Register custom fonts with LibSharedMedia
 local LSM = LibStub("LibSharedMedia-3.0")
 if LSM then
@@ -33,8 +36,8 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 
 	-- Create the frame
 	local frame = AceGUI:Create("Frame")
-	frame:SetTitle("Create New Profile")
-	frame:SetStatusText("Enter a name for the new profile")
+	frame:SetTitle(L["Create New Profile"])
+	frame:SetStatusText(L["Enter a name for the new profile"])
 	frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
 	frame:SetLayout("Flow")
 	frame:SetWidth(350)
@@ -42,14 +45,14 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 
 	-- Create the editbox
 	local editbox = AceGUI:Create("EditBox")
-	editbox:SetLabel("Profile Name:")
+	editbox:SetLabel(L["Profile Name:"])
 	editbox:SetWidth(250)
 	editbox:SetCallback("OnEnterPressed", function(widget)
 		local profileName = widget:GetText()
 		if profileName and profileName ~= "" then
 			local success, message = self:CreateNewProfile(profileName)
 			if success then
-				zBarButtonBG.print("Profile '" .. profileName .. "' created and activated!")
+				zBarButtonBG.print(L["Profile created: "] .. profileName)
 				-- Refresh the config to update dropdowns
 				LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
 				frame:Hide()
@@ -68,14 +71,14 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 
 	-- Create button
 	local createButton = AceGUI:Create("Button")
-	createButton:SetText("Create")
+	createButton:SetText(L["Create"])
 	createButton:SetWidth(80)
 	createButton:SetCallback("OnClick", function()
 		local profileName = editbox:GetText()
 		if profileName and profileName ~= "" then
 			local success, message = self:CreateNewProfile(profileName)
 			if success then
-				zBarButtonBG.print("Profile '" .. profileName .. "' created and activated!")
+				zBarButtonBG.print(L["Profile created: "] .. profileName)
 				-- Refresh the config to update dropdowns
 				LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
 				frame:Hide()
@@ -88,7 +91,7 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 
 	-- Cancel button
 	local cancelButton = AceGUI:Create("Button")
-	cancelButton:SetText("Cancel")
+	cancelButton:SetText(L["Cancel"])
 	cancelButton:SetWidth(80)
 	cancelButton:SetCallback("OnClick", function()
 		frame:Hide()
@@ -107,19 +110,18 @@ function zBarButtonBGAce:GetOptionsTable()
 			general = {
 				order = 1,
 				type = "group",
-				name = "General",
+				name = L["General"],
 				args = {
 					header = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "General",
+						name = L["General"],
 					},
 					enabled = {
 						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Enable Skinning",
-						desc =
-						"Toggle action bar skinning on/off. Note: /reload may be required when disabling to restore default borders.",
+						name = L["Enable addon"],
+						desc = L["Turn the addon on or off"],
 						get = function() return self.db.profile.enabled end,
 						set = function(_, value)
 							self.db.profile.enabled = value
@@ -128,19 +130,19 @@ function zBarButtonBGAce:GetOptionsTable()
 							if value and not zBarButtonBG.enabled then
 								zBarButtonBG.enabled = true
 								zBarButtonBG.createActionBarBackgrounds()
-								zBarButtonBG.print("Action bar backgrounds |cFF00FF00enabled|r")
+								zBarButtonBG.print(L["Action bar backgrounds enabled"])
 							elseif not value and zBarButtonBG.enabled then
 								zBarButtonBG.enabled = false
 								zBarButtonBG.removeActionBarBackgrounds()
-								zBarButtonBG.print("Action bar backgrounds |cFFFF0000disabled|r")
+								zBarButtonBG.print(L["Action bar backgrounds disabled"])
 							end
 						end,
 					},
 					resetButton = {
 						order = nextOrderNumber(),
 						type = "execute",
-						name = "Reset to Default",
-						desc = "Reset the currently selected profile to default values",
+						name = L["Reset Profile"],
+						desc = L["Reset current profile to defaults"],
 						func = function()
 							-- Reset current profile to defaults
 							self.db:ResetProfile()
@@ -150,7 +152,7 @@ function zBarButtonBGAce:GetOptionsTable()
 								zBarButtonBG.removeActionBarBackgrounds()
 								zBarButtonBG.createActionBarBackgrounds()
 							end
-							zBarButtonBG.print("Current profile reset to defaults!")
+							zBarButtonBG.print(L["Current profile reset to defaults!"])
 						end,
 					},
 					spacer1 = {
@@ -161,13 +163,13 @@ function zBarButtonBGAce:GetOptionsTable()
 					profilesHeader = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Profiles",
+						name = L["Profiles"],
 					},
 					selectedProfile = {
 						order = nextOrderNumber(),
 						type = "select",
-						name = "Active Profile",
-						desc = "Choose the active profile. Changing this will switch to that profile's settings.",
+						name = L["Current Profile"],
+						desc = L["The currently active profile"],
 						values = function()
 							local profiles = {}
 							for name, _ in pairs(self.db.profiles) do
@@ -187,14 +189,14 @@ function zBarButtonBGAce:GetOptionsTable()
 								zBarButtonBG.removeActionBarBackgrounds()
 								zBarButtonBG.createActionBarBackgrounds()
 							end
-							zBarButtonBG.print("Switched to profile: |cFF00FF00" .. value .. "|r")
+							zBarButtonBG.print(L["Switched to profile: "] .. value)
 						end,
 					},
 					createProfile = {
 						order = nextOrderNumber(),
 						type = "execute",
-						name = "New Profile",
-						desc = "Create a new profile with default settings",
+						name = L["New Profile"],
+						desc = L["Create a new profile"],
 						func = function()
 							self:ShowNewProfileDialog()
 						end,
@@ -207,13 +209,13 @@ function zBarButtonBGAce:GetOptionsTable()
 					spacer3 = {
 						order = nextOrderNumber(),
 						type = "description",
-						name = "Modify Profiles",
+						name = L["Modify Profiles"],
 					},
 					chooseProfile = {
 						order = nextOrderNumber(),
 						type = "select",
-						name = "Choose Profile",
-						desc = "Select a profile for copy/delete operations",
+						name = L["Choose Profile"],
+						desc = L["Select a profile for copy/delete operations"],
 						values = function()
 							local profiles = {}
 							for name, _ in pairs(self.db.profiles) do
@@ -234,20 +236,20 @@ function zBarButtonBGAce:GetOptionsTable()
 					copyProfile = {
 						order = nextOrderNumber(),
 						type = "execute",
-						name = "Copy Profile",
-						desc = "Copy settings from the chosen profile to the current profile",
+						name = L["Copy Profile"],
+						desc = L["Copy settings from the chosen profile to the current profile"],
 						disabled = function() return not self.selectedProfileForActions end,
 						confirm = function()
-							return "Copy settings from '" ..
+							return L["Copy settings from: "] ..
 							(self.selectedProfileForActions or "") ..
-							"' to '" .. self.db:GetCurrentProfile() .. "'?\n\nThis will overwrite all current settings!"
+							"' to '" .. self.db:GetCurrentProfile() .. "'?\n\n" .. L["This will overwrite all current settings!"]
 						end,
 						func = function()
 							local success, message = self:CopyProfile(self.selectedProfileForActions,
 								self.db:GetCurrentProfile())
 							if success then
-								zBarButtonBG.print("Settings copied from '" ..
-								self.selectedProfileForActions .. "' to '" .. self.db:GetCurrentProfile() .. "'!")
+								zBarButtonBG.print(L["Settings copied from: "] ..
+								self.selectedProfileForActions .. "' -> '" .. self.db:GetCurrentProfile())
 								-- Rebuild action bars with updated settings
 								if zBarButtonBG.enabled then
 									zBarButtonBG.removeActionBarBackgrounds()
@@ -267,14 +269,14 @@ function zBarButtonBGAce:GetOptionsTable()
 							return not self.selectedProfileForActions or self.selectedProfileForActions == "Default"
 						end,
 						confirm = function()
-							return "Are you sure you want to delete the profile '" ..
-							(self.selectedProfileForActions or "") .. "'?\n\nThis action cannot be undone!"
+							return L["Are you sure you want to delete the profile: "] ..
+							(self.selectedProfileForActions or "") .. "'?\n\n" .. L["This action cannot be undone!"]
 						end,
 						func = function()
 							local profileToDelete = self.selectedProfileForActions
 							local success, message = self:DeleteProfile(profileToDelete)
 							if success then
-								zBarButtonBG.print("Profile '" .. profileToDelete .. "' deleted!")
+								zBarButtonBG.print(L["Profile deleted: "] .. profileToDelete)
 								self.selectedProfileForActions = nil
 							else
 								zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
@@ -291,10 +293,10 @@ function zBarButtonBGAce:GetOptionsTable()
 					resetButtonSettings = {
 						order = nextOrderNumber(),
 						type = "execute",
-						name = "Reset Button Settings",
-						desc = "Reset all button-related settings to default values",
+						name = L["Reset Button Settings"],
+						desc = L["Reset all button-related settings to default values"],
 						confirm = function()
-							return "Are you sure you want to reset all button settings to default values?\n\nThis will reset button shape, backdrop, slot background, and border settings.\n\nThis action cannot be undone!"
+							return L["Are you sure you want to reset all button settings to default values?\n\nThis will reset button shape, backdrop, slot background, and border settings.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset button-specific settings to defaults from aceDefaults table
@@ -320,7 +322,7 @@ function zBarButtonBGAce:GetOptionsTable()
 								zBarButtonBG.removeActionBarBackgrounds()
 								zBarButtonBG.createActionBarBackgrounds()
 							end
-							zBarButtonBG.print("Button settings reset to defaults!")
+							zBarButtonBG.print(L["Button settings reset to defaults!"])
 						end,
 					},
 					spacer0a = {
@@ -331,13 +333,13 @@ function zBarButtonBGAce:GetOptionsTable()
 					header0 = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Button Shape",
+						name = L["Appearance"],
 					},
 					squareButtons = {
 						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Square Buttons",
-						desc = "Make action buttons square instead of rounded",
+						name = L["Square Buttons"],
+						desc = L["Use square button style instead of round"],
 						get = function() return self.db.profile.squareButtons end,
 						set = function(_, value)
 							self.db.profile.squareButtons = value
@@ -356,13 +358,13 @@ function zBarButtonBGAce:GetOptionsTable()
 					header1 = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Backdrop",
+						name = L["Backdrop"],
 					},
 					showBackdrop = {
 						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Show Backdrop",
-						desc = "Show the outer backdrop frame behind each button",
+						name = L["Show Backdrop"],
+						desc = L["Show outer background frame"],
 						get = function() return self.db.profile.showBackdrop end,
 						set = function(_, value)
 							self.db.profile.showBackdrop = value
@@ -381,8 +383,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					outerColor = {
 						order = nextOrderNumber(),
 						type = "color",
-						name = "Backdrop Color",
-						desc = "Color of the outer backdrop frame",
+						name = L["Backdrop Color"],
+						desc = L["Color of the outer backdrop frame"],
 						disabled = function() return not self.db.profile.showBackdrop or
 							self.db.profile.useClassColorOuter end,
 						hasAlpha = true,
@@ -401,8 +403,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					useClassColorOuter = {
 						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Use Class Color",
-						desc = "Use your class color for the outer backdrop",
+						name = L["Use Class Color"],
+						desc = L["Use your class color"],
 						disabled = function() return not self.db.profile.showBackdrop end,
 						get = function() return self.db.profile.useClassColorOuter end,
 						set = function(_, value)
@@ -421,8 +423,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					backdropTopAdjustment = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Top Size",
-						desc = "How far the backdrop extends above the button (in pixels)",
+						name = L["Top Size"],
+						desc = L["How far the backdrop extends above the button (in pixels)"],
 						disabled = function() return not self.db.profile.showBackdrop end,
 						min = 0,
 						max = 20,
@@ -440,8 +442,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					backdropBottomAdjustment = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Bottom Size",
-						desc = "How far the backdrop extends below the button (in pixels)",
+						name = L["Bottom Size"],
+						desc = L["How far the backdrop extends below the button (in pixels)"],
 						disabled = function() return not self.db.profile.showBackdrop end,
 						min = 0,
 						max = 20,
@@ -464,8 +466,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					backdropLeftAdjustment = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Left Size",
-						desc = "How far the backdrop extends to the left of the button (in pixels)",
+						name = L["Left Size"],
+						desc = L["How far the backdrop extends to the left of the button (in pixels)"],
 						disabled = function() return not self.db.profile.showBackdrop end,
 						min = 0,
 						max = 20,
@@ -483,8 +485,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					backdropRightAdjustment = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Right Size",
-						desc = "How far the backdrop extends to the right of the button (in pixels)",
+						name = L["Right Size"],
+						desc = L["How far the backdrop extends to the right of the button (in pixels)"],
 						disabled = function() return not self.db.profile.showBackdrop end,
 						min = 0,
 						max = 20,
@@ -507,13 +509,13 @@ function zBarButtonBGAce:GetOptionsTable()
 					header2 = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Slot Background",
+						name = L["Button Background"],
 					},
 					showSlotBackground = {
 						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Show Slot Background",
-						desc = "Show the slot background fill behind each button icon",
+						name = L["Show Button Background"],
+						desc = L["Show the button background fill behind each button icon"],
 						get = function() return self.db.profile.showSlotBackground end,
 						set = function(_, value)
 							self.db.profile.showSlotBackground = value
@@ -532,8 +534,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					innerColor = {
 						order = nextOrderNumber(),
 						type = "color",
-						name = "Button Background Color",
-						desc = "Color of the button slot background",
+						name = L["Button Background Color"],
+						desc = L["Color of the button slot background"],
 						disabled = function() return not self.db.profile.showSlotBackground or
 							self.db.profile.useClassColorInner end,
 						hasAlpha = true,
@@ -552,8 +554,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					useClassColorInner = {
 						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Use Class Color",
-						desc = "Use your class color for the button background",
+						name = L["Use Class Color"],
+						desc = L["Use your class color"],
 						disabled = function() return not self.db.profile.showSlotBackground end,
 						get = function() return self.db.profile.useClassColorInner end,
 						set = function(_, value)
@@ -572,13 +574,13 @@ function zBarButtonBGAce:GetOptionsTable()
 					header3 = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Border",
+						name = L["Border"],
 					},
 					showBorder = {
 						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Enable Button Border",
-						desc = "Add a border around each action button icon",
+						name = L["Show Border"],
+						desc = L["Show border around buttons"],
 						get = function() return self.db.profile.showBorder end,
 						set = function(_, value)
 							self.db.profile.showBorder = value
@@ -597,8 +599,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					borderColor = {
 						order = nextOrderNumber(),
 						type = "color",
-						name = "Button Border Color",
-						desc = "Color of the button icon border",
+						name = L["Border Color"],
+						desc = L["Color of the button border"],
 						disabled = function() return not self.db.profile.showBorder or
 							self.db.profile.useClassColorBorder end,
 						hasAlpha = true,
@@ -617,8 +619,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					useClassColorBorder = {
 						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Use Class Color",
-						desc = "Use your class color for the icon border",
+						name = L["Use Class Color"],
+						desc = L["Use your class color"],
 						disabled = function() return not self.db.profile.showBorder end,
 						get = function() return self.db.profile.useClassColorBorder end,
 						set = function(_, value)
@@ -639,10 +641,10 @@ function zBarButtonBGAce:GetOptionsTable()
 					resetIndicatorSettings = {
 						order = nextOrderNumber(),
 						type = "execute",
-						name = "Reset Indicator Settings",
-						desc = "Reset all indicator-related settings to default values",
+						name = L["Reset Indicator Settings"],
+						desc = L["Reset all indicator-related settings to default values"],
 						confirm = function()
-							return "Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator and cooldown fade settings.\n\nThis action cannot be undone!"
+							return L["Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator and cooldown fade settings.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset indicator-specific settings to defaults from aceDefaults table
@@ -658,7 +660,7 @@ function zBarButtonBGAce:GetOptionsTable()
 								zBarButtonBG.removeActionBarBackgrounds()
 								zBarButtonBG.createActionBarBackgrounds()
 							end
-							zBarButtonBG.print("Indicator settings reset to defaults!")
+							zBarButtonBG.print(L["Indicator settings reset to defaults!"])
 						end,
 					},
 					spacer0a = {
@@ -669,13 +671,13 @@ function zBarButtonBGAce:GetOptionsTable()
 					header = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Visual Indicators",
+						name = L["Overlays"],
 					},
 					showRangeIndicator = {
 						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Show Out-of-Range Highlight",
-						desc = "Show a colored overlay on buttons when the ability is out of range",
+						name = L["Out of Range Overlay"],
+						desc = L["Show red overlay when abilities are out of range"],
 						get = function() return self.db.profile.showRangeIndicator end,
 						set = function(_, value)
 							self.db.profile.showRangeIndicator = value
@@ -689,8 +691,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					rangeIndicatorColor = {
 						order = nextOrderNumber(),
 						type = "color",
-						name = "Range Indicator Color",
-						desc = "Color of the out-of-range overlay",
+						name = L["Out of Range Color"],
+						desc = L["Color"],
 						disabled = function() return not self.db.profile.showRangeIndicator end,
 						hasAlpha = true,
 						get = function()
@@ -713,8 +715,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					fadeCooldown = {
 						order = nextOrderNumber(),
 						type = "toggle",
-						name = "Fade On Cooldown",
-						desc = "Add a dark overlay to buttons while on cooldown",
+						name = L["Cooldown Overlay"],
+						desc = L["Show dark overlay during ability cooldowns"],
 						get = function() return self.db.profile.fadeCooldown end,
 						set = function(_, value)
 							self.db.profile.fadeCooldown = value
@@ -728,8 +730,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					cooldownColor = {
 						order = nextOrderNumber(),
 						type = "color",
-						name = "Cooldown Overlay Color",
-						desc = "Color of the cooldown overlay",
+						name = L["Cooldown Color"],
+						desc = L["Color"],
 						disabled = function() return not self.db.profile.fadeCooldown end,
 						hasAlpha = true,
 						get = function()
@@ -754,15 +756,15 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNameHeader = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Macro Name",
+						name = L["Macro Name"],
 					},
 					resetMacroSettings = {
 						order = nextOrderNumber(),
 						type = "execute",
-						name = "Reset Macro Settings",
-						desc = "Reset macro name text settings to default values",
+						name = L["Reset Macro Settings"],
+						desc = L["Reset macro name text settings to default values"],
 						confirm = function()
-							return "Are you sure you want to reset all macro text settings to default values?\n\nThis will reset font, size, color, positioning, and justification settings for macro names.\n\nThis action cannot be undone!"
+							return L["Are you sure you want to reset all macro text settings to default values?\n\nThis will reset font, size, color, positioning, and justification settings for macro names.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset macro-specific settings to defaults from aceDefaults table
@@ -783,7 +785,7 @@ function zBarButtonBGAce:GetOptionsTable()
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
 								zBarButtonBG.updateFonts()
 							end
-							zBarButtonBG.print("Macro text settings reset to defaults!")
+							zBarButtonBG.print(L["Macro text settings reset to defaults!"])
 						end,
 					},
 					spacerReset1 = {
@@ -794,8 +796,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNameFont = {
 						order = nextOrderNumber(),
 						type = "select",
-						name = "Macro Name Font",
-						desc = "Font family for macro names",
+						name = L["Macro Name Font"],
+						desc = L["Font family"],
 						dialogControl = 'LSM30_Font',
 						values = AceGUIWidgetLSMlists.font,
 						get = function() return self.db.profile.macroNameFont end,
@@ -810,13 +812,13 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNameFontFlags = {
 						order = nextOrderNumber(),
 						type = "select",
-						name = "Macro Name Font Style",
-						desc = "Font style flags for macro names",
+						name = L["Font Flags"],
+						desc = L["Font style flags"],
 						values = {
-							[""] = "None",
-							["OUTLINE"] = "Outline",
-							["THICKOUTLINE"] = "Thick Outline",
-							["MONOCHROME"] = "Monochrome",
+							[""] = L["None"],
+							["OUTLINE"] = L["Outline"],
+							["THICKOUTLINE"] = L["Thick Outline"],
+							["MONOCHROME"] = L["Monochrome"],
 						},
 						get = function() return self.db.profile.macroNameFontFlags end,
 						set = function(_, value)
@@ -830,8 +832,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNameFontSize = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Macro Name Font Size",
-						desc = "Size of the macro name text",
+						name = L["Font Size"],
+						desc = L["Size"],
 						min = 6,
 						max = 24,
 						step = 1,
@@ -847,8 +849,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNameColor = {
 						order = nextOrderNumber(),
 						type = "color",
-						name = "Macro Name Color",
-						desc = "Color of the macro name text",
+						name = L["Macro Name Color"],
+						desc = L["Color"],
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.macroNameColor
@@ -865,8 +867,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNameWidth = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Macro Name Width",
-						desc = "Width of the macro name text frame",
+						name = L["Macro Name Width"],
+						desc = L["Width"],
 						min = 20,
 						max = 200,
 						step = 1,
@@ -882,8 +884,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNameHeight = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Macro Name Height",
-						desc = "Height of the macro name text frame",
+						name = L["Macro Name Height"],
+						desc = L["Height of the macro name text frame"],
 						min = 8,
 						max = 50,
 						step = 1,
@@ -899,8 +901,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNameOffsetX = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Macro Name X Offset",
-						desc = "Horizontal positioning offset for macro name text",
+						name = L["Macro Name X Offset"],
+						desc = L["Horizontal positioning offset for macro name text"],
 						min = -50,
 						max = 50,
 						step = 1,
@@ -918,10 +920,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						validate = function(_, value)
 							local num = tonumber(value)
 							if not num then
-								return "Value must be a number"
+								return L["Value must be a number"]
 							end
 							if num < -50 or num > 50 then
-								return "Value must be between -50 and 50"
+								return L["Value must be between -50 and 50"]
 							end
 							return true
 						end,
@@ -929,8 +931,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNameOffsetY = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Macro Name Y Offset",
-						desc = "Vertical positioning offset for macro name text",
+						name = L["Macro Name Y Offset"],
+						desc = L["Vertical positioning offset for macro name text"],
 						min = -50,
 						max = 50,
 						step = 1,
@@ -948,10 +950,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						validate = function(_, value)
 							local num = tonumber(value)
 							if not num then
-								return "Value must be a number"
+								return L["Value must be a number"]
 							end
 							if num < -50 or num > 50 then
-								return "Value must be between -50 and 50"
+								return L["Value must be between -50 and 50"]
 							end
 							return true
 						end,
@@ -964,12 +966,12 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNameJustification = {
 						order = nextOrderNumber(),
 						type = "select",
-						name = "Macro Text Justification",
-						desc = "Text alignment for macro names",
+						name = L["Macro Text Justification"],
+						desc = L["Text alignment for macro names"],
 						values = {
-							["LEFT"] = "Left",
-							["CENTER"] = "Center", 
-							["RIGHT"] = "Right",
+							["LEFT"] = L["Left"],
+							["CENTER"] = L["Center"],
+							["RIGHT"] = L["Right"],
 						},
 						get = function() return self.db.profile.macroNameJustification end,
 						set = function(_, value)
@@ -983,12 +985,12 @@ function zBarButtonBGAce:GetOptionsTable()
 					macroNamePosition = {
 						order = nextOrderNumber(),
 						type = "select",
-						name = "Macro Text Position",
-						desc = "Vertical position of macro text within the text frame",
+						name = L["Macro Text Position"],
+						desc = L["Vertical position of macro text within the text frame"],
 						values = {
-							["TOP"] = "Top",
-							["MIDDLE"] = "Center",
-							["BOTTOM"] = "Bottom",
+							["TOP"] = L["Top"],
+							["MIDDLE"] = L["Center"],
+							["BOTTOM"] = L["Bottom"],
 						},
 						get = function() return self.db.profile.macroNamePosition end,
 						set = function(_, value)
@@ -1007,15 +1009,15 @@ function zBarButtonBGAce:GetOptionsTable()
 					countHeader = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Count/Charge",
+						name = L["Count/Charge"],
 					},
 					resetCountSettings = {
 						order = nextOrderNumber(),
 						type = "execute",
-						name = "Reset Count Settings",
-						desc = "Reset count/charge text settings to default values",
+						name = L["Reset Count Settings"],
+						desc = L["Reset count/charge text settings to default values"],
 						confirm = function()
-							return "Are you sure you want to reset all count/charge text settings to default values?\n\nThis will reset font, size, color, and positioning settings for count/charge numbers.\n\nThis action cannot be undone!"
+							return L["Are you sure you want to reset all count/charge text settings to default values?\n\nThis will reset font, size, color, and positioning settings for count/charge numbers.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset count-specific settings to defaults from aceDefaults table
@@ -1034,7 +1036,7 @@ function zBarButtonBGAce:GetOptionsTable()
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
 								zBarButtonBG.updateFonts()
 							end
-							zBarButtonBG.print("Count text settings reset to defaults!")
+							zBarButtonBG.print(L["Count text settings reset to defaults!"])
 						end,
 					},
 					spacerReset2 = {
@@ -1045,8 +1047,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					countFont = {
 						order = nextOrderNumber(),
 						type = "select",
-						name = "Count Font",
-						desc = "Font family for count/charge numbers",
+						name = L["Count Font"],
+						desc = L["Font family for count/charge numbers"],
 						dialogControl = 'LSM30_Font',
 						values = AceGUIWidgetLSMlists.font,
 						get = function() return self.db.profile.countFont end,
@@ -1061,13 +1063,13 @@ function zBarButtonBGAce:GetOptionsTable()
 					countFontFlags = {
 						order = nextOrderNumber(),
 						type = "select",
-						name = "Count Font Style",
-						desc = "Font style flags for count/charge numbers",
+						name = L["Count Font Style"],
+						desc = L["Font style flags for count/charge numbers"],
 						values = {
-							[""] = "None",
-							["OUTLINE"] = "Outline",
-							["THICKOUTLINE"] = "Thick Outline",
-							["MONOCHROME"] = "Monochrome",
+							[""] = L["None"],
+							["OUTLINE"] = L["Outline"],
+							["THICKOUTLINE"] = L["Thick Outline"],
+							["MONOCHROME"] = L["Monochrome"],
 						},
 						get = function() return self.db.profile.countFontFlags end,
 						set = function(_, value)
@@ -1081,8 +1083,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					countFontSize = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Count Font Size",
-						desc = "Size of the count/charge text",
+						name = L["Count Font Size"],
+						desc = L["Size of the count/charge text"],
 						min = 6,
 						max = 24,
 						step = 1,
@@ -1098,8 +1100,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					countColor = {
 						order = nextOrderNumber(),
 						type = "color",
-						name = "Count Color",
-						desc = "Color of the count/charge text",
+						name = L["Count Color"],
+						desc = L["Color of the count/charge text"],
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.countColor
@@ -1116,8 +1118,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					countWidth = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Count Width",
-						desc = "Width of the count text frame",
+						name = L["Count Width"],
+						desc = L["Width of the count text frame"],
 						min = 10,
 						max = 100,
 						step = 1,
@@ -1133,8 +1135,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					countHeight = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Count Height",
-						desc = "Height of the count text frame",
+						name = L["Count Height"],
+						desc = L["Height of the count text frame"],
 						min = 8,
 						max = 50,
 						step = 1,
@@ -1150,8 +1152,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					countOffsetX = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Count X Offset",
-						desc = "Horizontal positioning offset for count/charge text",
+						name = L["Count X Offset"],
+						desc = L["Horizontal positioning offset for count/charge text"],
 						min = -50,
 						max = 50,
 						step = 1,
@@ -1169,10 +1171,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						validate = function(_, value)
 							local num = tonumber(value)
 							if not num then
-								return "Value must be a number"
+								return L["Value must be a number"]
 							end
 							if num < -50 or num > 50 then
-								return "Value must be between -50 and 50"
+								return L["Value must be between -50 and 50"]
 							end
 							return true
 						end,
@@ -1180,8 +1182,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					countOffsetY = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Count Y Offset",
-						desc = "Vertical positioning offset for count/charge text",
+						name = L["Count Y Offset"],
+						desc = L["Vertical positioning offset for count/charge text"],
 						min = -50,
 						max = 50,
 						step = 1,
@@ -1199,10 +1201,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						validate = function(_, value)
 							local num = tonumber(value)
 							if not num then
-								return "Value must be a number"
+								return L["Value must be a number"]
 							end
 							if num < -50 or num > 50 then
-								return "Value must be between -50 and 50"
+								return L["Value must be between -50 and 50"]
 							end
 							return true
 						end,
@@ -1215,15 +1217,15 @@ function zBarButtonBGAce:GetOptionsTable()
 					keybindHeader = {
 						order = nextOrderNumber(),
 						type = "header",
-						name = "Keybind/Hotkey",
+						name = L["Keybind/Hotkey"],
 					},
 					resetKeybindSettings = {
 						order = nextOrderNumber(),
 						type = "execute",
-						name = "Reset Keybind Settings",
-						desc = "Reset keybind/hotkey text settings to default values",
+						name = L["Reset Keybind Settings"],
+						desc = L["Reset keybind/hotkey text settings to default values"],
 						confirm = function()
-							return "Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, and positioning settings for keybind/hotkey text.\n\nThis action cannot be undone!"
+							return L["Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, and positioning settings for keybind/hotkey text.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset keybind-specific settings to defaults from aceDefaults table
@@ -1242,7 +1244,7 @@ function zBarButtonBGAce:GetOptionsTable()
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
 								zBarButtonBG.updateFonts()
 							end
-							zBarButtonBG.print("Keybind text settings reset to defaults!")
+							zBarButtonBG.print(L["Keybind text settings reset to defaults!"])
 						end,
 					},
 					spacerReset3 = {
@@ -1253,8 +1255,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					keybindFont = {
 						order = nextOrderNumber(),
 						type = "select",
-						name = "Keybind Font",
-						desc = "Font family for keybind/hotkey text",
+						name = L["Keybind Font"],
+						desc = L["Font family for keybind/hotkey text"],
 						dialogControl = 'LSM30_Font',
 						values = AceGUIWidgetLSMlists.font,
 						get = function() return self.db.profile.keybindFont end,
@@ -1269,13 +1271,13 @@ function zBarButtonBGAce:GetOptionsTable()
 					keybindFontFlags = {
 						order = nextOrderNumber(),
 						type = "select",
-						name = "Keybind Font Style",
-						desc = "Font style flags for keybind/hotkey text",
+						name = L["Keybind Font Style"],
+						desc = L["Font style flags for keybind/hotkey text"],
 						values = {
-							[""] = "None",
-							["OUTLINE"] = "Outline",
-							["THICKOUTLINE"] = "Thick Outline",
-							["MONOCHROME"] = "Monochrome",
+							[""] = L["None"],
+							["OUTLINE"] = L["Outline"],
+							["THICKOUTLINE"] = L["Thick Outline"],
+							["MONOCHROME"] = L["Monochrome"],
 						},
 						get = function() return self.db.profile.keybindFontFlags end,
 						set = function(_, value)
@@ -1289,8 +1291,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					keybindFontSize = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Keybind Font Size",
-						desc = "Size of the keybind/hotkey text",
+						name = L["Keybind Font Size"],
+						desc = L["Size of the keybind/hotkey text"],
 						min = 6,
 						max = 24,
 						step = 1,
@@ -1306,8 +1308,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					keybindColor = {
 						order = nextOrderNumber(),
 						type = "color",
-						name = "Keybind Text Color",
-						desc = "Color of the keybind/hotkey text",
+						name = L["Keybind Text Color"],
+						desc = L["Color of the keybind/hotkey text"],
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.keybindColor
@@ -1324,8 +1326,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					keybindWidth = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Keybind Width",
-						desc = "Width of the keybind text frame",
+						name = L["Keybind Width"],
+						desc = L["Width of the keybind text frame"],
 						min = 10,
 						max = 100,
 						step = 1,
@@ -1341,8 +1343,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					keybindHeight = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Keybind Height",
-						desc = "Height of the keybind text frame",
+						name = L["Keybind Height"],
+						desc = L["Height of the keybind text frame"],
 						min = 8,
 						max = 50,
 						step = 1,
@@ -1358,8 +1360,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					keybindOffsetX = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Keybind X Offset",
-						desc = "Horizontal positioning offset for keybind/hotkey text",
+						name = L["Keybind X Offset"],
+						desc = L["Horizontal positioning offset for keybind/hotkey text"],
 						min = -50,
 						max = 50,
 						step = 1,
@@ -1377,10 +1379,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						validate = function(_, value)
 							local num = tonumber(value)
 							if not num then
-								return "Value must be a number"
+								return L["Value must be a number"]
 							end
 							if num < -50 or num > 50 then
-								return "Value must be between -50 and 50"
+								return L["Value must be between -50 and 50"]
 							end
 							return true
 						end,
@@ -1388,8 +1390,8 @@ function zBarButtonBGAce:GetOptionsTable()
 					keybindOffsetY = {
 						order = nextOrderNumber(),
 						type = "range",
-						name = "Keybind Y Offset",
-						desc = "Vertical positioning offset for keybind/hotkey text",
+						name = L["Keybind Y Offset"],
+						desc = L["Vertical positioning offset for keybind/hotkey text"],
 						min = -50,
 						max = 50,
 						step = 1,
@@ -1407,10 +1409,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						validate = function(_, value)
 							local num = tonumber(value)
 							if not num then
-								return "Value must be a number"
+								return L["Value must be a number"]
 							end
 							if num < -50 or num > 50 then
-								return "Value must be between -50 and 50"
+								return L["Value must be between -50 and 50"]
 							end
 							return true
 						end,
