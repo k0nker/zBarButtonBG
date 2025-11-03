@@ -596,6 +596,15 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_customHighlight:Hide()         -- Hidden by default
 					end
 
+					-- Create custom checked state indicator for pet buttons (shows when abilities are active/toggled on)
+					if baseName == "PetActionButton" then
+						if not button._zBBG_customChecked then
+							button._zBBG_customChecked = button:CreateTexture(nil, "OVERLAY", nil, 3)
+							button._zBBG_customChecked:SetColorTexture(0, 1, 0, 0.3) -- Green at 30% opacity for active state
+							button._zBBG_customChecked:Hide() -- Hidden by default
+						end
+					end
+
 					-- Create custom range indicator overlay (only if enabled)
 					if zBarButtonBG.charSettings.showRangeIndicator then
 						if not button._zBBG_rangeOverlay then
@@ -633,6 +642,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if button._zBBG_cooldownOverlay then
 						button._zBBG_cooldownOverlay:ClearAllPoints()
 					end
+					if button._zBBG_customChecked then
+						button._zBBG_customChecked:ClearAllPoints()
+					end
 					
 					if zBarButtonBG.charSettings.squareButtons then
 						-- Square mode: highlight inset by 2px, overlays fill entire button
@@ -640,12 +652,15 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_customHighlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
 						button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)
 						
-						-- Range and cooldown overlays fill the entire button (no inset)
+						-- Range, cooldown, and checked overlays fill the entire button (no inset)
 						if button._zBBG_rangeOverlay then
 							button._zBBG_rangeOverlay:SetAllPoints(button.icon)
 						end
 						if button._zBBG_cooldownOverlay then
 							button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
+						end
+						if button._zBBG_customChecked then
+							button._zBBG_customChecked:SetAllPoints(button.icon)
 						end
 						
 						-- Remove masks for square mode
@@ -657,6 +672,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 							if button._zBBG_cooldownOverlay then
 								removeMaskFromTexture(button._zBBG_cooldownOverlay)
 							end
+							if button._zBBG_customChecked then
+								removeMaskFromTexture(button._zBBG_customChecked)
+							end
 						end
 					else
 						-- Round mode: use custom mask for rounded edges
@@ -667,6 +685,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 						if button._zBBG_cooldownOverlay then
 							button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
 						end
+						if button._zBBG_customChecked then
+							button._zBBG_customChecked:SetAllPoints(button.icon)
+						end
 						
 						if button._zBBG_customMask then
 							-- Apply mask to highlight and overlays
@@ -676,6 +697,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 							end
 							if button._zBBG_cooldownOverlay then
 								applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_customMask)
+							end
+							if button._zBBG_customChecked then
+								applyMaskToTexture(button._zBBG_customChecked, button._zBBG_customMask)
 							end
 						end
 					end
@@ -723,6 +747,28 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end)
 
 						button._zBBG_highlightHooked = true
+					end
+
+					-- Special handling for pet action buttons - hook checked state changes
+					if baseName == "PetActionButton" and button._zBBG_customChecked and not button._zBBG_checkedHooked then
+						-- Function to update the checked state overlay
+						local function updateCheckedState(self)
+							if self._zBBG_customChecked then
+								if self:GetChecked() then
+									self._zBBG_customChecked:Show()
+								else
+									self._zBBG_customChecked:Hide()
+								end
+							end
+						end
+
+						-- Hook the SetChecked function to catch state changes
+						hooksecurefunc(button, "SetChecked", updateCheckedState)
+						
+						-- Also update state immediately in case it's already checked
+						updateCheckedState(button)
+						
+						button._zBBG_checkedHooked = true
 					end
 
 					-- Replace the beveled SlotBackground with a flat texture if borders are enabled
@@ -1399,10 +1445,13 @@ function zBarButtonBG.removeActionBarBackgrounds()
 				end
 			end
 
-			-- Remove custom highlight and restore Blizzard's default overlays
+			-- Remove custom highlight and overlays, restore Blizzard's default overlays
 			if data.button then
 				if data.button._zBBG_customHighlight then
 					data.button._zBBG_customHighlight:Hide()
+				end
+				if data.button._zBBG_customChecked then
+					data.button._zBBG_customChecked:Hide()
 				end
 				-- Restore default overlay textures (highlight, pushed, checked, flash)
 				local overlays = {
