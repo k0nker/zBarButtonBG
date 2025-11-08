@@ -55,10 +55,10 @@ local aceDefaults = {
 function zBarButtonBGAce:OnInitialize()
 	-- Initialize AceDB with profile support
 	self.db = LibStub("AceDB-3.0"):New("zBarButtonBGDB", aceDefaults, true)
-	
+
 	-- Make Ace the single source of truth - native system points to Ace profile
 	zBarButtonBG.charSettings = self.db.profile
-	
+
 	-- AceDB automatically handles profile creation and management
 	-- No need to force creation of "Default" profile - let AceDB handle it naturally
 end
@@ -68,21 +68,21 @@ function zBarButtonBGAce:CreateNewProfile(profileName)
 	if not profileName or profileName == "" then
 		return false, "Profile name cannot be empty"
 	end
-	
+
 	if self.db.profiles[profileName] then
 		return false, "Profile already exists"
 	end
-	
+
 	-- Create new profile and switch to it
 	self.db:SetProfile(profileName)
 	zBarButtonBG.charSettings = self.db.profile
-	
+
 	-- Update the action bars
 	if zBarButtonBG.enabled then
 		zBarButtonBG.removeActionBarBackgrounds()
 		zBarButtonBG.createActionBarBackgrounds()
 	end
-	
+
 	return true, "Profile created successfully"
 end
 
@@ -90,17 +90,17 @@ function zBarButtonBGAce:SwitchToProfile(profileName)
 	if not profileName or not self.db.profiles[profileName] then
 		return false, "Profile does not exist"
 	end
-	
+
 	-- Switch to profile
 	self.db:SetProfile(profileName)
 	zBarButtonBG.charSettings = self.db.profile
-	
+
 	-- Update the action bars
 	if zBarButtonBG.enabled then
 		zBarButtonBG.removeActionBarBackgrounds()
 		zBarButtonBG.createActionBarBackgrounds()
 	end
-	
+
 	return true, "Switched to profile: " .. profileName
 end
 
@@ -108,21 +108,21 @@ function zBarButtonBGAce:CopyProfile(sourceProfile, targetProfile)
 	if not sourceProfile or not self.db.profiles[sourceProfile] then
 		return false, "Source profile does not exist"
 	end
-	
+
 	if not targetProfile or targetProfile == "" then
 		targetProfile = self.db:GetCurrentProfile()
 	end
-	
+
 	-- Copy profile data
 	self.db:CopyProfile(sourceProfile, targetProfile)
 	zBarButtonBG.charSettings = self.db.profile
-	
+
 	-- Update the action bars
 	if zBarButtonBG.enabled then
 		zBarButtonBG.removeActionBarBackgrounds()
 		zBarButtonBG.createActionBarBackgrounds()
 	end
-	
+
 	return true, "Profile copied successfully"
 end
 
@@ -130,11 +130,11 @@ function zBarButtonBGAce:DeleteProfile(profileName)
 	if not profileName or profileName == "Default" then
 		return false, "Cannot delete Default profile"
 	end
-	
+
 	if not self.db.profiles[profileName] then
 		return false, "Profile does not exist"
 	end
-	
+
 	if self.db:GetCurrentProfile() == profileName then
 		-- Switch to a safe profile before deleting
 		-- Try to find an existing profile to switch to, preferring "Default"
@@ -148,20 +148,20 @@ function zBarButtonBGAce:DeleteProfile(profileName)
 				end
 			end
 		end
-		
+
 		self.db:SetProfile(targetProfile)
 		zBarButtonBG.charSettings = self.db.profile
-		
+
 		-- Update the action bars
 		if zBarButtonBG.enabled then
 			zBarButtonBG.removeActionBarBackgrounds()
 			zBarButtonBG.createActionBarBackgrounds()
 		end
 	end
-	
+
 	-- Delete the profile
 	self.db:DeleteProfile(profileName, true)
-	
+
 	return true, "Profile deleted successfully"
 end
 
@@ -178,7 +178,7 @@ function zBarButtonBGAce:InitializeOptions()
 	-- Register options with Ace Config
 	LibStub("AceConfig-3.0"):RegisterOptionsTable("zBarButtonBG", self:GetOptionsTable())
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("zBarButtonBG", "zBarButtonBG")
-	
+
 	-- Register slash command to open options
 	SLASH_ZBARBUTTONBGOPTIONS1 = "/zbg"
 	SlashCmdList["ZBARBUTTONBGOPTIONS"] = function(msg)
@@ -204,7 +204,7 @@ Frame:SetScript("OnEvent", function(self, event)
 	if event == "PLAYER_LOGIN" then
 		-- Settings are now handled entirely by Ace - zBarButtonBG.charSettings already points to Ace profile
 		-- No need for native SavedVariables system anymore
-		
+
 		-- If we had this enabled before, turn it back on after a short delay
 		-- (need to wait for action bars to actually load first)
 		if zBarButtonBG.charSettings.enabled then
@@ -213,7 +213,7 @@ Frame:SetScript("OnEvent", function(self, event)
 				zBarButtonBG.createActionBarBackgrounds()
 			end)
 		end
-		
+
 		-- Initialize Ace options after settings are loaded
 		zBarButtonBGAce:InitializeOptions()
 	end
@@ -240,15 +240,15 @@ end
 
 -- Get mask texture path based on square/round setting
 local function getMaskPath()
-	return zBarButtonBG.charSettings.squareButtons 
-		and "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconMask_Square" 
+	return zBarButtonBG.charSettings.squareButtons
+		and "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconMask_Square"
 		or "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconMask_Rounded"
 end
 
 -- Get border texture path based on square/round setting
 local function getBorderPath()
-	return zBarButtonBG.charSettings.squareButtons 
-		and "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconBorder_Square" 
+	return zBarButtonBG.charSettings.squareButtons
+		and "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconBorder_Square"
 		or "Interface\\AddOns\\zBarButtonBG\\Assets\\ButtonIconBorder_Rounded"
 end
 
@@ -344,7 +344,8 @@ function zBarButtonBG.updateColors()
 
 			-- Update cooldown overlay color
 			if data.button._zBBG_cooldownOverlay then
-				data.button._zBBG_cooldownOverlay:SetColorTexture(cooldownColor.r, cooldownColor.g, cooldownColor.b, cooldownColor.a)
+				data.button._zBBG_cooldownOverlay:SetColorTexture(cooldownColor.r, cooldownColor.g, cooldownColor.b,
+					cooldownColor.a)
 			end
 		end
 	end
@@ -366,7 +367,7 @@ end
 -- Apply macro name text styling (extracted from repeated pattern)
 local function applyMacroNameStyling(button)
 	if not button or not button.Name then return end
-	
+
 	button.Name:SetFont(
 		getFontPath(zBarButtonBG.charSettings.macroNameFont),
 		zBarButtonBG.charSettings.macroNameFontSize,
@@ -391,7 +392,7 @@ end
 -- Apply count text styling (extracted from repeated pattern)
 local function applyCountStyling(button)
 	if not button or not button.Count then return end
-	
+
 	button.Count:SetFont(
 		getFontPath(zBarButtonBG.charSettings.countFont),
 		zBarButtonBG.charSettings.countFontSize,
@@ -412,7 +413,7 @@ end
 -- Apply keybind text styling (extracted from repeated pattern)
 local function applyKeybindStyling(button)
 	if not button or not button.HotKey then return end
-	
+
 	button.HotKey:SetFont(
 		getFontPath(zBarButtonBG.charSettings.keybindFont),
 		zBarButtonBG.charSettings.keybindFontSize,
@@ -433,7 +434,7 @@ end
 -- Apply all text styling to a button (eliminates 60+ lines of duplication)
 local function applyAllTextStyling(button)
 	if not button then return end
-	
+
 	applyMacroNameStyling(button)
 	applyCountStyling(button)
 	applyKeybindStyling(button)
@@ -442,7 +443,7 @@ end
 -- Manage NormalTexture consistently (extracted from repeated calls)
 local function updateButtonNormalTexture(button)
 	if not button or not button.NormalTexture then return end
-	
+
 	-- Always keep it transparent for our custom styling
 	button.NormalTexture:SetAlpha(0)
 end
@@ -450,12 +451,12 @@ end
 -- Apply backdrop positioning with adjustable offsets
 local function applyBackdropPositioning(outerFrame, button)
 	if not outerFrame or not button then return end
-	
+
 	local topAdj = zBarButtonBG.charSettings.backdropTopAdjustment or 5
 	local bottomAdj = zBarButtonBG.charSettings.backdropBottomAdjustment or 5
 	local leftAdj = zBarButtonBG.charSettings.backdropLeftAdjustment or 5
 	local rightAdj = zBarButtonBG.charSettings.backdropRightAdjustment or 5
-	
+
 	outerFrame:ClearAllPoints()
 	outerFrame:SetPoint("TOPLEFT", button, "TOPLEFT", -leftAdj, topAdj)
 	outerFrame:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", rightAdj, -bottomAdj)
@@ -464,7 +465,7 @@ end
 -- Apply text positioning with offsets (eliminates repetitive positioning code)
 local function applyTextPositioning(button)
 	if not button then return end
-	
+
 	-- Apply text positioning after button data is stored
 	if button.Name then
 		button.Name:SetJustifyH(zBarButtonBG.charSettings.macroNameJustification or "CENTER")
@@ -601,7 +602,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 						if not button._zBBG_customChecked then
 							button._zBBG_customChecked = button:CreateTexture(nil, "OVERLAY", nil, 3)
 							button._zBBG_customChecked:SetColorTexture(0, 1, 0, 0.3) -- Green at 30% opacity for active state
-							button._zBBG_customChecked:Hide() -- Hidden by default
+							button._zBBG_customChecked:Hide()   -- Hidden by default
 						end
 					end
 
@@ -645,13 +646,13 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if button._zBBG_customChecked then
 						button._zBBG_customChecked:ClearAllPoints()
 					end
-					
+
 					if zBarButtonBG.charSettings.squareButtons then
 						-- Square mode: highlight inset by 2px, overlays fill entire button
 						button._zBBG_customHighlight:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
 						button._zBBG_customHighlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
 						button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)
-						
+
 						-- Range, cooldown, and checked overlays fill the entire button (no inset)
 						if button._zBBG_rangeOverlay then
 							button._zBBG_rangeOverlay:SetAllPoints(button.icon)
@@ -662,7 +663,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 						if button._zBBG_customChecked then
 							button._zBBG_customChecked:SetAllPoints(button.icon)
 						end
-						
+
 						-- Remove masks for square mode
 						if button._zBBG_customMask then
 							removeMaskFromTexture(button._zBBG_customHighlight)
@@ -688,7 +689,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 						if button._zBBG_customChecked then
 							button._zBBG_customChecked:SetAllPoints(button.icon)
 						end
-						
+
 						if button._zBBG_customMask then
 							-- Apply mask to highlight and overlays
 							applyMaskToTexture(button._zBBG_customHighlight, button._zBBG_customMask)
@@ -764,10 +765,10 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 						-- Hook the SetChecked function to catch state changes
 						hooksecurefunc(button, "SetChecked", updateCheckedState)
-						
+
 						-- Also update state immediately in case it's already checked
 						updateCheckedState(button)
-						
+
 						button._zBBG_checkedHooked = true
 					end
 
@@ -875,10 +876,10 @@ function zBarButtonBG.createActionBarBackgrounds()
 						customBorderTexture = customBorderTexture,
 						button = button
 					}
-					
+
 					-- Apply text positioning after button data is stored using helper
 					applyTextPositioning(button)
-					
+
 					-- Make sure the mask stays removed
 					if button.icon and button.IconMask then
 						button.icon:RemoveMaskTexture(button.IconMask)
@@ -906,8 +907,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 
 						-- Update icon scale and texcoords based on mode
-							button.icon:SetScale(1.0)
-							button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+						button.icon:SetScale(1.0)
+						button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 						--[[
 							if zBarButtonBG.charSettings.squareButtons then
 							-- Square mode: normal scale
@@ -918,7 +919,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button.icon:SetScale(1.05)
 							button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 						end
-						]]--
+						]] --
 
 						-- Create new mask with correct texture for current mode
 						button._zBBG_customMask = button:CreateMaskTexture()
@@ -957,7 +958,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if button._zBBG_rangeOverlay then
 						button._zBBG_rangeOverlay:ClearAllPoints()
 						button._zBBG_rangeOverlay:SetAllPoints(button.icon)
-						
+
 						if zBarButtonBG.charSettings.squareButtons then
 							-- Square mode: remove any mask we previously applied
 							removeMaskFromTexture(button._zBBG_rangeOverlay)
@@ -972,7 +973,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if button._zBBG_cooldownOverlay then
 						button._zBBG_cooldownOverlay:ClearAllPoints()
 						button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
-						
+
 						if zBarButtonBG.charSettings.squareButtons then
 							-- Square mode: remove any mask we previously applied
 							removeMaskFromTexture(button._zBBG_cooldownOverlay)
@@ -1143,7 +1144,10 @@ function zBarButtonBG.createActionBarBackgrounds()
 					local hasTarget = UnitExists("target")
 					local action = button.action
 					local inRange = action and IsActionInRange(action, "target")
-					zBarButtonBG.print("Range update for " .. buttonName .. " - Target: " .. tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
+					zBarButtonBG.print("Range update for " ..
+						buttonName ..
+						" - Target: " ..
+						tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
 				end
 				zBarButtonBG.updateRangeOverlay(button)
 			end
@@ -1155,14 +1159,14 @@ function zBarButtonBG.createActionBarBackgrounds()
 				zBarButtonBG.updateCooldownOverlay(button)
 			end
 		end)
-		
+
 		-- Also catch the general cooldown frame stuff
 		hooksecurefunc("CooldownFrame_Set", function(cooldown, start, duration, enable, forceShowDrawEdge, modRate)
 			if cooldown and cooldown:GetParent() and cooldown:GetParent()._zBBG_styled and zBarButtonBG.enabled then
 				zBarButtonBG.updateCooldownOverlay(cooldown:GetParent())
 			end
 		end)
-		
+
 		-- Hook usability updates - way better than spamming events everywhere
 		-- WoW calls this when stuff like mana or range changes
 		if ActionButton_UpdateUsable then
@@ -1177,7 +1181,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 				end
 			end)
 		end
-		
+
 		-- Hook main action updates - catches when buttons get new spells (like mounting)
 		if ActionButton_Update then
 			hooksecurefunc("ActionButton_Update", function(button)
@@ -1191,7 +1195,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 				end
 			end)
 		end
-		
+
 		-- Hook state updates for better highlight management
 		if ActionButton_UpdateState then
 			hooksecurefunc("ActionButton_UpdateState", function(button)
@@ -1200,7 +1204,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 				end
 			end)
 		end
-		
+
 		-- Hook the main action button update function to catch page changes
 		-- This should be called whenever a button's action changes
 		if ActionButton_OnEvent then
@@ -1228,17 +1232,18 @@ function zBarButtonBG.updateCooldownOverlay(button)
 	if not button or not button._zBBG_cooldownOverlay or not button._zBBG_styled or not zBarButtonBG.enabled then
 		return
 	end
-	
+
 	if not zBarButtonBG.charSettings.fadeCooldown or not button.cooldown then
 		button._zBBG_cooldownOverlay:Hide()
 		return
 	end
-	
+
+	-- To test midnight remove FROM HERE
 	local start, duration = button.cooldown:GetCooldownTimes()
 	if start and duration and start > 0 and duration > 0 then
 		-- Convert to seconds for easier comparison (GetCooldownTimes returns milliseconds)
 		local durationSec = duration / 1000
-		
+
 		-- Get GCD duration in seconds
 		local gcdDuration = 0
 		if C_Spell and C_Spell.GetSpellCooldown then
@@ -1252,6 +1257,33 @@ function zBarButtonBG.updateCooldownOverlay(button)
 			local gcdStart, gcdDur = GetSpellCooldown(61304)
 			gcdDuration = gcdDur or 0
 		end
+
+	-- TO HERE
+
+	-- The below is the Midnight API test block to replace above
+	--[[
+	-- Get cooldown info using the new C_ActionBar API
+	local action = button.action
+	if not action or action == 0 then
+		button._zBBG_cooldownOverlay:Hide()
+		return
+	end
+
+	local cooldownInfo = C_ActionBar.GetActionCooldown(action)
+	if cooldownInfo and cooldownInfo.startTime and cooldownInfo.duration and cooldownInfo.duration > 0 then
+		-- C_ActionBar.GetActionCooldown returns seconds directly (not milliseconds)
+		local durationSec = cooldownInfo.duration
+
+		-- Get GCD duration using C_Spell API
+		local gcdDuration = 0
+		if C_Spell and C_Spell.GetSpellCooldown then
+			local gcdInfo = C_Spell.GetSpellCooldown(61304)
+			if gcdInfo and gcdInfo.duration then
+				gcdDuration = gcdInfo.duration
+			end
+		end
+		--]]
+
 		
 		-- Check if this looks like GCD by duration comparison
 		-- GCD is typically 1.0-1.5 seconds, so if duration is close to that range and matches GCD, hide it
@@ -1281,29 +1313,33 @@ function zBarButtonBG.updateRangeOverlay(button)
 	if not button or not button._zBBG_rangeOverlay or not button._zBBG_styled or not zBarButtonBG.enabled then
 		return
 	end
-	
+
 	if not zBarButtonBG.charSettings.showRangeIndicator then
 		button._zBBG_rangeOverlay:Hide()
 		return
 	end
-	
+
 	-- Check if we have a valid target first
 	if not UnitExists("target") then
 		button._zBBG_rangeOverlay:Hide()
 		return
 	end
-	
+
 	local inRange = nil
-	
+
 	-- Get the action from the button - this is key!
 	local action = button.action
 	if action and action > 0 then
 		-- Regular action buttons - use WoW's native range checking
 		inRange = IsActionInRange(action, "target")
-		
+
 		if zBarButtonBG._debug then
 			local actionType, id = GetActionInfo(action)
-			zBarButtonBG.print("Button: " .. (button:GetName() or "Unknown") .. ", Action: " .. action .. ", Type: " .. tostring(actionType) .. ", ID: " .. tostring(id) .. ", InRange: " .. tostring(inRange))
+			zBarButtonBG.print("Button: " ..
+				(button:GetName() or "Unknown") ..
+				", Action: " ..
+				action ..
+				", Type: " .. tostring(actionType) .. ", ID: " .. tostring(id) .. ", InRange: " .. tostring(inRange))
 		end
 	elseif button.GetAction then
 		-- Try to get action from the button (some addon buttons)
@@ -1317,7 +1353,7 @@ function zBarButtonBG.updateRangeOverlay(button)
 			inRange = IsSpellInRange(button.spellID, "target")
 		end
 	end
-	
+
 	-- IsActionInRange returns: true = in range, false = out of range, nil = no target/not applicable
 	if inRange == false then
 		-- Out of range - show overlay
@@ -1326,7 +1362,7 @@ function zBarButtonBG.updateRangeOverlay(button)
 			zBarButtonBG.print("Showing range overlay for " .. (button:GetName() or "Unknown"))
 		end
 	else
-		-- In range or no valid range check - hide overlay  
+		-- In range or no valid range check - hide overlay
 		button._zBBG_rangeOverlay:Hide()
 		if zBarButtonBG._debug and inRange == true then
 			zBarButtonBG.print("Hiding range overlay for " .. (button:GetName() or "Unknown") .. " (in range)")
@@ -1341,7 +1377,8 @@ SlashCmdList["ZBBGDEBUG"] = function(msg)
 		zBarButtonBG._debug = not zBarButtonBG._debug
 		zBarButtonBG.print("Debug mode " .. (zBarButtonBG._debug and "|cFF00FF00enabled|r" or "|cFFFF0000disabled|r"))
 	elseif msg == "hooks" then
-		zBarButtonBG.print("Hook status: " .. (zBarButtonBG.hookInstalled and "|cFF00FF00installed|r" or "|cFFFF0000not installed|r"))
+		zBarButtonBG.print("Hook status: " ..
+			(zBarButtonBG.hookInstalled and "|cFF00FF00installed|r" or "|cFFFF0000not installed|r"))
 		local count = 0
 		for _ in pairs(zBarButtonBG.frames) do count = count + 1 end
 		zBarButtonBG.print("Styled buttons: " .. count)
@@ -1352,14 +1389,16 @@ SlashCmdList["ZBBGDEBUG"] = function(msg)
 			local hasTarget = UnitExists("target")
 			local action = button.action
 			local inRange = action and IsActionInRange(action, "target")
-			zBarButtonBG.print("Target exists: " .. tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
-			
+			zBarButtonBG.print("Target exists: " ..
+				tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
+
 			if button._zBBG_rangeOverlay then
 				local points = button._zBBG_rangeOverlay:GetNumPoints()
 				local alpha = button._zBBG_rangeOverlay:GetAlpha()
 				local shown = button._zBBG_rangeOverlay:IsShown()
-				zBarButtonBG.print("Overlay - Points: " .. points .. ", Alpha: " .. alpha .. ", Shown: " .. tostring(shown))
-				
+				zBarButtonBG.print("Overlay - Points: " ..
+					points .. ", Alpha: " .. alpha .. ", Shown: " .. tostring(shown))
+
 				-- Force update
 				zBarButtonBG.updateRangeOverlay(button)
 				zBarButtonBG.print("After update - Shown: " .. tostring(button._zBBG_rangeOverlay:IsShown()))
@@ -1374,7 +1413,8 @@ SlashCmdList["ZBBGDEBUG"] = function(msg)
 		if button and button._zBBG_styled then
 			zBarButtonBG.print("Testing cooldown on ActionButton1...")
 			zBarButtonBG.updateCooldownOverlay(button)
-			zBarButtonBG.print("Cooldown overlay: " .. (button._zBBG_cooldownOverlay and (button._zBBG_cooldownOverlay:IsShown() and "shown" or "hidden") or "not created"))
+			zBarButtonBG.print("Cooldown overlay: " ..
+				(button._zBBG_cooldownOverlay and (button._zBBG_cooldownOverlay:IsShown() and "shown" or "hidden") or "not created"))
 		else
 			zBarButtonBG.print("ActionButton1 not styled or not found")
 		end
