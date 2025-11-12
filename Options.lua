@@ -16,6 +16,29 @@ if LSM then
 	if not LSM:IsValid("font", "Skurri") then
 		LSM:Register("font", "Skurri", [[Fonts\skurri.ttf]])
 	end
+
+	-- Register custom addon fonts from Assets folder
+	if not LSM:IsValid("font", "Champagne & Limousines Bold") then
+		LSM:Register("font", "Champagne & Limousines Bold", [[Interface\AddOns\zBarButtonBG\Assets\Champagne & Limousines Bold.ttf]])
+	end
+	if not LSM:IsValid("font", "HOOGE") then
+		LSM:Register("font", "HOOGE", [[Interface\AddOns\zBarButtonBG\Assets\HOOGE.TTF]])
+	end
+	if not LSM:IsValid("font", "OpenSans Condensed Bold") then
+		LSM:Register("font", "OpenSans Condensed Bold", [[Interface\AddOns\zBarButtonBG\Assets\OpenSans-CondBold.ttf]])
+	end
+	if not LSM:IsValid("font", "OpenSans Condensed Light") then
+		LSM:Register("font", "OpenSans Condensed Light", [[Interface\AddOns\zBarButtonBG\Assets\OpenSans-CondLight.ttf]])
+	end
+	if not LSM:IsValid("font", "OpenSans Condensed Light Italic") then
+		LSM:Register("font", "OpenSans Condensed Light Italic", [[Interface\AddOns\zBarButtonBG\Assets\OpenSans-CondLightItalic.ttf]])
+	end
+	if not LSM:IsValid("font", "Vintage One") then
+		LSM:Register("font", "Vintage One", [[Interface\AddOns\zBarButtonBG\Assets\VintageOne.ttf]])
+	end
+	if not LSM:IsValid("font", "Homespun") then
+		LSM:Register("font", "Homespun", [[Interface\AddOns\zBarButtonBG\Assets\homespun.ttf]])
+	end
 end
 
 -- Order number helper function for dynamic ordering
@@ -692,7 +715,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = nextOrderNumber(),
 						type = "color",
 						name = L["Out of Range Color"],
-						desc = L["Color"],
+						desc = L["Color of the out of range indicator"],
 						disabled = function() return not self.db.profile.showRangeIndicator end,
 						hasAlpha = true,
 						get = function()
@@ -717,6 +740,8 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "toggle",
 						name = L["Cooldown Overlay"],
 						desc = L["Show dark overlay during ability cooldowns"],
+						hidden = function() return not zBarButtonBG.midnightCooldown end,
+						disabled = function() return not zBarButtonBG.midnightCooldown end,
 						get = function() return self.db.profile.fadeCooldown end,
 						set = function(_, value)
 							self.db.profile.fadeCooldown = value
@@ -731,8 +756,9 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = nextOrderNumber(),
 						type = "color",
 						name = L["Cooldown Color"],
-						desc = L["Color"],
-						disabled = function() return not self.db.profile.fadeCooldown end,
+						desc = L["Color of the cooldown overlay"],
+						hidden = function() return not zBarButtonBG.midnightCooldown end,
+						disabled = function() return not zBarButtonBG.midnightCooldown or not self.db.profile.fadeCooldown end,
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.cooldownColor
@@ -797,9 +823,17 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = nextOrderNumber(),
 						type = "select",
 						name = L["Macro Name Font"],
-						desc = L["Font family"],
-						dialogControl = 'LSM30_Font',
-						values = AceGUIWidgetLSMlists.font,
+						desc = L["Font family for macro names"],
+						values = function()
+							local fontList = LSM:List("font")
+							local result = {}
+							if fontList then
+								for _, fontName in ipairs(fontList) do
+									result[fontName] = fontName
+								end
+							end
+							return result
+						end,
 						get = function() return self.db.profile.macroNameFont end,
 						set = function(_, value)
 							self.db.profile.macroNameFont = value
@@ -813,7 +847,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = nextOrderNumber(),
 						type = "select",
 						name = L["Font Flags"],
-						desc = L["Font style flags"],
+						desc = L["Font style flags for macro names"],
 						values = {
 							[""] = L["None"],
 							["OUTLINE"] = L["Outline"],
@@ -833,7 +867,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = nextOrderNumber(),
 						type = "range",
 						name = L["Font Size"],
-						desc = L["Size"],
+						desc = L["Size of the macro name text"],
 						min = 6,
 						max = 24,
 						step = 1,
@@ -850,7 +884,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = nextOrderNumber(),
 						type = "color",
 						name = L["Macro Name Color"],
-						desc = L["Color"],
+						desc = L["Color of the macro name text"],
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.macroNameColor
@@ -868,7 +902,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						order = nextOrderNumber(),
 						type = "range",
 						name = L["Macro Name Width"],
-						desc = L["Width"],
+						desc = L["Width of the macro name text frame"],
 						min = 20,
 						max = 200,
 						step = 1,
@@ -1049,8 +1083,16 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "select",
 						name = L["Count Font"],
 						desc = L["Font family for count/charge numbers"],
-						dialogControl = 'LSM30_Font',
-						values = AceGUIWidgetLSMlists.font,
+						values = function()
+							local fontList = LSM:List("font")
+							local result = {}
+							if fontList then
+								for _, fontName in ipairs(fontList) do
+									result[fontName] = fontName
+								end
+							end
+							return result
+						end,
 						get = function() return self.db.profile.countFont end,
 						set = function(_, value)
 							self.db.profile.countFont = value
@@ -1257,8 +1299,16 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "select",
 						name = L["Keybind Font"],
 						desc = L["Font family for keybind/hotkey text"],
-						dialogControl = 'LSM30_Font',
-						values = AceGUIWidgetLSMlists.font,
+						values = function()
+							local fontList = LSM:List("font")
+							local result = {}
+							if fontList then
+								for _, fontName in ipairs(fontList) do
+									result[fontName] = fontName
+								end
+							end
+							return result
+						end,
 						get = function() return self.db.profile.keybindFont end,
 						set = function(_, value)
 							self.db.profile.keybindFont = value

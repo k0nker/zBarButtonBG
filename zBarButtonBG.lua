@@ -23,7 +23,7 @@ local aceDefaults = {
 		rangeIndicatorColor = { r = .42, g = 0.07, b = .12, a = 0.75 },
 		fadeCooldown = false,
 		cooldownColor = { r = 0, g = 0, b = 0, a = 0.5 },
-		macroNameFont = "Friz Quadrata TT",
+		macroNameFont = "Homespun",
 		macroNameFontSize = 12,
 		macroNameFontFlags = "OUTLINE",
 		macroNameWidth = 42,
@@ -33,7 +33,7 @@ local aceDefaults = {
 		macroNamePosition = "BOTTOM",
 		macroNameOffsetX = 0,
 		macroNameOffsetY = 0,
-		countFont = "Friz Quadrata TT",
+		countFont = "Homespun",
 		countFontSize = 16,
 		countFontFlags = "OUTLINE",
 		countWidth = 42,
@@ -41,7 +41,7 @@ local aceDefaults = {
 		countColor = { r = 1, g = 1, b = 1, a = 1 },
 		countOffsetX = 0,
 		countOffsetY = 0,
-		keybindFont = "Friz Quadrata TT",
+		keybindFont = "Homespun",
 		keybindFontSize = 12,
 		keybindFontFlags = "OUTLINE",
 		keybindWidth = 42,
@@ -195,6 +195,10 @@ end
 -- Keep main functionality in global namespace (native WoW API)
 zBarButtonBG = {}
 
+-- Developer toggle for cooldown overlay feature (set to false to disable, true to enable)
+-- This is NOT a SavedVariable - it's a developer-level control
+zBarButtonBG.midnightCooldown = false
+
 -- ############################################################
 -- Load settings when we log in
 -- ############################################################
@@ -205,6 +209,13 @@ Frame:SetScript("OnEvent", function(self, event)
 		-- Settings are now handled entirely by Ace - zBarButtonBG.charSettings already points to Ace profile
 		-- No need for native SavedVariables system anymore
 
+		-- Initialize Ace options after settings are loaded
+		-- Debug: Check if LSM30_Font widget is registered before options
+		local AceGUI = LibStub("AceGUI-3.0", true)
+		C_Timer.After(0.5, function()
+			zBarButtonBGAce:InitializeOptions()
+		end)
+
 		-- If we had this enabled before, turn it back on after a short delay
 		-- (need to wait for action bars to actually load first)
 		if zBarButtonBG.charSettings.enabled then
@@ -213,9 +224,6 @@ Frame:SetScript("OnEvent", function(self, event)
 				zBarButtonBG.createActionBarBackgrounds()
 			end)
 		end
-
-		-- Initialize Ace options after settings are loaded
-		zBarButtonBGAce:InitializeOptions()
 	end
 end)
 
@@ -620,21 +628,19 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_rangeOverlay = nil
 					end
 
-					-- Create custom cooldown fade overlay (only if enabled)
-					if zBarButtonBG.charSettings.fadeCooldown then
-						if not button._zBBG_cooldownOverlay then
-							button._zBBG_cooldownOverlay = button:CreateTexture(nil, "OVERLAY", nil, 2)
-							local c = zBarButtonBG.charSettings.cooldownColor
-							button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
-							button._zBBG_cooldownOverlay:Hide() -- Hidden by default
-						end
-					elseif button._zBBG_cooldownOverlay then
-						-- Cooldown fade disabled, hide and remove overlay
-						button._zBBG_cooldownOverlay:Hide()
-						button._zBBG_cooldownOverlay = nil
+				-- Create custom cooldown fade overlay (only if enabled and developer flag allows it)
+				if zBarButtonBG.midnightCooldown and zBarButtonBG.charSettings.fadeCooldown then
+					if not button._zBBG_cooldownOverlay then
+						button._zBBG_cooldownOverlay = button:CreateTexture(nil, "OVERLAY", nil, 2)
+						local c = zBarButtonBG.charSettings.cooldownColor
+						button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+						button._zBBG_cooldownOverlay:Hide() -- Hidden by default
 					end
-
-					-- Position the highlight based on square/round mode
+				elseif button._zBBG_cooldownOverlay then
+					-- Cooldown fade disabled, hide and remove overlay
+					button._zBBG_cooldownOverlay:Hide()
+					button._zBBG_cooldownOverlay = nil
+				end					-- Position the highlight based on square/round mode
 					local inset = 2
 					button._zBBG_customHighlight:ClearAllPoints()
 					if button._zBBG_rangeOverlay then
