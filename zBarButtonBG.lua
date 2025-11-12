@@ -197,7 +197,7 @@ zBarButtonBG = {}
 
 -- Developer toggle for cooldown overlay feature (set to false to disable, true to enable)
 -- This is NOT a SavedVariable - it's a developer-level control
-zBarButtonBG.midnightCooldown = false
+zBarButtonBG.midnightCooldown = true
 
 -- ############################################################
 -- Load settings when we log in
@@ -635,6 +635,29 @@ function zBarButtonBG.createActionBarBackgrounds()
 						local c = zBarButtonBG.charSettings.cooldownColor
 						button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
 						button._zBBG_cooldownOverlay:Hide() -- Hidden by default
+
+						-- Hook the cooldown frame's Show/Hide scripts to instantly sync our overlay
+						-- This fires immediately when the Blizzard cooldown shows/hides
+						if button.cooldown and not button.cooldown._zBBG_hooked then
+							local originalShow = button.cooldown:GetScript("OnShow") or function() end
+							local originalHide = button.cooldown:GetScript("OnHide") or function() end
+							
+							button.cooldown:SetScript("OnShow", function(self)
+								originalShow(self)
+								if self:GetParent() and self:GetParent()._zBBG_cooldownOverlay then
+									self:GetParent()._zBBG_cooldownOverlay:Show()
+								end
+							end)
+							
+							button.cooldown:SetScript("OnHide", function(self)
+								originalHide(self)
+								if self:GetParent() and self:GetParent()._zBBG_cooldownOverlay then
+									self:GetParent()._zBBG_cooldownOverlay:Hide()
+								end
+							end)
+							
+							button.cooldown._zBBG_hooked = true
+						end
 					end
 				elseif button._zBBG_cooldownOverlay then
 					-- Cooldown fade disabled, hide and remove overlay
@@ -1244,70 +1267,11 @@ function zBarButtonBG.updateCooldownOverlay(button)
 		return
 	end
 
-	-- To test midnight remove FROM HERE
-	local start, duration = button.cooldown:GetCooldownTimes()
-	if start and duration and start > 0 and duration > 0 then
-		-- Convert to seconds for easier comparison (GetCooldownTimes returns milliseconds)
-		local durationSec = duration / 1000
-
-		-- Get GCD duration in seconds
-		local gcdDuration = 0
-		if C_Spell and C_Spell.GetSpellCooldown then
-			-- Use new API
-			local gcdInfo = C_Spell.GetSpellCooldown(61304)
-			if gcdInfo and gcdInfo.duration then
-				gcdDuration = gcdInfo.duration
-			end
-		elseif GetSpellCooldown then
-			-- Fallback to old API
-			local gcdStart, gcdDur = GetSpellCooldown(61304)
-			gcdDuration = gcdDur or 0
-		end
-
-	-- TO HERE
-
-	-- The below is the Midnight API test block to replace above
-	--[[
-	-- Get cooldown info using the new C_ActionBar API
-	local action = button.action
-	if not action or action == 0 then
-		button._zBBG_cooldownOverlay:Hide()
-		return
-	end
-
-	local cooldownInfo = C_ActionBar.GetActionCooldown(action)
-	if cooldownInfo and cooldownInfo.startTime and cooldownInfo.duration and cooldownInfo.duration > 0 then
-		-- C_ActionBar.GetActionCooldown returns seconds directly (not milliseconds)
-		local durationSec = cooldownInfo.duration
-
-		-- Get GCD duration using C_Spell API
-		local gcdDuration = 0
-		if C_Spell and C_Spell.GetSpellCooldown then
-			local gcdInfo = C_Spell.GetSpellCooldown(61304)
-			if gcdInfo and gcdInfo.duration then
-				gcdDuration = gcdInfo.duration
-			end
-		end
-		--]]
-
-		
-		-- Check if this looks like GCD by duration comparison
-		-- GCD is typically 1.0-1.5 seconds, so if duration is close to that range and matches GCD, hide it
-		if gcdDuration > 0 and durationSec > 0.8 and durationSec < 2.0 then
-			-- This could be GCD - check if duration is very close to GCD duration
-			if math.abs(durationSec - gcdDuration) < 0.05 then -- 50ms tolerance
-				-- Duration matches GCD closely - hide overlay (just GCD)
-				button._zBBG_cooldownOverlay:Hide()
-			else
-				-- Duration doesn't match GCD - show overlay (real cooldown)
-				button._zBBG_cooldownOverlay:Show()
-			end
-		else
-			-- Duration is outside GCD range or no GCD detected - show overlay
-			button._zBBG_cooldownOverlay:Show()
-		end
+	-- Check if the Blizzard cooldown frame is visible
+	-- If the built-in cooldown is showing, display our overlay; otherwise hide it
+	if button.cooldown:IsShown() then
+		button._zBBG_cooldownOverlay:Show()
 	else
-		-- Not on cooldown - hide overlay
 		button._zBBG_cooldownOverlay:Hide()
 	end
 end
