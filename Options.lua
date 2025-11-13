@@ -41,6 +41,85 @@ if LSM then
 	end
 end
 
+-- Export/Import helper functions for settings
+local function getDefaultProfile()
+	-- Reference the default profile structure from the main addon (zBarButtonBG.lua)
+	return zBarButtonBGAce.db.defaults.profile
+end
+
+local function exportProfile(profile)
+	-- Serialize profile using AceSerializer
+	local serialized = LibStub("AceSerializer-3.0"):Serialize(profile)
+	
+	-- Compress using LibDeflate
+	local LibDeflate = LibStub:GetLibrary("LibDeflate")
+	if not LibDeflate then
+		-- Try direct global access
+		LibDeflate = _G.LibDeflate
+	end
+	
+	if LibDeflate then
+		local compressed = LibDeflate:CompressDeflate(serialized)
+		if compressed then
+			local encoded = LibDeflate:EncodeForPrint(compressed)
+			if encoded then
+				return encoded
+			end
+		end
+	end
+	
+	-- Fallback if LibDeflate not available or compression fails
+	return serialized
+end
+
+local function importProfile(exportString)
+	-- Validate that we have something
+	if not exportString or exportString == "" then
+		return nil, L["Invalid export string format"]
+	end
+	
+	-- Trim whitespace from start and end
+	exportString = exportString:gsub("^%s+", ""):gsub("%s+$", "")
+	
+	-- Try to decompress first (most recent format)
+	local LibDeflate = LibStub:GetLibrary("LibDeflate")
+	local decompressed = nil
+	
+	if LibDeflate then
+		local decoded = LibDeflate:DecodeForPrint(exportString)
+		if decoded then
+			decompressed = LibDeflate:DecompressDeflate(decoded)
+		end
+	end
+	
+	-- If decompression failed, try raw deserialization (fallback for uncompressed exports)
+	local dataToDeserialize = decompressed or exportString
+	
+	-- Decode using AceSerializer
+	local success, profile = LibStub("AceSerializer-3.0"):Deserialize(dataToDeserialize)
+	if not success then
+		return nil, L["Failed to decode export string"]
+	end
+	
+	-- Validate that it has the expected settings
+	local defaults = getDefaultProfile()
+	if not profile or type(profile) ~= "table" then
+		return nil, L["Invalid export string - not a valid profile"]
+	end
+	
+	-- Merge with defaults, ensuring all required keys exist
+	local validatedProfile = {}
+	for key, defaultValue in pairs(defaults) do
+		if profile[key] ~= nil then
+			validatedProfile[key] = profile[key]
+		else
+			validatedProfile[key] = defaultValue
+		end
+	end
+	
+	return validatedProfile
+end
+
 -- Order number helper function for dynamic ordering
 local orderCounter = 0
 local function nextOrderNumber()
@@ -304,6 +383,158 @@ function zBarButtonBGAce:GetOptionsTable()
 							else
 								zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
 							end
+						end,
+					},
+					spacer5 = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
+					},
+					exportProfileHeader = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = "Import/Export",
+					},
+					exportProfile = {
+						order = nextOrderNumber(),
+						type = "execute",
+						name = L["Export Profile"],
+						desc = L["Export current profile settings as a string"],
+						func = function()
+							local exportString = exportProfile(self.db.profile)
+							
+							-- Create an AceGUI frame to display the export string
+							local AceGUI = LibStub("AceGUI-3.0")
+							local frame = AceGUI:Create("Frame")
+							frame:SetTitle("Export Profile")
+							frame:SetStatusText("Copy this string to share your settings")
+							frame:SetLayout("Flow")
+							frame:SetWidth(600)
+							frame:SetHeight(250)
+							
+							-- Create a scrolling editbox for the export string
+							local editbox = AceGUI:Create("MultiLineEditBox")
+							editbox:SetLabel("Export String:")
+							editbox:SetText(exportString)
+							editbox:SetFullWidth(true)
+							editbox:SetNumLines(10)
+							editbox:DisableButton(true)  -- Make it read-only
+							frame:AddChild(editbox)
+							
+							-- Copy button (if clipboard available)
+							if ClipboardFrame or CPOOL_CLIPBOARD_FRAME then
+								local copyButton = AceGUI:Create("Button")
+								copyButton:SetText("Copy to Clipboard")
+								copyButton:SetWidth(150)
+								copyButton:SetCallback("OnClick", function()
+									ClipboardFrame:SetText(exportString)
+									ClipboardFrame:Show()
+									zBarButtonBG.print("Export string copied to clipboard!")
+								end)
+								frame:AddChild(copyButton)
+							end
+						end,
+					},
+					importProfile = {
+						order = nextOrderNumber(),
+						type = "execute",
+						name = L["Import Profile"],
+						desc = L["Import profile settings from an export string"],
+						func = function()
+							local AceGUI = LibStub("AceGUI-3.0")
+							
+							-- Create frame for import input
+							local frame = AceGUI:Create("Frame")
+							frame:SetTitle("Import Profile")
+							frame:SetStatusText("Paste an export string and click Import")
+							frame:SetLayout("Flow")
+							frame:SetWidth(600)
+							frame:SetHeight(300)
+							
+							-- Create editbox for paste
+							local editbox = AceGUI:Create("MultiLineEditBox")
+							editbox:SetLabel("Paste Export String:")
+							editbox:SetFullWidth(true)
+							editbox:SetNumLines(8)
+							editbox:DisableButton(true)  -- Disable the built-in accept button
+							frame:AddChild(editbox)
+							
+							-- Create Import button
+							local importButton = AceGUI:Create("Button")
+							importButton:SetText("Import")
+							importButton:SetWidth(100)
+							importButton:SetCallback("OnClick", function()
+								local exportString = editbox:GetText()
+								if not exportString or exportString == "" then
+									zBarButtonBG.print("|cFFFF0000Error:|r Please paste an export string first")
+									return
+								end
+								
+								local profile, errorMsg = importProfile(exportString)
+								if not profile then
+									zBarButtonBG.print("|cFFFF0000Error:|r " .. (errorMsg or "Invalid export string"))
+									return
+								end
+								
+								-- Close the import window
+								AceGUI:Release(frame)
+								
+								-- Ask for new profile name
+								local nameDialog = AceGUI:Create("Frame")
+								nameDialog:SetTitle("Create Profile from Import")
+								nameDialog:SetStatusText("Enter a name for the new profile")
+								nameDialog:SetLayout("Flow")
+								nameDialog:SetWidth(350)
+								nameDialog:SetHeight(150)
+								
+								local nameEditbox = AceGUI:Create("EditBox")
+								nameEditbox:SetLabel("Profile Name:")
+								nameEditbox:SetFullWidth(true)
+								nameEditbox:DisableButton(true)  -- Disable built-in button
+								nameDialog:AddChild(nameEditbox)
+								
+								-- Create button
+								local createButton = AceGUI:Create("Button")
+								createButton:SetText("Create")
+								createButton:SetWidth(100)
+								createButton:SetCallback("OnClick", function()
+									local profileName = nameEditbox:GetText()
+									if not profileName or profileName == "" then
+										zBarButtonBG.print("|cFFFF0000Error:|r Profile name cannot be empty")
+										return
+									end
+									
+									-- Check if profile already exists
+									if zBarButtonBGAce.db.profiles[profileName] then
+										zBarButtonBG.print("|cFFFF0000Error:|r Profile already exists")
+										return
+									end
+									
+									-- Create the profile
+									zBarButtonBGAce.db:SetProfile(profileName)
+									
+									-- Import the settings
+									for key, value in pairs(profile) do
+										zBarButtonBGAce.db.profile[key] = value
+									end
+									
+									zBarButtonBG.charSettings = zBarButtonBGAce.db.profile
+									
+									-- Rebuild the UI
+									if zBarButtonBG.enabled then
+										zBarButtonBG.removeActionBarBackgrounds()
+										zBarButtonBG.createActionBarBackgrounds()
+									end
+									
+									zBarButtonBG.print("Profile imported: " .. profileName)
+									LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
+									
+									AceGUI:Release(nameDialog)
+								end)
+								nameDialog:AddChild(createButton)
+								
+							end)
+							frame:AddChild(importButton)
 						end,
 					},
 				},

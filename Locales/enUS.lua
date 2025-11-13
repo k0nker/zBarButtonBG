@@ -46,6 +46,17 @@ L["Settings copied from: "] = "Settings copied from: "
 L["Current profile reset to defaults!"] = "Current profile reset to defaults!"
 
 -- ############################################################
+-- Profile Import/Export
+-- ############################################################
+L["Export Profile"] = "Export Profile"
+L["Export current profile settings as a string"] = "Export current profile settings as a string"
+L["Import Profile"] = "Import Profile"
+L["Import profile settings from an export string"] = "Import profile settings from an export string"
+L["Invalid export string format"] = "Invalid export string format"
+L["Failed to decode export string"] = "Failed to decode export string"
+L["Invalid export string - not a valid profile"] = "Invalid export string - not a valid profile"
+
+-- ############################################################
 -- Reset Operations & Confirmations
 -- ############################################################
 L["Reset Profile"] = "Reset Profile"
