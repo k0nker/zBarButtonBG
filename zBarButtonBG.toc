@@ -4,6 +4,7 @@
 ## Author: k0nker
 ## Version: 2025.1112.01a
 ## SavedVariables: zBarButtonBGDB
+## IconTexture: Interface\AddOns\zBarButtonBG\zBarButtonBG.tga
 ## Category: Action Bars
 ## Category-enUS: Action Bars
 ## Category-deDE: Aktionsleisten
