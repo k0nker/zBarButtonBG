@@ -1070,7 +1070,10 @@ function zBarButtonBGAce:GetOptionsTable()
 							self.db.profile.macroNameFont = value
 							zBarButtonBG.charSettings.macroNameFont = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
-								zBarButtonBG.updateFonts()
+								-- Add small delay to allow LibSharedMedia to load the font
+								C_Timer.After(0.1, function()
+									zBarButtonBG.updateFonts()
+								end)
 							end
 						end,
 					},
@@ -1329,7 +1332,10 @@ function zBarButtonBGAce:GetOptionsTable()
 							self.db.profile.countFont = value
 							zBarButtonBG.charSettings.countFont = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
-								zBarButtonBG.updateFonts()
+								-- Add small delay to allow LibSharedMedia to load the font
+								C_Timer.After(0.1, function()
+									zBarButtonBG.updateFonts()
+								end)
 							end
 						end,
 					},
@@ -1545,7 +1551,10 @@ function zBarButtonBGAce:GetOptionsTable()
 							self.db.profile.keybindFont = value
 							zBarButtonBG.charSettings.keybindFont = value
 							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
-								zBarButtonBG.updateFonts()
+								-- Add small delay to allow LibSharedMedia to load the font
+								C_Timer.After(0.1, function()
+									zBarButtonBG.updateFonts()
+								end)
 							end
 						end,
 					},
@@ -1705,3 +1714,14 @@ function zBarButtonBGAce:GetOptionsTable()
 
 	return options
 end
+
+-- Initialize the Ace config interface
+function zBarButtonBGAce:InitializeOptions()
+	-- Get the options table
+	local optionsTable = self:GetOptionsTable()
+	
+	-- Register with AceConfig (note: AceConfig-3.0 not AceConfigRegistry)
+	LibStub("AceConfig-3.0"):RegisterOptionsTable("zBarButtonBG", optionsTable)
+	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("zBarButtonBG", "zBarButtonBG")
+end
+

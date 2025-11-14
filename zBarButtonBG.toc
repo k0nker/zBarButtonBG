@@ -43,5 +43,18 @@ Locales\ruRU.lua
 Locales\zhCN.lua
 Locales\zhTW.lua
 
+# Core namespace and modules (loaded in order)
+Core\Objects.lua
+Core\Constants.lua
+Core\Defaults.lua
+Core\Utilities.lua
+Core\Styling.lua
+Core\Overlays.lua
+Core\Init.lua
+
+# Profile management
+Profile\ProfileManager.lua
+
+# Main addon and UI
 zBarButtonBG.lua
-Options.lua
+UI\Options.lua

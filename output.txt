@@ -1,0 +1,11 @@
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								-- Add small delay to allow LibSharedMedia to load the font
+								C_Timer.After(0.1, function()
+--
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								-- Add small delay to allow LibSharedMedia to load the font
+								C_Timer.After(0.1, function()
+--
+							if zBarButtonBG.enabled and zBarButtonBG.updateFonts then
+								-- Add small delay to allow LibSharedMedia to load the font
+								C_Timer.After(0.1, function()
