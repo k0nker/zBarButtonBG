@@ -7,7 +7,7 @@ local addonTable = select(2, ...)
 addonTable.Core.Defaults = {
 	profile = {
 		enabled = true,
-		squareButtons = true,
+		buttonStyle = "Square",
 		showBorder = false,
 		borderColor = { r = 0.2, g = 0.2, b = 0.2, a = 1 },
 		useClassColorBorder = false,

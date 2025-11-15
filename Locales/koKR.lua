@@ -155,8 +155,13 @@ L["Keybind Y Offset"] = "단축키 Y 오프셋"
 -- ############################################################
 -- Appearance Controls
 -- ############################################################
-L["Square Buttons"] = "사각형 버튼"
-L["Use square button style instead of round"] = "원형 대신 사각형 버튼 스타일 사용"
+L["Button Style"] = "버튼 스타일"
+L["Choose button style"] = "버튼 스타일 선택"
+L["Round"] = "원형"
+L["Square"] = "사각형"
+L["Less rounded button style"] = "클래식 둥근 버튼 스타일"
+L["Sharp square button style"] = "날카로운 사각형 버튼 스타일"
+L["Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"] = "현재 프로필의 모든 설정을 기본값으로 초기화하시겠습니까?\n\n이것은 모든 모양, 배경, 테늤트 및 지시기 설정을 초기화합니다.\n\n이 동작은 되돌릴 수 없습니다!"
 L["Show Backdrop"] = "배경 표시"
 L["Show outer background frame"] = "외부 배경 프레임 표시"
 L["Show Border"] = "테두리 표시"

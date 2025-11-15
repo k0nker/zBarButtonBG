@@ -191,15 +191,6 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 	end)
 	buttonGroup:AddChild(createButton)
 
-	-- Cancel button
-	local cancelButton = AceGUI:Create("Button")
-	cancelButton:SetText(L["Cancel"])
-	cancelButton:SetWidth(80)
-	cancelButton:SetCallback("OnClick", function()
-		frame:Hide()
-	end)
-	buttonGroup:AddChild(cancelButton)
-
 	-- Focus the editbox
 	editbox:SetFocus()
 end
@@ -214,54 +205,6 @@ function zBarButtonBGAce:GetOptionsTable()
 				type = "group",
 				name = L["General"],
 				args = {
-					header = {
-						order = nextOrderNumber(),
-						type = "header",
-						name = L["General"],
-					},
-					enabled = {
-						order = nextOrderNumber(),
-						type = "toggle",
-						name = L["Enable addon"],
-						desc = L["Turn the addon on or off"],
-						get = function() return self.db.profile.enabled end,
-						set = function(_, value)
-							self.db.profile.enabled = value
-							-- Update native system
-							zBarButtonBG.charSettings.enabled = value
-							if value and not zBarButtonBG.enabled then
-								zBarButtonBG.enabled = true
-								zBarButtonBG.createActionBarBackgrounds()
-								zBarButtonBG.print(L["Action bar backgrounds enabled"])
-							elseif not value and zBarButtonBG.enabled then
-								zBarButtonBG.enabled = false
-								zBarButtonBG.removeActionBarBackgrounds()
-								zBarButtonBG.print(L["Action bar backgrounds disabled"])
-							end
-						end,
-					},
-					resetButton = {
-						order = nextOrderNumber(),
-						type = "execute",
-						name = L["Reset Profile"],
-						desc = L["Reset current profile to defaults"],
-						func = function()
-							-- Reset current profile to defaults
-							self.db:ResetProfile()
-							zBarButtonBG.charSettings = self.db.profile
-							-- Trigger rebuild
-							if zBarButtonBG.enabled then
-								zBarButtonBG.removeActionBarBackgrounds()
-								zBarButtonBG.createActionBarBackgrounds()
-							end
-							zBarButtonBG.print(L["Current profile reset to defaults!"])
-						end,
-					},
-					spacer1 = {
-						order = nextOrderNumber(),
-						type = "description",
-						name = " ",
-					},
 					profilesHeader = {
 						order = nextOrderNumber(),
 						type = "header",
@@ -308,9 +251,34 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "description",
 						name = " ",
 					},
+					resetButton = {
+						order = nextOrderNumber(),
+						type = "execute",
+						name = L["Reset Profile"],
+						desc = L["Reset current profile to defaults"],
+						confirm = function()
+							return L["Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"]
+						end,
+						func = function()
+							-- Reset current profile to defaults
+							self.db:ResetProfile()
+							zBarButtonBG.charSettings = self.db.profile
+							-- Trigger rebuild
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+							zBarButtonBG.print(L["Current profile reset to defaults!"])
+						end,
+					},
 					spacer3 = {
 						order = nextOrderNumber(),
 						type = "description",
+						name = " ",
+					},
+					modifyProfilesHeader = {
+						order = nextOrderNumber(),
+						type = "header",
 						name = L["Modify Profiles"],
 					},
 					chooseProfile = {
@@ -555,7 +523,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						func = function()
 							-- Reset button-specific settings to defaults from aceDefaults table
 							local defaults = zBarButtonBGAce.db.defaults.profile
-							self.db.profile.squareButtons = defaults.squareButtons
+							self.db.profile.buttonStyle = defaults.buttonStyle
 							self.db.profile.showBorder = defaults.showBorder
 							self.db.profile.borderColor = {r = defaults.borderColor.r, g = defaults.borderColor.g, b = defaults.borderColor.b, a = defaults.borderColor.a}
 							self.db.profile.useClassColorBorder = defaults.useClassColorBorder
@@ -591,13 +559,14 @@ function zBarButtonBGAce:GetOptionsTable()
 					},
 					squareButtons = {
 						order = nextOrderNumber(),
-						type = "toggle",
-						name = L["Square Buttons"],
-						desc = L["Use square button style instead of round"],
-						get = function() return self.db.profile.squareButtons end,
+						type = "select",
+						name = L["Button Style"],
+						desc = L["Choose button style"],
+						values = function() return zBarButtonBG.ButtonStyles.GetStylesForDropdown() end,
+						get = function() return self.db.profile.buttonStyle or "Round" end,
 						set = function(_, value)
-							self.db.profile.squareButtons = value
-							zBarButtonBG.charSettings.squareButtons = value
+							self.db.profile.buttonStyle = value
+							zBarButtonBG.charSettings.buttonStyle = value
 							if zBarButtonBG.enabled then
 								zBarButtonBG.removeActionBarBackgrounds()
 								zBarButtonBG.createActionBarBackgrounds()

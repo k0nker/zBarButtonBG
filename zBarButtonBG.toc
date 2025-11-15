@@ -47,6 +47,7 @@ Locales\zhTW.lua
 Core\Objects.lua
 Core\Constants.lua
 Core\Defaults.lua
+Core\ButtonStyles.lua
 Core\Utilities.lua
 Core\Styling.lua
 Core\Overlays.lua

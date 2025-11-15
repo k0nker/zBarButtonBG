@@ -218,8 +218,13 @@ L["Vertical positioning offset for keybind/hotkey text"] = "Vertikaler Positions
 -- ############################################################
 -- Appearance Controls
 -- ############################################################
-L["Square Buttons"] = "Eckige Schaltflächen"
-L["Use square button style instead of round"] = "Eckigen Schaltflächenstil anstelle von runden verwenden"
+L["Button Style"] = "Schaltflächenart"
+L["Choose button style"] = "Wählen Sie die Schaltflächenart"
+L["Round"] = "Rund"
+L["Square"] = "Eckig"
+L["Less rounded button style"] = "Klassischer abgerundeter Schaltflächenart"
+L["Sharp square button style"] = "Scharfer eckiger Schaltflächenart"
+L["Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"] = "Sind Sie sicher, dass Sie alle Einstellungen im aktuellen Profil auf Standardwerte zurücksetzen möchten?\n\nDies setzt alle Erscheinungs-, Hintergrund-, Text- und Indikatoreinstellungen zurück.\n\nDiese Aktion kann nicht rückgängig gemacht werden!"
 L["Show Backdrop"] = "Hintergrund anzeigen"
 L["Show outer background frame"] = "Äußeren Hintergrundrahmen anzeigen"
 L["Show Border"] = "Rand anzeigen"

@@ -13,11 +13,13 @@ local Constants = addonTable.Core.Constants
 local Utilities = addonTable.Core.Utilities
 local Styling = addonTable.Core.Styling
 local ProfileManager = addonTable.Profile.Manager
+local ButtonStyles = addonTable.Core.ButtonStyles
 
 -- Re-export commonly used functions to global zBarButtonBG namespace for backward compatibility
 zBarButtonBG.print = Utilities.print
 zBarButtonBG.updateCooldownOverlay = Overlays.updateCooldownOverlay
 zBarButtonBG.updateRangeOverlay = Overlays.updateRangeOverlay
+zBarButtonBG.ButtonStyles = ButtonStyles
 
 -- Developer toggle for cooldown overlay feature
 zBarButtonBG.midnightCooldown = Constants.MIDNIGHT_COOLDOWN
@@ -336,29 +338,45 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Always make Blizzard's NormalTexture fully transparent so it never shows
 					updateButtonNormalTexture(button)
 
-					-- Apply icon styling based on square/round mode
-
-					-- Round button mode: zoom in and use custom mask for clipping
+					-- Apply icon styling: all styles use same position/zoom, only mask/border change
 					if button.icon then
 						-- Remove Blizzard's mask
 						if button.IconMask then
 							button.icon:RemoveMaskTexture(button.IconMask)
 						end
 
-						-- Scale up slightly to zoom in and hide any icon border
+						-- Always use same zoom and position for all styles
 						button.icon:SetScale(1.05)
-
-						-- Crop the texture coordinates to remove edges
 						button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+						button.icon:ClearAllPoints()
+						button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
+						button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 2)
 
-						-- Apply our custom mask texture (BLEND mode uses the alpha channel)
+						-- Create or update mask texture, scale up if borders are off
 						if not button._zBBG_customMask then
 							button._zBBG_customMask = button:CreateMaskTexture()
-							-- Use BLEND mode which respects alpha: transparent=hide, opaque=show
-							button._zBBG_customMask:SetTexture(getMaskPath())
-							button._zBBG_customMask:SetAllPoints(button)
+						end
+						button._zBBG_customMask:SetTexture(getMaskPath())
+						if zBarButtonBG.charSettings.showBorder then
+							button._zBBG_customMask:SetAllPoints(button.icon)
+						else
+							button._zBBG_customMask:ClearAllPoints()
+							button._zBBG_customMask:SetPoint("TOPLEFT", button.icon, "TOPLEFT", -1, 1)
+							button._zBBG_customMask:SetPoint("BOTTOMRIGHT", button.icon, "BOTTOMRIGHT", 1, -1)
 						end
 						applyMaskToTexture(button.icon, button._zBBG_customMask)
+
+						-- Hide Blizzard's NormalTexture (border) for all styles
+						if button.NormalTexture then
+							button.NormalTexture:SetAlpha(0)
+							button.NormalTexture:Hide()
+						end
+
+						-- Hide Blizzard's NormalTexture (border) for all styles
+						if button.NormalTexture then
+							button.NormalTexture:SetAlpha(0)
+							button.NormalTexture:Hide()
+						end
 					end
 
 					-- Make the cooldown spiral fill the whole button
@@ -460,17 +478,15 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if button._zBBG_cooldownOverlay then
 						button._zBBG_cooldownOverlay:ClearAllPoints()
 					end
-					if button._zBBG_customChecked then
-						button._zBBG_customChecked:ClearAllPoints()
-					end
+				if button._zBBG_customChecked then
+					button._zBBG_customChecked:ClearAllPoints()
+				end
 
-					if zBarButtonBG.charSettings.squareButtons then
-						-- Square mode: highlight inset by 2px, overlays fill entire button
-						button._zBBG_customHighlight:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
-						button._zBBG_customHighlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
-						button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)
-
-						-- Range, cooldown, and checked overlays fill the entire button (no inset)
+				if Utilities.isSquareButtonStyle() then
+					-- Square mode: highlight inset by 2px, overlays fill entire button
+					button._zBBG_customHighlight:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+					button._zBBG_customHighlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+					button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)						-- Range, cooldown, and checked overlays fill the entire button (no inset)
 						if button._zBBG_rangeOverlay then
 							button._zBBG_rangeOverlay:SetAllPoints(button.icon)
 						end
@@ -613,6 +629,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button._zBBG_customMask = button:CreateMaskTexture()
 							button._zBBG_customMask:SetTexture(getMaskPath())
 							button._zBBG_customMask:SetAllPoints(button)
+						else
+							-- Update the mask texture to match current button style (in case style changed)
+							button._zBBG_customMask:SetTexture(getMaskPath())
 						end
 						applyMaskToTexture(button.SlotBackground, button._zBBG_customMask)
 					end
@@ -657,6 +676,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button._zBBG_customMask = button:CreateMaskTexture()
 							button._zBBG_customMask:SetTexture(getMaskPath())
 							button._zBBG_customMask:SetAllPoints(button)
+						else
+							-- Update the mask texture to match current button style (in case style changed)
+							button._zBBG_customMask:SetTexture(getMaskPath())
 						end
 						applyMaskToTexture(bg, button._zBBG_customMask)
 					end
@@ -742,56 +764,50 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 					end
 
-					-- Update custom highlight positioning based on current mode
-					if button._zBBG_customHighlight then
-						local inset = 2
-						button._zBBG_customHighlight:ClearAllPoints()
-						if zBarButtonBG.charSettings.squareButtons then
-							-- Square mode: inset by 2px
-							button._zBBG_customHighlight:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
-							button._zBBG_customHighlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
-							button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)
-						else
-							-- Round mode: use custom mask
-							button._zBBG_customHighlight:SetAllPoints(button.icon)
-							if button._zBBG_customMask then
-								applyMaskToTexture(button._zBBG_customHighlight, button._zBBG_customMask)
-							end
+				-- Update custom highlight positioning based on current mode
+				if button._zBBG_customHighlight then
+					local inset = 2
+					button._zBBG_customHighlight:ClearAllPoints()
+					if Utilities.isSquareButtonStyle() then
+						-- Square mode: inset by 2px
+						button._zBBG_customHighlight:SetPoint("TOPLEFT", button, "TOPLEFT", inset, -inset)
+						button._zBBG_customHighlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -inset, inset)
+						button._zBBG_customHighlight:SetTexCoord(0, 1, 0, 1)
+					else
+						-- Round mode: use custom mask
+						button._zBBG_customHighlight:SetAllPoints(button.icon)
+						if button._zBBG_customMask then
+							applyMaskToTexture(button._zBBG_customHighlight, button._zBBG_customMask)
 						end
 					end
+				end					-- Update range and cooldown overlays positioning
+				if button._zBBG_rangeOverlay then
+					button._zBBG_rangeOverlay:ClearAllPoints()
+					button._zBBG_rangeOverlay:SetAllPoints(button.icon)
 
-					-- Update range and cooldown overlays positioning
-					if button._zBBG_rangeOverlay then
-						button._zBBG_rangeOverlay:ClearAllPoints()
-						button._zBBG_rangeOverlay:SetAllPoints(button.icon)
-
-						if zBarButtonBG.charSettings.squareButtons then
-							-- Square mode: remove any mask we previously applied
-							removeMaskFromTexture(button._zBBG_rangeOverlay)
-						else
-							-- Round mode: apply mask
-							if button._zBBG_customMask then
-								applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_customMask)
-							end
+					if Utilities.isSquareButtonStyle() then
+						-- Square mode: remove any mask we previously applied
+						removeMaskFromTexture(button._zBBG_rangeOverlay)
+					else
+						-- Round mode: apply mask
+						if button._zBBG_customMask then
+							applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_customMask)
 						end
 					end
+				end				if button._zBBG_cooldownOverlay then
+					button._zBBG_cooldownOverlay:ClearAllPoints()
+					button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
 
-					if button._zBBG_cooldownOverlay then
-						button._zBBG_cooldownOverlay:ClearAllPoints()
-						button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
-
-						if zBarButtonBG.charSettings.squareButtons then
-							-- Square mode: remove any mask we previously applied
-							removeMaskFromTexture(button._zBBG_cooldownOverlay)
-						else
-							-- Round mode: apply mask
-							if button._zBBG_customMask then
-								applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_customMask)
-							end
+					if Utilities.isSquareButtonStyle() then
+						-- Square mode: remove any mask we previously applied
+						removeMaskFromTexture(button._zBBG_cooldownOverlay)
+					else
+						-- Round mode: apply mask
+						if button._zBBG_customMask then
+							applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_customMask)
 						end
 					end
-
-					-- Update the SlotBackground based on whether borders are on or off
+				end					-- Update the SlotBackground based on whether borders are on or off
 					if button.SlotBackground then
 						if zBarButtonBG.charSettings.showBorder then
 							-- Flat texture when borders are enabled
@@ -919,7 +935,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 		-- Keep it invisible when we want square buttons, or color it when we need borders
 		local function manageNormalTexture(button)
 			if button and button.NormalTexture and button._zBBG_styled and zBarButtonBG.enabled then
-				if zBarButtonBG.charSettings.squareButtons then
+				if Utilities.isSquareButtonStyle() then
 					-- Square buttons: make it fully transparent
 					button.NormalTexture:SetAlpha(0)
 				elseif zBarButtonBG.charSettings.showBorder then

@@ -229,8 +229,17 @@ L["Vertical positioning offset for keybind/hotkey text"] = "Vertical positioning
 -- ############################################################
 -- Appearance Controls
 -- ############################################################
-L["Square Buttons"] = "Square Buttons"
-L["Use square button style instead of round"] = "Use square button style instead of round"
+L["Button Style"] = "Button Style"
+L["Choose button style"] = "Choose button style"
+L["Round"] = "Round"
+L["Square"] = "Square"
+L["Less Round"] = "Less Round"
+L["Octagon"] = "Octagon"
+L["Less rounded button style"] = "Less rounded button style"
+L["Sharp square button style"] = "Sharp square button style"
+L["Less rounded button style"] = "Less rounded button style"
+L["Octagon button style"] = "Octagon button style"
+L["Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"] = "Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"
 L["Show Backdrop"] = "Show Backdrop"
 L["Show outer background frame"] = "Show outer background frame"
 L["Show Border"] = "Show Border"

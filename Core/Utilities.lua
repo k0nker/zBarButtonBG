@@ -28,14 +28,23 @@ function Util.getColorTable(colorKey, useClassColorKey)
 	end
 end
 
--- Get mask texture path based on square/round setting
+-- Get mask texture path based on current button style
 function Util.getMaskPath()
-	return zBarButtonBG.charSettings.squareButtons and C.MASK_SQUARE or C.MASK_ROUNDED
+	local ButtonStyles = addonTable.Core.ButtonStyles
+	local styleName = zBarButtonBG.charSettings.buttonStyle or "Round"
+	return ButtonStyles.GetMaskPath(styleName)
 end
 
--- Get border texture path based on square/round setting
+-- Get border texture path based on current button style
 function Util.getBorderPath()
-	return zBarButtonBG.charSettings.squareButtons and C.BORDER_SQUARE or C.BORDER_ROUNDED
+	local ButtonStyles = addonTable.Core.ButtonStyles
+	local styleName = zBarButtonBG.charSettings.buttonStyle or "Round"
+	return ButtonStyles.GetBorderPath(styleName)
+end
+
+-- Check if current button style is "Square" (for positioning logic)
+function Util.isSquareButtonStyle()
+	return zBarButtonBG.charSettings.buttonStyle == "Square"
 end
 
 -- Helper to apply/remove a mask to a texture while tracking what mask is applied

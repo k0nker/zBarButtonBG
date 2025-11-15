@@ -155,8 +155,13 @@ L["Keybind Y Offset"] = "Deslocamento Y das Teclas"
 -- ############################################################
 -- Appearance Controls
 -- ############################################################
-L["Square Buttons"] = "Botões Quadrados"
-L["Use square button style instead of round"] = "Usar estilo de botão quadrado em vez de redondo"
+L["Button Style"] = "Estilo de Botão"
+L["Choose button style"] = "Escolha o estilo do botão"
+L["Round"] = "Redondo"
+L["Square"] = "Quadrado"
+L["Less rounded button style"] = "Estilo de botão redondo clássico"
+L["Sharp square button style"] = "Estilo de botão quadrado agudo"
+L["Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"] = "Tem certeza de que deseja redefinir todas as configurações no perfil atual para os valores padrão?\n\nIsso redefinirá todas as configurações de aparência, fundo, texto e indicador.\n\nEsta ação não pode ser desfeita!"
 L["Show Backdrop"] = "Mostrar Fundo"
 L["Show outer background frame"] = "Mostrar moldura de fundo externa"
 L["Show Border"] = "Mostrar Borda"

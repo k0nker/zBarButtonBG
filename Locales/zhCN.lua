@@ -155,8 +155,13 @@ L["Keybind Y Offset"] = "按键绑定Y偏移"
 -- ############################################################
 -- Appearance Controls
 -- ############################################################
-L["Square Buttons"] = "方形按钮"
-L["Use square button style instead of round"] = "使用方形按钮样式而不是圆形"
+L["Button Style"] = "按钮样式"
+L["Choose button style"] = "选择按钮样式"
+L["Round"] = "圆形"
+L["Square"] = "方形"
+L["Less rounded button style"] = "经典圆形按钮样式"
+L["Sharp square button style"] = "尖锐的方形按钮样式"
+L["Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"] = "你确定要将当前配置中的所有设置重置为默认值吗？\n\n这将重置所有外观、背景、文本和指示器设置。\n\n此操作不能丢失!"
 L["Show Backdrop"] = "显示背景"
 L["Show outer background frame"] = "显示外部背景框架"
 L["Show Border"] = "显示边框"

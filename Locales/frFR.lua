@@ -155,8 +155,13 @@ L["Keybind Y Offset"] = "Décalage Y de raccourci"
 -- ############################################################
 -- Appearance Controls
 -- ############################################################
-L["Square Buttons"] = "Boutons carrés"
-L["Use square button style instead of round"] = "Utiliser le style de bouton carré au lieu de rond"
+L["Button Style"] = "Style de Bouton"
+L["Choose button style"] = "Choisissez le style de bouton"
+L["Round"] = "Arrondi"
+L["Square"] = "Carré"
+L["Less rounded button style"] = "Style de bouton arrondi classique"
+L["Sharp square button style"] = "Style de bouton carré net"
+L["Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"] = "Voulez-vous vraiment réinitialiser tous les paramètres du profil actuel aux valeurs par défaut?\n\nCela réinitialisera tous les paramètres d'apparence, d'arrière-plan, de texte et d'indicateur.\n\nCette action ne peut pas être annulée!"
 L["Show Backdrop"] = "Afficher l'arrière-plan"
 L["Show outer background frame"] = "Afficher le cadre d'arrière-plan extérieur"
 L["Show Border"] = "Afficher la bordure"
