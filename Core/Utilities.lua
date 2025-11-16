@@ -1,4 +1,5 @@
 -- Utility helper functions for zBarButtonBG
+-- Provides centralized sizing, positioning, masking, and color management
 
 ---@class addonTableZBarButtonBG
 local addonTable = select(2, ...)
@@ -28,27 +29,30 @@ function Util.getColorTable(colorKey, useClassColorKey)
 	end
 end
 
+-- Get all texture paths (mask, border, highlight) for current button style
+-- Consolidated from three separate functions to reduce duplication
+function Util.getTexturePaths(styleName)
+	local ButtonStyles = addonTable.Core.ButtonStyles
+	return ButtonStyles.GetPaths(styleName)
+end
+
 -- Get mask texture path based on current button style
-function Util.getMaskPath()
-	local ButtonStyles = addonTable.Core.ButtonStyles
-	local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
-	return ButtonStyles.GetMaskPath(styleName)
+function Util.getMaskPath(styleName)
+	local paths = Util.getTexturePaths(styleName)
+	return paths.mask
 end
 
 -- Get border texture path based on current button style
-function Util.getBorderPath()
-	local ButtonStyles = addonTable.Core.ButtonStyles
-	local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
-	return ButtonStyles.GetBorderPath(styleName)
+function Util.getBorderPath(styleName)
+	local paths = Util.getTexturePaths(styleName)
+	return paths.border
 end
 
--- Get border texture path based on current button style
-function Util.getHighlightPath()
-	local ButtonStyles = addonTable.Core.ButtonStyles
-	local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
-	return ButtonStyles.GetHighlightPath(styleName)
+-- Get highlight texture path based on current button style
+function Util.getHighlightPath(styleName)
+	local paths = Util.getTexturePaths(styleName)
+	return paths.highlight
 end
-
 
 -- Check if current button style is "Square" (for positioning logic)
 function Util.isSquareButtonStyle()
@@ -56,6 +60,7 @@ function Util.isSquareButtonStyle()
 end
 
 -- Helper to apply/remove a mask to a texture while tracking what mask is applied
+-- Prevents duplicate mask applications and tracks mask state
 function Util.applyMaskToTexture(tex, mask)
 	if not tex then return end
 	-- If the mask is already applied to this texture, do nothing
@@ -71,7 +76,7 @@ function Util.applyMaskToTexture(tex, mask)
 	end
 end
 
--- Remove mask from texture
+-- Remove mask from texture and clear tracking
 function Util.removeMaskFromTexture(tex)
 	if not tex then return end
 	if tex._zBBG_appliedMask then
@@ -89,3 +94,23 @@ function Util.getFontPath(fontName)
 	return fontName
 end
 
+-- Unified function to apply mask to a set of textures
+-- Eliminates repeated mask application code scattered throughout
+function Util.applyMaskToSet(mask, ...)
+	for i = 1, select("#", ...) do
+		local tex = select(i, ...)
+		if tex then
+			Util.applyMaskToTexture(tex, mask)
+		end
+	end
+end
+
+-- Unified function to remove mask from a set of textures
+function Util.removeMaskFromSet(...)
+	for i = 1, select("#", ...) do
+		local tex = select(i, ...)
+		if tex then
+			Util.removeMaskFromTexture(tex)
+		end
+	end
+end

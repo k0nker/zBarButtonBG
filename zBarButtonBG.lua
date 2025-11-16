@@ -254,13 +254,13 @@ Frame:SetScript("OnEvent", function(self, event)
 end)
 
 -- ############################################################
--- ACTION BAR BACKGROUNDS - KEPT FROM ORIGINAL FILE
+-- ACTION BAR BACKGROUNDS
 -- ############################################################
--- The createActionBarBackgrounds and removeActionBarBackgrounds functions are large
--- and contain complex interconnected logic, so they're kept in their original form here
 -- Local aliases for module functions to work within this file
 local applyMaskToTexture = Utilities.applyMaskToTexture
 local removeMaskFromTexture = Utilities.removeMaskFromTexture
+local applyMaskToSet = Utilities.applyMaskToSet
+local removeMaskFromSet = Utilities.removeMaskFromSet
 local getMaskPath = Utilities.getMaskPath
 local getBorderPath = Utilities.getBorderPath
 local getHighlightPath = Utilities.getHighlightPath
@@ -270,6 +270,65 @@ local updateButtonNormalTexture = Styling.updateButtonNormalTexture
 local applyAllTextStyling = Styling.applyAllTextStyling
 local applyBackdropPositioning = Styling.applyBackdropPositioning
 local applyTextPositioning = Styling.applyTextPositioning
+
+-- Process all button regions in one consolidated pass
+-- This replaces scattered region-specific logic throughout the code
+local function initializeButtonRegions(button)
+	local regions = ButtonStyles.GetRegionList()
+	for regionName, regionDef in pairs(regions) do
+		ButtonStyles.ProcessRegion(button, regionName, regionDef)
+	end
+end
+
+-- Create and apply button mask efficiently
+local function createAndApplyMask(button, maskTexture)
+	if not button then return end
+	if not button._zBBG_customMask then
+		button._zBBG_customMask = button:CreateMaskTexture()
+	end
+	button._zBBG_customMask:SetTexture(maskTexture)
+	button._zBBG_customMask:SetAllPoints(button)
+	
+	-- Apply mask to all maskable elements
+	if button.icon then
+		applyMaskToTexture(button.icon, button._zBBG_customMask)
+	end
+	if button.SlotBackground then
+		applyMaskToTexture(button.SlotBackground, button._zBBG_customMask)
+	end
+	return button._zBBG_customMask
+end
+
+-- Create a background layer frame with texture and optional mask
+-- Consolidates the duplicated background creation logic
+local function createBackgroundLayer(button, colorData, drawLayer, drawOrder)
+	local bgFrame = CreateFrame("Frame", nil, button)
+	bgFrame:SetAllPoints(button)
+	bgFrame:SetFrameLevel(0)
+	bgFrame:SetFrameStrata("BACKGROUND")
+
+	local bgTexture = bgFrame:CreateTexture(nil, "BACKGROUND", nil, drawOrder)
+	bgTexture:SetAllPoints(bgFrame)
+	bgTexture:SetColorTexture(colorData.r, colorData.g, colorData.b, colorData.a)
+
+	return { frame = bgFrame, texture = bgTexture }
+end
+
+-- Recreate and reapply mask when button style changes
+local function updateButtonMask(button, maskTexture, ...)
+	if not button or not button._zBBG_customMask then return end
+	
+	-- Remove old masks from all maskable textures
+	removeMaskFromSet(button.icon, button.SlotBackground, ...)
+	
+	-- Destroy and recreate mask with new texture
+	button._zBBG_customMask = button:CreateMaskTexture()
+	button._zBBG_customMask:SetTexture(maskTexture)
+	button._zBBG_customMask:SetAllPoints(button)
+	
+	-- Reapply mask to all maskable elements
+	applyMaskToSet(button._zBBG_customMask, button.icon, button.SlotBackground, ...)
+end
 
 function zBarButtonBG.removeActionBarBackgrounds()
 	-- Hide and destroy all our custom frames and clean up button masks
@@ -335,64 +394,18 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Mark this button as having our custom styling applied
 					button._zBBG_styled = true
 
+					-- Process all button regions in one pass using consolidated helper
+					initializeButtonRegions(button)
+
 					-- Handle the default border texture based on settings
-					-- Always make Blizzard's NormalTexture fully transparent so it never shows
 					updateButtonNormalTexture(button)
 
-					-- Apply icon styling: all styles use same position/zoom, only mask/border change
+					-- Create and apply mask to icon and other maskable elements
 					if button.icon then
-						-- Remove Blizzard's mask
 						if button.IconMask then
 							button.icon:RemoveMaskTexture(button.IconMask)
 						end
-
-						-- Always use same zoom and position for all styles
-						button.icon:SetScale(1.05)
-						button.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-						button.icon:ClearAllPoints()
-						button.icon:SetAllPoints(button)
-						--button.icon:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
-						--button.icon:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 2)
-
-						-- Create or update mask texture, scale up if borders are off
-						if not button._zBBG_customMask then
-							button._zBBG_customMask = button:CreateMaskTexture()
-						end
-						button._zBBG_customMask:SetTexture(getMaskPath())
-						if zBarButtonBG.charSettings.showBorder then
-							button._zBBG_customMask:SetAllPoints(button)
-						else
-							button._zBBG_customMask:ClearAllPoints()
-							button._zBBG_customMask:SetAllPoints(button)
-						end
-						applyMaskToTexture(button.icon, button._zBBG_customMask)
-
-						-- Hide Blizzard's NormalTexture (border) for all styles
-					if button.NormalTexture then
-						button.NormalTexture:SetAlpha(0)
-						button.NormalTexture:Hide()
-					end
-				end					-- Make the cooldown spiral fill the whole button
-					if button.cooldown then
-						button.cooldown:SetAllPoints(button)
-					end
-
-					-- Hide Blizzard's default highlight and create our own custom golden overlay
-					-- Use SetAlpha(0) to make them invisible even if Blizzard tries to show them
-					if button.HighlightTexture then
-						button.HighlightTexture:SetAlpha(0)
-						button.HighlightTexture:Hide()
-						button.HighlightTexture:SetScript("OnShow", function(self) self:Hide() end)
-					end
-					if button.PushedTexture then
-						button.PushedTexture:SetAlpha(0)
-						button.PushedTexture:Hide()
-						button.PushedTexture:SetScript("OnShow", function(self) self:Hide() end)
-					end
-					if button.CheckedTexture then
-						button.CheckedTexture:SetAlpha(0)
-						button.CheckedTexture:Hide()
-						button.CheckedTexture:SetScript("OnShow", function(self) self:Hide() end)
+						createAndApplyMask(button, getMaskPath())
 					end
 
 				-- Create custom highlight overlay
@@ -706,16 +719,10 @@ function zBarButtonBG.createActionBarBackgrounds()
 							button.SlotBackground:SetAllPoints(button)
 						end
 
-						-- Apply appropriate mask to clip the SlotBackground
-						if not button._zBBG_customMask then
-							button._zBBG_customMask = button:CreateMaskTexture()
-							button._zBBG_customMask:SetTexture(getMaskPath())
-							button._zBBG_customMask:SetAllPoints(button)
-						else
-							-- Update the mask texture to match current button style (in case style changed)
-							button._zBBG_customMask:SetTexture(getMaskPath())
+						-- Apply mask to clip the SlotBackground
+						if button._zBBG_customMask then
+							applyMaskToTexture(button.SlotBackground, button._zBBG_customMask)
 						end
-						applyMaskToTexture(button.SlotBackground, button._zBBG_customMask)
 					end
 
 					-- Hide those annoying spell cast animations
@@ -743,26 +750,14 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Create the inner background that sits right behind the button (if enabled)
 					local bgFrame, bg
 					if zBarButtonBG.charSettings.showSlotBackground then
-						bgFrame = CreateFrame("Frame", nil, button)
-						bgFrame:SetAllPoints(button)
-						bgFrame:SetFrameLevel(0)
-						bgFrame:SetFrameStrata("BACKGROUND")
+						local bgData = createBackgroundLayer(button, innerColor, "BACKGROUND", -7)
+						bgFrame = bgData.frame
+						bg = bgData.texture
 
-						-- Fill it with dark grey (or class color)
-						bg = bgFrame:CreateTexture(nil, "BACKGROUND", nil, -7)
-						bg:SetAllPoints(bgFrame)
-						bg:SetColorTexture(innerColor.r, innerColor.g, innerColor.b, innerColor.a)
-
-						-- Apply appropriate mask to inner background
-						if not button._zBBG_customMask then
-							button._zBBG_customMask = button:CreateMaskTexture()
-							button._zBBG_customMask:SetTexture(getMaskPath())
-							button._zBBG_customMask:SetAllPoints(button)
-						else
-							-- Update the mask texture to match current button style (in case style changed)
-							button._zBBG_customMask:SetTexture(getMaskPath())
+						-- Apply mask to inner background
+						if button._zBBG_customMask then
+							applyMaskToTexture(bg, button._zBBG_customMask)
 						end
-						applyMaskToTexture(bg, button._zBBG_customMask)
 					end
 
 					-- Create the border if that option is turned on
@@ -812,38 +807,14 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Handle NormalTexture - always keep it transparent
 					updateButtonNormalTexture(button)
 
-					-- Update icon mask when switching modes
+					-- Update icon mask when switching modes using consolidated helper
 					if button.icon then
-						-- Remove old mask completely from ALL elements
-						if button._zBBG_customMask then
-							-- Use helper removal to safely clear any masks we applied
-							removeMaskFromTexture(button.icon)
-							removeMaskFromTexture(button.SlotBackground)
-							removeMaskFromTexture(data.bg)
-							removeMaskFromTexture(button._zBBG_customHighlight)
-							removeMaskFromTexture(button._zBBG_rangeOverlay)
-							removeMaskFromTexture(button._zBBG_cooldownOverlay)
-							-- Destroy the old mask to force texture reload
-							button._zBBG_customMask = nil
-						end
+						-- Use the unified mask update function
+						updateButtonMask(button, getMaskPath(), data.bg)
 
 						-- Update icon scale and texcoords based on mode
 						button.icon:SetScale(1.0)
 						button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-
-						-- Create new mask with correct texture for current mode
-						button._zBBG_customMask = button:CreateMaskTexture()
-						button._zBBG_customMask:SetTexture(getMaskPath())
-						button._zBBG_customMask:SetAllPoints(button)
-
-						-- Apply new mask to all elements (use helpers to avoid duplicate adds)
-						applyMaskToTexture(button.icon, button._zBBG_customMask)
-						if button.SlotBackground then
-							applyMaskToTexture(button.SlotBackground, button._zBBG_customMask)
-						end
-						if data.bg then
-							applyMaskToTexture(data.bg, button._zBBG_customMask)
-						end
 					end
 
 					-- Update custom highlight positioning based on current mode
