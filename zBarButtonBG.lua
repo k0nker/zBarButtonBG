@@ -273,12 +273,6 @@ local applyAllTextStyling = Styling.applyAllTextStyling
 local applyBackdropPositioning = Styling.applyBackdropPositioning
 local applyTextPositioning = Styling.applyTextPositioning
 
--- Get the cooldown swipe mask for the current button style
-local function getCooldownSwipeMask()
-	local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
-	return ButtonStyles.GetCooldownSwipeMaskPath(styleName)
-end
-
 -- Initialize all button regions from metadata
 local function initializeButtonRegions(button)
 	ButtonStyles.InitializeButton(button)
@@ -332,6 +326,14 @@ local function updateButtonMask(button, maskTexture, ...)
 	
 	-- Reapply mask to all maskable elements
 	applyMaskToSet(button._zBBG_customMask, button.icon, button.SlotBackground, ...)
+	
+	-- Update cooldown swipe texture when button style changes
+	if button.cooldown then
+		local fullMaskPath = ButtonStyles.GetFullMaskPath()
+		if fullMaskPath then
+			button.cooldown:SetSwipeTexture(fullMaskPath, 1, 1, 1, 0.8)
+		end
+	end
 end
 
 function zBarButtonBG.removeActionBarBackgrounds()
@@ -412,7 +414,16 @@ function zBarButtonBG.createActionBarBackgrounds()
 						createAndApplyMask(button, getMaskPath())
 					end
 
-				-- Create custom highlight overlay
+				-- Apply full mask texture to cooldown swipe (must be done immediately during button setup)
+				-- Following Masque's approach for proper swipe texture rendering
+				if button.cooldown then
+					local fullMaskPath = ButtonStyles.GetFullMaskPath()
+					if fullMaskPath then
+						-- SetSwipeTexture requires all 5 parameters: texture path, R, G, B, A
+						-- Using white color (1,1,1) with 0.8 alpha to match default Blizzard cooldown appearance
+						button.cooldown:SetSwipeTexture(fullMaskPath, 1, 1, 1, 0.8)
+					end
+				end				-- Create custom highlight overlay
 					if not button._zBBG_customHighlight then
 						button._zBBG_customHighlight = button:CreateTexture(nil, "OVERLAY")
 						button._zBBG_customHighlight:SetColorTexture(1, 0.82, 0, 0.5) -- Golden at 50% opacity
@@ -440,6 +451,14 @@ function zBarButtonBG.createActionBarBackgrounds()
 						-- Range indicators disabled, hide and remove overlay
 						button._zBBG_rangeOverlay:Hide()
 						button._zBBG_rangeOverlay = nil
+					end
+
+					-- Apply swipe texture to cooldown frame (same as icon mask, matches button shape)
+					-- This must be done immediately during button setup, not in a hook (following Masque's approach)
+					if button.cooldown and button._zBBG_swipeTexturePath then
+						-- SetSwipeTexture requires all 5 parameters: texture path, R, G, B, A
+						-- Using white color (1,1,1) with 0.8 alpha to match default Blizzard cooldown appearance
+						button.cooldown:SetSwipeTexture(button._zBBG_swipeTexturePath, 1, 1, 1, 0.8)
 					end
 
 					-- Create custom cooldown fade overlay (only if enabled and developer flag allows it)
@@ -471,25 +490,6 @@ function zBarButtonBG.createActionBarBackgrounds()
 								end)
 
 								button.cooldown._zBBG_hooked = true
-								
-								-- Apply mask texture to the cooldown swipe using SetSwipeTexture
-								-- This replaces the swipe animation with our custom mask shape
-								-- Following Masque's approach for cooldown masking
-								if button.cooldown:GetDrawSwipe() then
-									local swipeMaskPath = getCooldownSwipeMask()
-									-- SetSwipeTexture takes: texture path, R, G, B, A
-									-- White (1,1,1) color allows the mask to show properly
-									button.cooldown:SetSwipeTexture(swipeMaskPath, 1, 1, 1, 0.8)
-									
-									-- Only use circular edge rendering for the "Round" and "Circle" styles
-									-- Other shapes (Square, Octagon, Hexagon, etc) use their own shape rendering
-									local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
-									if styleName == "Round" or styleName == "Circle" then
-										button.cooldown:SetUseCircularEdge(true)
-									else
-										button.cooldown:SetUseCircularEdge(false)
-									end
-								end
 							end
 						end
 					elseif button._zBBG_cooldownOverlay then

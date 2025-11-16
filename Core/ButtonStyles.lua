@@ -155,6 +155,7 @@ ButtonStyles.styles = {
 	["Round"] = {
 		nameKey = "Round",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Rounded",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Rounded",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Rounded",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Rounded",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_Rounded",
@@ -164,6 +165,7 @@ ButtonStyles.styles = {
 	["Square"] = {
 		nameKey = "Square",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Square",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Square",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Square",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Square",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_Square",
@@ -173,6 +175,7 @@ ButtonStyles.styles = {
 	["Octagon"] = {
 		nameKey = "Octagon",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Octagon",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Octagon",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Octagon",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Octagon",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_Octagon",
@@ -182,6 +185,7 @@ ButtonStyles.styles = {
 	["OctagonFlipped"] = {
 		nameKey = "Octagon Flipped",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_OctagonFlipped",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_OctagonFlipped",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_OctagonFlipped",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_OctagonFlipped",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_OctagonFlipped",
@@ -191,6 +195,7 @@ ButtonStyles.styles = {
 	["Hexagon"] = {
 		nameKey = "Hexagon",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Hexagon",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Hexagon",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Hexagon",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Hexagon",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_Hexagon",
@@ -200,6 +205,7 @@ ButtonStyles.styles = {
 	["HexagonFlipped"] = {
 		nameKey = "Hexagon Flipped",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_HexagonFlipped",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_HexagonFlipped",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_HexagonFlipped",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_HexagonFlipped",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_HexagonFlipped",
@@ -209,6 +215,7 @@ ButtonStyles.styles = {
 	["Circle"] = {
 		nameKey = "Circle",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Circle",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Circle",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Circle",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Circle",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_Circle",
@@ -294,6 +301,16 @@ function ButtonStyles.GetHighlightPath(styleName)
 	return paths.highlight
 end
 
+-- Get full mask texture path based on button style (can be used for various overlay purposes)
+function ButtonStyles.GetFullMaskPath(styleName)
+	styleName = styleName or zBarButtonBG.charSettings.buttonStyle or "Square"
+	local style = ButtonStyles.GetStyle(styleName)
+	if not style then
+		style = ButtonStyles.styles["Square"]
+	end
+	return style.fullMaskTexture
+end
+
 -- Get proc flipbook texture path based on button style
 function ButtonStyles.GetProcFlipbookPath(styleName)
 	styleName = styleName or zBarButtonBG.charSettings.buttonStyle or "Square"
@@ -314,18 +331,6 @@ function ButtonStyles.GetSuggestedFlipbookPath(styleName)
 	return style.suggestedFlipbookTexture
 end
 
--- Get cooldown swipe mask texture path based on button style
--- This is the mask that will be applied to the cooldown swipe animation
--- It uses the same shape mask as the button icon
-function ButtonStyles.GetCooldownSwipeMaskPath(styleName)
-	styleName = styleName or zBarButtonBG.charSettings.buttonStyle or "Square"
-	local style = ButtonStyles.GetStyle(styleName)
-	if not style then
-		style = ButtonStyles.styles["Square"]
-	end
-	-- Cooldown swipe uses the same mask texture as the button icon shape
-	return style.maskTexture
-end
 -- REGION PROCESSING
 -- ############################################################
 -- REGION SKINNING
