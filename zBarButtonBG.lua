@@ -367,19 +367,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 						applyMaskToTexture(button.icon, button._zBBG_customMask)
 
 						-- Hide Blizzard's NormalTexture (border) for all styles
-						if button.NormalTexture then
-							button.NormalTexture:SetAlpha(0)
-							button.NormalTexture:Hide()
-						end
-
-						-- Hide Blizzard's NormalTexture (border) for all styles
-						if button.NormalTexture then
-							button.NormalTexture:SetAlpha(0)
-							button.NormalTexture:Hide()
-						end
+					if button.NormalTexture then
+						button.NormalTexture:SetAlpha(0)
+						button.NormalTexture:Hide()
 					end
-
-					-- Make the cooldown spiral fill the whole button
+				end					-- Make the cooldown spiral fill the whole button
 					if button.cooldown then
 						button.cooldown:SetAllPoints(button)
 					end
@@ -402,7 +394,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button.CheckedTexture:SetScript("OnShow", function(self) self:Hide() end)
 					end
 
-					-- Create custom highlight overlay
+				-- Create custom highlight overlay
 					if not button._zBBG_customHighlight then
 						button._zBBG_customHighlight = button:CreateTexture(nil, "OVERLAY")
 						button._zBBG_customHighlight:SetColorTexture(1, 0.82, 0, 0.5) -- Golden at 50% opacity
@@ -603,6 +595,95 @@ function zBarButtonBG.createActionBarBackgrounds()
 						updateCheckedState(button)
 
 						button._zBBG_checkedHooked = true
+					end
+
+					-- Hook to keep suggested action texture and NormalTexture hidden
+					if (button.SuggestedActionIconTexture or button.NormalTexture) and not button._zBBG_blizzardTexturesHooked then
+						-- Create a function that will keep hiding Blizzard textures
+						local function hideBlizzardTextures(self)
+							if self.SuggestedActionIconTexture then
+								self.SuggestedActionIconTexture:SetAlpha(0)
+								self.SuggestedActionIconTexture:Hide()
+								self.SuggestedActionIconTexture:SetTexture("")
+							end
+							if self.NormalTexture then
+								self.NormalTexture:SetAlpha(0)
+								self.NormalTexture:Hide()
+							end
+						end
+
+						-- Call once on setup
+						hideBlizzardTextures(button)
+						
+						-- Hook NormalTexture's Show to keep it hidden
+						if button.NormalTexture then
+							button.NormalTexture:SetScript("OnShow", function(self)
+								self:Hide()
+								self:SetAlpha(0)
+							end)
+						end
+
+						button._zBBG_blizzardTexturesHooked = true
+					end
+
+					-- Hook animation frames (ProcLoopFlipbook, spell alerts) to apply masks
+					if not button._zBBG_animationHooked then
+						-- Function to apply mask to animation frames
+						local function setupAnimationMasks()
+							-- Check for AssistedCombatHighlightFrame and mask its flipbook
+							if button.AssistedCombatHighlightFrame and button.AssistedCombatHighlightFrame.Flipbook then
+								local flipbook = button.AssistedCombatHighlightFrame.Flipbook
+								if not flipbook._zBBG_maskHooked then
+									flipbook:SetScript("OnShow", function(self)
+										applyMaskToTexture(self, button._zBBG_customMask)
+									end)
+									flipbook._zBBG_maskHooked = true
+									-- Apply mask now if it's already shown
+									if flipbook:IsShown() then
+										applyMaskToTexture(flipbook, button._zBBG_customMask)
+									end
+								end
+							end
+							
+							-- Check for SpellActivationAlert frame
+							if button.SpellActivationAlert then
+								local alert = button.SpellActivationAlert
+								-- Mask ProcLoopFlipbook
+								if alert.ProcLoopFlipbook and not alert.ProcLoopFlipbook._zBBG_maskHooked then
+									alert.ProcLoopFlipbook:SetScript("OnShow", function(self)
+										applyMaskToTexture(self, button._zBBG_customMask)
+									end)
+									hooksecurefunc(alert.ProcLoopFlipbook, "SetAtlas", function(self, atlas)
+										applyMaskToTexture(self, button._zBBG_customMask)
+									end)
+									alert.ProcLoopFlipbook._zBBG_maskHooked = true
+									if alert.ProcLoopFlipbook:IsShown() then
+										applyMaskToTexture(alert.ProcLoopFlipbook, button._zBBG_customMask)
+									end
+								end
+								-- Mask ProcStartFlipbook
+								if alert.ProcStartFlipbook and not alert.ProcStartFlipbook._zBBG_maskHooked then
+									alert.ProcStartFlipbook:SetScript("OnShow", function(self)
+										applyMaskToTexture(self, button._zBBG_customMask)
+									end)
+									hooksecurefunc(alert.ProcStartFlipbook, "SetAtlas", function(self, atlas)
+										applyMaskToTexture(self, button._zBBG_customMask)
+									end)
+									alert.ProcStartFlipbook._zBBG_maskHooked = true
+									if alert.ProcStartFlipbook:IsShown() then
+										applyMaskToTexture(alert.ProcStartFlipbook, button._zBBG_customMask)
+									end
+								end
+							end
+						end
+
+						-- Set up masks on first call
+						setupAnimationMasks()
+						
+						-- Recheck when button shows in case frames are created dynamically
+						button:HookScript("OnShow", setupAnimationMasks)
+
+						button._zBBG_animationHooked = true
 					end
 
 					-- Replace the beveled SlotBackground with a flat texture if borders are enabled
@@ -1058,6 +1139,110 @@ function zBarButtonBG.createActionBarBackgrounds()
 							zBarButtonBG.updateRangeOverlay(button)
 						end
 						manageNormalTexture(button)
+					end
+				end
+			end)
+		end
+
+		-- Hook AssistedCombatManager to mask the blue highlight frame when it's created/shown
+		if AssistedCombatManager then
+			hooksecurefunc(AssistedCombatManager, "SetAssistedHighlightFrameShown", function(self, actionButton, shown)
+				-- After frame is created/shown, apply mask
+				if actionButton and actionButton._zBBG_customMask then
+					-- Create or update the suggested action indicator if it doesn't exist
+					if shown then
+						if not actionButton._zBBG_suggestedIndicator then
+							actionButton._zBBG_suggestedIndicator = actionButton:CreateTexture(nil, "OVERLAY", nil, 5)
+							actionButton._zBBG_suggestedIndicator:SetBlendMode("ADD")
+						end
+						-- Show the indicator with bright blue
+						actionButton._zBBG_suggestedIndicator:SetTexture(getBorderPath())
+						actionButton._zBBG_suggestedIndicator:SetAllPoints(actionButton)
+						actionButton._zBBG_suggestedIndicator:SetVertexColor(0.2, 0.8, 1.0, 0.8) -- Bright blue
+						actionButton._zBBG_suggestedIndicator:Show()
+						applyMaskToTexture(actionButton._zBBG_suggestedIndicator, actionButton._zBBG_customMask)
+					else
+						-- Hide the indicator and glow
+						if actionButton._zBBG_suggestedIndicator then
+							actionButton._zBBG_suggestedIndicator:Hide()
+						end
+						if actionButton._zBBG_suggestedGlow then
+							actionButton._zBBG_suggestedGlow:Hide()
+						end
+					end
+					
+					-- Also mask the actual flipbook if it exists
+					if actionButton.AssistedCombatHighlightFrame then
+						local flipbook = actionButton.AssistedCombatHighlightFrame.Flipbook
+						if flipbook then
+							applyMaskToTexture(flipbook, actionButton._zBBG_customMask)
+						end
+					end
+				end
+			end)
+		end
+
+		-- Hook ActionButtonSpellAlertManager to mask spell activation alerts and show colored indicators
+		if ActionButtonSpellAlertManager then
+			hooksecurefunc(ActionButtonSpellAlertManager, "ShowAlert", function(self, actionButton, alertType)
+				-- After alert is shown, apply mask to the flipbooks and alt glow
+				if actionButton and actionButton.SpellActivationAlert and actionButton._zBBG_customMask then
+					local alert = actionButton.SpellActivationAlert
+					
+					-- Determine which proc type is active and create/show appropriate indicator
+					local indicatorColor = {r = 1.0, g = 0.84, b = 0.0, a = 0.8} -- Default gold
+					local glowColor = {r = 1.0, g = 1.0, b = 0.2, a = 0.3} -- Bright yellow glow
+					
+					-- Check which animation is actually showing
+					if alert.ProcAltGlow and alert.ProcAltGlow:IsShown() then
+						-- Alt glow is showing - use orange-gold with orange glow
+						indicatorColor = {r = 1.0, g = 0.6, b = 0.2, a = 0.8}
+						glowColor = {r = 1.0, g = 0.8, b = 0.2, a = 0.3}
+					elseif alert.ProcLoopFlipbook and alert.ProcLoopFlipbook:IsShown() then
+						-- Regular proc loop - use bright gold with yellow glow
+						indicatorColor = {r = 1.0, g = 0.84, b = 0.0, a = 0.8}
+						glowColor = {r = 1.0, g = 1.0, b = 0.2, a = 0.3}
+					end
+					
+					-- Create the proc indicator if it doesn't exist
+					if not actionButton._zBBG_procIndicator then
+						actionButton._zBBG_procIndicator = actionButton:CreateTexture(nil, "OVERLAY", nil, 5)
+						actionButton._zBBG_procIndicator:SetBlendMode("ADD")
+					end
+					
+					-- Show the indicator with appropriate color
+					actionButton._zBBG_procIndicator:SetTexture(getBorderPath())
+					actionButton._zBBG_procIndicator:SetAllPoints(actionButton)
+					actionButton._zBBG_procIndicator:SetVertexColor(indicatorColor.r, indicatorColor.g, indicatorColor.b, indicatorColor.a)
+					actionButton._zBBG_procIndicator:Show()
+					applyMaskToTexture(actionButton._zBBG_procIndicator, actionButton._zBBG_customMask)
+					
+					-- Mask the actual spell alert flipbooks too
+					if alert.ProcLoopFlipbook then
+						applyMaskToTexture(alert.ProcLoopFlipbook, actionButton._zBBG_customMask)
+						alert.ProcLoopFlipbook:Hide()
+					end
+					if alert.ProcStartFlipbook then
+						applyMaskToTexture(alert.ProcStartFlipbook, actionButton._zBBG_customMask)
+						alert.ProcStartFlipbook:Hide()
+					end
+					if alert.ProcAltGlow then
+						applyMaskToTexture(alert.ProcAltGlow, actionButton._zBBG_customMask)
+						alert.ProcAltGlow:Hide()
+					end
+				end
+			end)
+		end
+		
+		-- Hook HideAlert to also hide our proc indicator and glow
+		if ActionButtonSpellAlertManager then
+			hooksecurefunc(ActionButtonSpellAlertManager, "HideAlert", function(self, actionButton)
+				if actionButton then
+					if actionButton._zBBG_procIndicator then
+						actionButton._zBBG_procIndicator:Hide()
+					end
+					if actionButton._zBBG_procGlow then
+						actionButton._zBBG_procGlow:Hide()
 					end
 				end
 			end)
