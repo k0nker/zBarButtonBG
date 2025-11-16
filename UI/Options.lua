@@ -19,7 +19,8 @@ if LSM then
 
 	-- Register custom addon fonts from Assets folder
 	if not LSM:IsValid("font", "Champagne & Limousines Bold") then
-		LSM:Register("font", "Champagne & Limousines Bold", [[Interface\AddOns\zBarButtonBG\Assets\Champagne & Limousines Bold.ttf]])
+		LSM:Register("font", "Champagne & Limousines Bold",
+			[[Interface\AddOns\zBarButtonBG\Assets\Champagne & Limousines Bold.ttf]])
 	end
 	if not LSM:IsValid("font", "HOOGE") then
 		LSM:Register("font", "HOOGE", [[Interface\AddOns\zBarButtonBG\Assets\HOOGE.TTF]])
@@ -31,7 +32,8 @@ if LSM then
 		LSM:Register("font", "OpenSans Condensed Light", [[Interface\AddOns\zBarButtonBG\Assets\OpenSans-CondLight.ttf]])
 	end
 	if not LSM:IsValid("font", "OpenSans Condensed Light Italic") then
-		LSM:Register("font", "OpenSans Condensed Light Italic", [[Interface\AddOns\zBarButtonBG\Assets\OpenSans-CondLightItalic.ttf]])
+		LSM:Register("font", "OpenSans Condensed Light Italic",
+			[[Interface\AddOns\zBarButtonBG\Assets\OpenSans-CondLightItalic.ttf]])
 	end
 	if not LSM:IsValid("font", "Vintage One") then
 		LSM:Register("font", "Vintage One", [[Interface\AddOns\zBarButtonBG\Assets\VintageOne.ttf]])
@@ -50,14 +52,14 @@ end
 local function exportProfile(profile)
 	-- Serialize profile using AceSerializer
 	local serialized = LibStub("AceSerializer-3.0"):Serialize(profile)
-	
+
 	-- Compress using LibDeflate
 	local LibDeflate = LibStub:GetLibrary("LibDeflate")
 	if not LibDeflate then
 		-- Try direct global access
 		LibDeflate = _G.LibDeflate
 	end
-	
+
 	if LibDeflate then
 		local compressed = LibDeflate:CompressDeflate(serialized)
 		if compressed then
@@ -67,7 +69,7 @@ local function exportProfile(profile)
 			end
 		end
 	end
-	
+
 	-- Fallback if LibDeflate not available or compression fails
 	return serialized
 end
@@ -77,36 +79,36 @@ local function importProfile(exportString)
 	if not exportString or exportString == "" then
 		return nil, L["Invalid export string format"]
 	end
-	
+
 	-- Trim whitespace from start and end
 	exportString = exportString:gsub("^%s+", ""):gsub("%s+$", "")
-	
+
 	-- Try to decompress first (most recent format)
 	local LibDeflate = LibStub:GetLibrary("LibDeflate")
 	local decompressed = nil
-	
+
 	if LibDeflate then
 		local decoded = LibDeflate:DecodeForPrint(exportString)
 		if decoded then
 			decompressed = LibDeflate:DecompressDeflate(decoded)
 		end
 	end
-	
+
 	-- If decompression failed, try raw deserialization (fallback for uncompressed exports)
 	local dataToDeserialize = decompressed or exportString
-	
+
 	-- Decode using AceSerializer
 	local success, profile = LibStub("AceSerializer-3.0"):Deserialize(dataToDeserialize)
 	if not success then
 		return nil, L["Failed to decode export string"]
 	end
-	
+
 	-- Validate that it has the expected settings
 	local defaults = getDefaultProfile()
 	if not profile or type(profile) ~= "table" then
 		return nil, L["Invalid export string - not a valid profile"]
 	end
-	
+
 	-- Merge with defaults, ensuring all required keys exist
 	local validatedProfile = {}
 	for key, defaultValue in pairs(defaults) do
@@ -116,7 +118,7 @@ local function importProfile(exportString)
 			validatedProfile[key] = defaultValue
 		end
 	end
-	
+
 	return validatedProfile
 end
 
@@ -200,6 +202,42 @@ function zBarButtonBGAce:GetOptionsTable()
 		type = "group",
 		name = "zBarButtonBG",
 		args = {
+			--[[
+			overrideIconPadding = {
+				order = nextOrderNumber(),
+				type = "toggle",
+				name = L["Override Icon Padding"],
+				desc = L["Allow icon padding to be set below Blizzard's minimum (default: off)."],
+				get = function() return self.db.profile.overrideIconPadding end,
+				set = function(_, value)
+					self.db.profile.overrideIconPadding = value
+					zBarButtonBG.charSettings.overrideIconPadding = value
+					if zBarButtonBG.enabled then
+						zBarButtonBG.removeActionBarBackgrounds()
+						zBarButtonBG.createActionBarBackgrounds()
+					end
+				end,
+			},
+			iconPaddingValue = {
+				order = nextOrderNumber(),
+				type = "range",
+				name = L["Icon Padding Value"],
+				desc = L["Set icon padding (0-20). Only applies if override is enabled."],
+				min = 0,
+				max = 20,
+				step = 1,
+				disabled = function() return not self.db.profile.overrideIconPadding end,
+				get = function() return self.db.profile.iconPaddingValue or 2 end,
+				set = function(_, value)
+					self.db.profile.iconPaddingValue = value
+					zBarButtonBG.charSettings.iconPaddingValue = value
+					if zBarButtonBG.enabled then
+						zBarButtonBG.removeActionBarBackgrounds()
+						zBarButtonBG.createActionBarBackgrounds()
+					end
+				end,
+			},
+			]]--
 			general = {
 				order = 1,
 				type = "group",
@@ -257,7 +295,8 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = L["Reset Profile"],
 						desc = L["Reset current profile to defaults"],
 						confirm = function()
-							return L["Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"]
+							return L
+							["Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset current profile to defaults
@@ -311,15 +350,17 @@ function zBarButtonBGAce:GetOptionsTable()
 						disabled = function() return not self.selectedProfileForActions end,
 						confirm = function()
 							return L["Copy settings from: "] ..
-							(self.selectedProfileForActions or "") ..
-							"' to '" .. self.db:GetCurrentProfile() .. "'?\n\n" .. L["This will overwrite all current settings!"]
+								(self.selectedProfileForActions or "") ..
+								"' to '" ..
+								self.db:GetCurrentProfile() .. "'?\n\n" .. L
+								["This will overwrite all current settings!"]
 						end,
 						func = function()
 							local success, message = self:CopyProfile(self.selectedProfileForActions,
 								self.db:GetCurrentProfile())
 							if success then
 								zBarButtonBG.print(L["Settings copied from: "] ..
-								self.selectedProfileForActions .. "' -> '" .. self.db:GetCurrentProfile())
+									self.selectedProfileForActions .. "' -> '" .. self.db:GetCurrentProfile())
 								-- Rebuild action bars with updated settings
 								if zBarButtonBG.enabled then
 									zBarButtonBG.removeActionBarBackgrounds()
@@ -340,7 +381,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						end,
 						confirm = function()
 							return L["Are you sure you want to delete the profile: "] ..
-							(self.selectedProfileForActions or "") .. "'?\n\n" .. L["This action cannot be undone!"]
+								(self.selectedProfileForActions or "") .. "'?\n\n" .. L["This action cannot be undone!"]
 						end,
 						func = function()
 							local profileToDelete = self.selectedProfileForActions
@@ -370,7 +411,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						desc = L["Export current profile settings as a string"],
 						func = function()
 							local exportString = exportProfile(self.db.profile)
-							
+
 							-- Create an AceGUI frame to display the export string
 							local AceGUI = LibStub("AceGUI-3.0")
 							local frame = AceGUI:Create("Frame")
@@ -379,16 +420,16 @@ function zBarButtonBGAce:GetOptionsTable()
 							frame:SetLayout("Flow")
 							frame:SetWidth(600)
 							frame:SetHeight(250)
-							
+
 							-- Create a scrolling editbox for the export string
 							local editbox = AceGUI:Create("MultiLineEditBox")
 							editbox:SetLabel("Export String:")
 							editbox:SetText(exportString)
 							editbox:SetFullWidth(true)
 							editbox:SetNumLines(10)
-							editbox:DisableButton(true)  -- Make it read-only
+							editbox:DisableButton(true) -- Make it read-only
 							frame:AddChild(editbox)
-							
+
 							-- Copy button (if clipboard available)
 							if ClipboardFrame or CPOOL_CLIPBOARD_FRAME then
 								local copyButton = AceGUI:Create("Button")
@@ -410,7 +451,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						desc = L["Import profile settings from an export string"],
 						func = function()
 							local AceGUI = LibStub("AceGUI-3.0")
-							
+
 							-- Create frame for import input
 							local frame = AceGUI:Create("Frame")
 							frame:SetTitle("Import Profile")
@@ -418,15 +459,15 @@ function zBarButtonBGAce:GetOptionsTable()
 							frame:SetLayout("Flow")
 							frame:SetWidth(600)
 							frame:SetHeight(300)
-							
+
 							-- Create editbox for paste
 							local editbox = AceGUI:Create("MultiLineEditBox")
 							editbox:SetLabel("Paste Export String:")
 							editbox:SetFullWidth(true)
 							editbox:SetNumLines(8)
-							editbox:DisableButton(true)  -- Disable the built-in accept button
+							editbox:DisableButton(true) -- Disable the built-in accept button
 							frame:AddChild(editbox)
-							
+
 							-- Create Import button
 							local importButton = AceGUI:Create("Button")
 							importButton:SetText("Import")
@@ -437,16 +478,16 @@ function zBarButtonBGAce:GetOptionsTable()
 									zBarButtonBG.print("|cFFFF0000Error:|r Please paste an export string first")
 									return
 								end
-								
+
 								local profile, errorMsg = importProfile(exportString)
 								if not profile then
 									zBarButtonBG.print("|cFFFF0000Error:|r " .. (errorMsg or "Invalid export string"))
 									return
 								end
-								
+
 								-- Close the import window
 								AceGUI:Release(frame)
-								
+
 								-- Ask for new profile name
 								local nameDialog = AceGUI:Create("Frame")
 								nameDialog:SetTitle("Create Profile from Import")
@@ -454,13 +495,13 @@ function zBarButtonBGAce:GetOptionsTable()
 								nameDialog:SetLayout("Flow")
 								nameDialog:SetWidth(350)
 								nameDialog:SetHeight(150)
-								
+
 								local nameEditbox = AceGUI:Create("EditBox")
 								nameEditbox:SetLabel("Profile Name:")
 								nameEditbox:SetFullWidth(true)
-								nameEditbox:DisableButton(true)  -- Disable built-in button
+								nameEditbox:DisableButton(true) -- Disable built-in button
 								nameDialog:AddChild(nameEditbox)
-								
+
 								-- Create button
 								local createButton = AceGUI:Create("Button")
 								createButton:SetText("Create")
@@ -471,36 +512,35 @@ function zBarButtonBGAce:GetOptionsTable()
 										zBarButtonBG.print("|cFFFF0000Error:|r Profile name cannot be empty")
 										return
 									end
-									
+
 									-- Check if profile already exists
 									if zBarButtonBGAce.db.profiles[profileName] then
 										zBarButtonBG.print("|cFFFF0000Error:|r Profile already exists")
 										return
 									end
-									
+
 									-- Create the profile
 									zBarButtonBGAce.db:SetProfile(profileName)
-									
+
 									-- Import the settings
 									for key, value in pairs(profile) do
 										zBarButtonBGAce.db.profile[key] = value
 									end
-									
+
 									zBarButtonBG.charSettings = zBarButtonBGAce.db.profile
-									
+
 									-- Rebuild the UI
 									if zBarButtonBG.enabled then
 										zBarButtonBG.removeActionBarBackgrounds()
 										zBarButtonBG.createActionBarBackgrounds()
 									end
-									
+
 									zBarButtonBG.print("Profile imported: " .. profileName)
 									LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
-									
+
 									AceGUI:Release(nameDialog)
 								end)
 								nameDialog:AddChild(createButton)
-								
 							end)
 							frame:AddChild(importButton)
 						end,
@@ -518,24 +558,28 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = L["Reset Button Settings"],
 						desc = L["Reset all button-related settings to default values"],
 						confirm = function()
-							return L["Are you sure you want to reset all button settings to default values?\n\nThis will reset button shape, backdrop, slot background, and border settings.\n\nThis action cannot be undone!"]
+							return L
+							["Are you sure you want to reset all button settings to default values?\n\nThis will reset button shape, backdrop, slot background, and border settings.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset button-specific settings to defaults from aceDefaults table
 							local defaults = zBarButtonBGAce.db.defaults.profile
 							self.db.profile.buttonStyle = defaults.buttonStyle
 							self.db.profile.showBorder = defaults.showBorder
-							self.db.profile.borderColor = {r = defaults.borderColor.r, g = defaults.borderColor.g, b = defaults.borderColor.b, a = defaults.borderColor.a}
+							self.db.profile.borderColor = { r = defaults.borderColor.r, g = defaults.borderColor.g, b =
+							defaults.borderColor.b, a = defaults.borderColor.a }
 							self.db.profile.useClassColorBorder = defaults.useClassColorBorder
 							self.db.profile.showBackdrop = defaults.showBackdrop
-							self.db.profile.outerColor = {r = defaults.outerColor.r, g = defaults.outerColor.g, b = defaults.outerColor.b, a = defaults.outerColor.a}
+							self.db.profile.outerColor = { r = defaults.outerColor.r, g = defaults.outerColor.g, b =
+							defaults.outerColor.b, a = defaults.outerColor.a }
 							self.db.profile.useClassColorOuter = defaults.useClassColorOuter
 							self.db.profile.backdropTopAdjustment = defaults.backdropTopAdjustment
 							self.db.profile.backdropBottomAdjustment = defaults.backdropBottomAdjustment
 							self.db.profile.backdropLeftAdjustment = defaults.backdropLeftAdjustment
 							self.db.profile.backdropRightAdjustment = defaults.backdropRightAdjustment
 							self.db.profile.showSlotBackground = defaults.showSlotBackground
-							self.db.profile.innerColor = {r = defaults.innerColor.r, g = defaults.innerColor.g, b = defaults.innerColor.b, a = defaults.innerColor.a}
+							self.db.profile.innerColor = { r = defaults.innerColor.r, g = defaults.innerColor.g, b =
+							defaults.innerColor.b, a = defaults.innerColor.a }
 							self.db.profile.useClassColorInner = defaults.useClassColorInner
 							-- Update native settings
 							zBarButtonBG.charSettings = self.db.profile
@@ -608,8 +652,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "color",
 						name = L["Backdrop Color"],
 						desc = L["Color of the outer backdrop frame"],
-						disabled = function() return not self.db.profile.showBackdrop or
-							self.db.profile.useClassColorOuter end,
+						disabled = function()
+							return not self.db.profile.showBackdrop or
+								self.db.profile.useClassColorOuter
+						end,
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.outerColor
@@ -759,8 +805,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "color",
 						name = L["Button Background Color"],
 						desc = L["Color of the button slot background"],
-						disabled = function() return not self.db.profile.showSlotBackground or
-							self.db.profile.useClassColorInner end,
+						disabled = function()
+							return not self.db.profile.showSlotBackground or
+								self.db.profile.useClassColorInner
+						end,
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.innerColor
@@ -824,8 +872,10 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "color",
 						name = L["Border Color"],
 						desc = L["Color of the button border"],
-						disabled = function() return not self.db.profile.showBorder or
-							self.db.profile.useClassColorBorder end,
+						disabled = function()
+							return not self.db.profile.showBorder or
+								self.db.profile.useClassColorBorder
+						end,
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.borderColor
@@ -867,15 +917,19 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = L["Reset Indicator Settings"],
 						desc = L["Reset all indicator-related settings to default values"],
 						confirm = function()
-							return L["Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator and cooldown fade settings.\n\nThis action cannot be undone!"]
+							return L
+							["Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator and cooldown fade settings.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset indicator-specific settings to defaults from aceDefaults table
 							local defaults = zBarButtonBGAce.db.defaults.profile
 							self.db.profile.showRangeIndicator = defaults.showRangeIndicator
-							self.db.profile.rangeIndicatorColor = {r = defaults.rangeIndicatorColor.r, g = defaults.rangeIndicatorColor.g, b = defaults.rangeIndicatorColor.b, a = defaults.rangeIndicatorColor.a}
+							self.db.profile.rangeIndicatorColor = { r = defaults.rangeIndicatorColor.r, g = defaults
+							.rangeIndicatorColor.g, b = defaults.rangeIndicatorColor.b, a = defaults.rangeIndicatorColor
+							.a }
 							self.db.profile.fadeCooldown = defaults.fadeCooldown
-							self.db.profile.cooldownColor = {r = defaults.cooldownColor.r, g = defaults.cooldownColor.g, b = defaults.cooldownColor.b, a = defaults.cooldownColor.a}
+							self.db.profile.cooldownColor = { r = defaults.cooldownColor.r, g = defaults.cooldownColor.g, b =
+							defaults.cooldownColor.b, a = defaults.cooldownColor.a }
 							-- Update native settings
 							zBarButtonBG.charSettings = self.db.profile
 							-- Trigger rebuild
@@ -958,7 +1012,8 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = L["Cooldown Color"],
 						desc = L["Color of the cooldown overlay"],
 						hidden = function() return not zBarButtonBG.midnightCooldown end,
-						disabled = function() return not zBarButtonBG.midnightCooldown or not self.db.profile.fadeCooldown end,
+						disabled = function() return not zBarButtonBG.midnightCooldown or
+							not self.db.profile.fadeCooldown end,
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.cooldownColor
@@ -990,7 +1045,8 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = L["Reset Macro Settings"],
 						desc = L["Reset macro name text settings to default values"],
 						confirm = function()
-							return L["Are you sure you want to reset all macro text settings to default values?\n\nThis will reset font, size, color, positioning, and justification settings for macro names.\n\nThis action cannot be undone!"]
+							return L
+							["Are you sure you want to reset all macro text settings to default values?\n\nThis will reset font, size, color, positioning, and justification settings for macro names.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset macro-specific settings to defaults from aceDefaults table
@@ -1000,7 +1056,8 @@ function zBarButtonBGAce:GetOptionsTable()
 							self.db.profile.macroNameFontFlags = defaults.macroNameFontFlags
 							self.db.profile.macroNameWidth = defaults.macroNameWidth
 							self.db.profile.macroNameHeight = defaults.macroNameHeight
-							self.db.profile.macroNameColor = {r = defaults.macroNameColor.r, g = defaults.macroNameColor.g, b = defaults.macroNameColor.b, a = defaults.macroNameColor.a}
+							self.db.profile.macroNameColor = { r = defaults.macroNameColor.r, g = defaults
+							.macroNameColor.g, b = defaults.macroNameColor.b, a = defaults.macroNameColor.a }
 							self.db.profile.macroNameJustification = defaults.macroNameJustification
 							self.db.profile.macroNamePosition = defaults.macroNamePosition
 							self.db.profile.macroNameOffsetX = defaults.macroNameOffsetX
@@ -1254,7 +1311,8 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = L["Reset Count Settings"],
 						desc = L["Reset count/charge text settings to default values"],
 						confirm = function()
-							return L["Are you sure you want to reset all count/charge text settings to default values?\n\nThis will reset font, size, color, and positioning settings for count/charge numbers.\n\nThis action cannot be undone!"]
+							return L
+							["Are you sure you want to reset all count/charge text settings to default values?\n\nThis will reset font, size, color, and positioning settings for count/charge numbers.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset count-specific settings to defaults from aceDefaults table
@@ -1264,7 +1322,8 @@ function zBarButtonBGAce:GetOptionsTable()
 							self.db.profile.countFontFlags = defaults.countFontFlags
 							self.db.profile.countWidth = defaults.countWidth
 							self.db.profile.countHeight = defaults.countHeight
-							self.db.profile.countColor = {r = defaults.countColor.r, g = defaults.countColor.g, b = defaults.countColor.b, a = defaults.countColor.a}
+							self.db.profile.countColor = { r = defaults.countColor.r, g = defaults.countColor.g, b =
+							defaults.countColor.b, a = defaults.countColor.a }
 							self.db.profile.countOffsetX = defaults.countOffsetX
 							self.db.profile.countOffsetY = defaults.countOffsetY
 							-- Update native settings
@@ -1473,7 +1532,8 @@ function zBarButtonBGAce:GetOptionsTable()
 						name = L["Reset Keybind Settings"],
 						desc = L["Reset keybind/hotkey text settings to default values"],
 						confirm = function()
-							return L["Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, and positioning settings for keybind/hotkey text.\n\nThis action cannot be undone!"]
+							return L
+							["Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, and positioning settings for keybind/hotkey text.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset keybind-specific settings to defaults from aceDefaults table
@@ -1483,7 +1543,8 @@ function zBarButtonBGAce:GetOptionsTable()
 							self.db.profile.keybindFontFlags = defaults.keybindFontFlags
 							self.db.profile.keybindWidth = defaults.keybindWidth
 							self.db.profile.keybindHeight = defaults.keybindHeight
-							self.db.profile.keybindColor = {r = defaults.keybindColor.r, g = defaults.keybindColor.g, b = defaults.keybindColor.b, a = defaults.keybindColor.a}
+							self.db.profile.keybindColor = { r = defaults.keybindColor.r, g = defaults.keybindColor.g, b =
+							defaults.keybindColor.b, a = defaults.keybindColor.a }
 							self.db.profile.keybindOffsetX = defaults.keybindOffsetX
 							self.db.profile.keybindOffsetY = defaults.keybindOffsetY
 							-- Update native settings
@@ -1688,9 +1749,8 @@ end
 function zBarButtonBGAce:InitializeOptions()
 	-- Get the options table
 	local optionsTable = self:GetOptionsTable()
-	
+
 	-- Register with AceConfig (note: AceConfig-3.0 not AceConfigRegistry)
 	LibStub("AceConfig-3.0"):RegisterOptionsTable("zBarButtonBG", optionsTable)
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("zBarButtonBG", "zBarButtonBG")
 end
-

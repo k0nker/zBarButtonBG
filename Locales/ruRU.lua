@@ -3,8 +3,6 @@ local L = LibStub("AceLocale-3.0"):NewLocale("zBarButtonBG", "ruRU")
 if not L then return end
 
 -- ############################################################
--- Core Interface Sections
--- ############################################################
 L["General"] = "Общие"
 L["Appearance"] = "Внешний вид"
 L["Backdrop"] = "Фон"
@@ -87,11 +85,14 @@ L["Count Color"] = "Цвет счётчика"
 L["Keybind Text Color"] = "Цвет текста клавиш"
 
 -- ############################################################
--- Size & Positioning
--- ############################################################
 L["Size"] = "Размер"
 L["Width"] = "Ширина"
 L["Height"] = "Высота"
+-- Icon Padding Override
+L["Override Icon Padding"] = "Переопределить отступ иконки"
+L["Allow icon padding to be set below Blizzard's minimum (default: off)."] = "Позволяет установить отступ иконки ниже минимального значения Blizzard (по умолчанию: выкл.)"
+L["Icon Padding Value"] = "Значение отступа иконки"
+L["Set icon padding (0-20). Only applies if override is enabled."] = "Установите отступ иконки (0-20). Применяется только при включённом переопределении."
 L["Top Size"] = "Верхний размер"
 L["Bottom Size"] = "Нижний размер"
 L["Left Size"] = "Левый размер"

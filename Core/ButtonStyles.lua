@@ -41,6 +41,25 @@ ButtonStyles.styles = {
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Octagon",
 		descriptionKey = "Octagon button style",
 	},
+	--[[
+    ["OctagonFlipped"] = {
+		nameKey = "Octagon Flipped",
+		maskTexture = ASSETS_PATH .. "ButtonIconMask_OctagonFlipped",
+		borderTexture = ASSETS_PATH .. "ButtonIconBorder_OctagonFlipped",
+		descriptionKey = "Octagon flipped button style",
+	}, ]]--
+	["Hexagon"] = {
+		nameKey = "Hexagon",
+		maskTexture = ASSETS_PATH .. "ButtonIconMask_Hexagon",
+		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Hexagon",
+		descriptionKey = "Hexagon button style",
+	},
+	["HexagonFlipped"] = {
+		nameKey = "Hexagon Flipped",
+		maskTexture = ASSETS_PATH .. "ButtonIconMask_HexagonFlipped",
+		borderTexture = ASSETS_PATH .. "ButtonIconBorder_HexagonFlipped",
+		descriptionKey = "Hexagon flipped button style",
+	},
 }
 
 -- Get a specific style by name

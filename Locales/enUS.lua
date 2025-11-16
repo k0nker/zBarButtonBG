@@ -3,8 +3,6 @@ local L = LibStub("AceLocale-3.0"):NewLocale("zBarButtonBG", "enUS", true)
 if not L then return end
 
 -- ############################################################
--- Core Interface Sections
--- ############################################################
 L["General"] = "General"
 L["Appearance"] = "Appearance" 
 L["Backdrop"] = "Backdrop"
@@ -123,11 +121,14 @@ L["Color of the count/charge text"] = "Color of the count/charge text"
 L["Color of the keybind/hotkey text"] = "Color of the keybind/hotkey text"
 
 -- ############################################################
--- Size & Positioning
--- ############################################################
 L["Size"] = "Size"
 L["Width"] = "Width"
 L["Height"] = "Height"
+-- Icon Padding Override
+L["Override Icon Padding"] = "Override Icon Padding"
+L["Allow icon padding to be set below Blizzard's minimum (default: off)."] = "Allow icon padding to be set below Blizzard's minimum (default: off)."
+L["Icon Padding Value"] = "Icon Padding Value"
+L["Set icon padding (0-20). Only applies if override is enabled."] = "Set icon padding (0-20). Only applies if override is enabled."
 L["Top Size"] = "Top Size"
 L["Bottom Size"] = "Bottom Size"
 L["Left Size"] = "Left Size"
@@ -235,10 +236,16 @@ L["Round"] = "Round"
 L["Square"] = "Square"
 L["Less Round"] = "Less Round"
 L["Octagon"] = "Octagon"
+L["Octagon Flipped"] = "Octagon Flipped"
+L["Hexagon"] = "Hexagon"
+L["Hexagon Flipped"] = "Hexagon Flipped"
 L["Less rounded button style"] = "Less rounded button style"
 L["Sharp square button style"] = "Sharp square button style"
-L["Less rounded button style"] = "Less rounded button style"
+L["Rounded button style"] = "Rounded button style"
 L["Octagon button style"] = "Octagon button style"
+L["Octagon flipped button style"] = "Octagon flipped button style"
+L["Hexagon button style"] = "Hexagon button style"
+L["Hexagon flipped button style"] = "Hexagon flipped button style"
 L["Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"] = "Are you sure you want to reset all settings in the current profile to default values?\n\nThis will reset all appearance, backdrop, text, and indicator settings.\n\nThis action cannot be undone!"
 L["Show Backdrop"] = "Show Backdrop"
 L["Show outer background frame"] = "Show outer background frame"

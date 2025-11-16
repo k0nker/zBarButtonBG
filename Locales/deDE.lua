@@ -117,6 +117,11 @@ L["Color of the keybind/hotkey text"] = "Farbe des Tastenbelegungs-/Hotkey-Texts
 L["Size"] = "Größe"
 L["Width"] = "Breite"
 L["Height"] = "Höhe"
+-- Icon Padding Override
+L["Override Icon Padding"] = "Schaltflächen-Abstand überschreiben"
+L["Allow icon padding to be set below Blizzard's minimum (default: off)."] = "Ermöglicht das Festlegen des Schaltflächenabstands unter dem Minimum von Blizzard (Standard: aus)."
+L["Icon Padding Value"] = "Wert des Schaltflächenabstands"
+L["Set icon padding (0-20). Only applies if override is enabled."] = "Legen Sie den Schaltflächenabstand fest (0-20). Gilt nur, wenn die Außerkraftsetzung aktiviert ist."
 L["Top Size"] = "Obere Größe"
 L["Bottom Size"] = "Untere Größe"
 L["Left Size"] = "Linke Größe"

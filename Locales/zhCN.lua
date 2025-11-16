@@ -3,8 +3,6 @@ local L = LibStub("AceLocale-3.0"):NewLocale("zBarButtonBG", "zhCN")
 if not L then return end
 
 -- ############################################################
--- Core Interface Sections
--- ############################################################
 L["General"] = "常规"
 L["Appearance"] = "外观"
 L["Backdrop"] = "背景"
@@ -87,11 +85,14 @@ L["Count Color"] = "计数颜色"
 L["Keybind Text Color"] = "按键绑定文本颜色"
 
 -- ############################################################
--- Size & Positioning
--- ############################################################
 L["Size"] = "大小"
 L["Width"] = "宽度"
 L["Height"] = "高度"
+-- Icon Padding Override
+L["Override Icon Padding"] = "覆盖图标间距"
+L["Allow icon padding to be set below Blizzard's minimum (default: off)."] = "允许将图标间距设置为低于暴雪的最小值（默认：关闭）"
+L["Icon Padding Value"] = "图标间距数值"
+L["Set icon padding (0-20). Only applies if override is enabled."] = "设置图标间距（0-20）。仅在启用覆盖时生效。"
 L["Top Size"] = "顶部大小"
 L["Bottom Size"] = "底部大小"
 L["Left Size"] = "左侧大小"
