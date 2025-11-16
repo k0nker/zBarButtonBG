@@ -263,6 +263,7 @@ local applyMaskToTexture = Utilities.applyMaskToTexture
 local removeMaskFromTexture = Utilities.removeMaskFromTexture
 local getMaskPath = Utilities.getMaskPath
 local getBorderPath = Utilities.getBorderPath
+local getHighlightPath = Utilities.getHighlightPath
 local getColorTable = Utilities.getColorTable
 local getFontPath = Utilities.getFontPath
 local updateButtonNormalTexture = Styling.updateButtonNormalTexture
@@ -1156,7 +1157,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 							actionButton._zBBG_suggestedIndicator:SetBlendMode("ADD")
 						end
 						-- Show the indicator with bright blue
-						actionButton._zBBG_suggestedIndicator:SetTexture(getBorderPath())
+						actionButton._zBBG_suggestedIndicator:SetTexture(getHighlightPath())
 						actionButton._zBBG_suggestedIndicator:SetAllPoints(actionButton)
 						actionButton._zBBG_suggestedIndicator:SetVertexColor(0.2, 0.8, 1.0, 0.8) -- Bright blue
 						actionButton._zBBG_suggestedIndicator:Show()
@@ -1211,7 +1212,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					
 					-- Show the indicator with appropriate color
-					actionButton._zBBG_procIndicator:SetTexture(getBorderPath())
+					actionButton._zBBG_procIndicator:SetTexture(getHighlightPath())
 					actionButton._zBBG_procIndicator:SetAllPoints(actionButton)
 					actionButton._zBBG_procIndicator:SetVertexColor(indicatorColor.r, indicatorColor.g, indicatorColor.b, indicatorColor.a)
 					actionButton._zBBG_procIndicator:Show()
@@ -1220,15 +1221,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Mask the actual spell alert flipbooks too
 					if alert.ProcLoopFlipbook then
 						applyMaskToTexture(alert.ProcLoopFlipbook, actionButton._zBBG_customMask)
-						alert.ProcLoopFlipbook:Hide()
 					end
 					if alert.ProcStartFlipbook then
 						applyMaskToTexture(alert.ProcStartFlipbook, actionButton._zBBG_customMask)
-						alert.ProcStartFlipbook:Hide()
 					end
 					if alert.ProcAltGlow then
 						applyMaskToTexture(alert.ProcAltGlow, actionButton._zBBG_customMask)
-						alert.ProcAltGlow:Hide()
 					end
 				end
 			end)

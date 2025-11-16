@@ -31,16 +31,24 @@ end
 -- Get mask texture path based on current button style
 function Util.getMaskPath()
 	local ButtonStyles = addonTable.Core.ButtonStyles
-	local styleName = zBarButtonBG.charSettings.buttonStyle or "Round"
+	local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
 	return ButtonStyles.GetMaskPath(styleName)
 end
 
 -- Get border texture path based on current button style
 function Util.getBorderPath()
 	local ButtonStyles = addonTable.Core.ButtonStyles
-	local styleName = zBarButtonBG.charSettings.buttonStyle or "Round"
+	local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
 	return ButtonStyles.GetBorderPath(styleName)
 end
+
+-- Get border texture path based on current button style
+function Util.getHighlightPath()
+	local ButtonStyles = addonTable.Core.ButtonStyles
+	local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
+	return ButtonStyles.GetHighlightPath(styleName)
+end
+
 
 -- Check if current button style is "Square" (for positioning logic)
 function Util.isSquareButtonStyle()

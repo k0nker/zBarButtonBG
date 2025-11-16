@@ -21,43 +21,50 @@ ButtonStyles.styles = {
 		nameKey = "Round",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Rounded",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Rounded",
+		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Rounded",
 		descriptionKey = "Rounded button style",
-	},
-	["LessRound"] = {
-		nameKey = "Less Round",
-		maskTexture = ASSETS_PATH .. "ButtonIconMask_LessRound",
-		borderTexture = ASSETS_PATH .. "ButtonIconBorder_LessRound",
-		descriptionKey = "Less rounded button style",
 	},
 	["Square"] = {
 		nameKey = "Square",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Square",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Square",
+		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Square",
 		descriptionKey = "Sharp square button style",
 	},
 	["Octagon"] = {
 		nameKey = "Octagon",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Octagon",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Octagon",
+		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Octagon",
 		descriptionKey = "Octagon button style",
 	},
     ["OctagonFlipped"] = {
 		nameKey = "Octagon Flipped",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_OctagonFlipped",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_OctagonFlipped",
+		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_OctagonFlipped",
 		descriptionKey = "Octagon flipped button style",
 	},
 	["Hexagon"] = {
 		nameKey = "Hexagon",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Hexagon",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Hexagon",
+		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Hexagon",
 		descriptionKey = "Hexagon button style",
 	},
 	["HexagonFlipped"] = {
 		nameKey = "Hexagon Flipped",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_HexagonFlipped",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_HexagonFlipped",
+		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_HexagonFlipped",
 		descriptionKey = "Hexagon flipped button style",
+	},
+	["Circle"] = {
+		nameKey = "Circle",
+		maskTexture = ASSETS_PATH .. "ButtonIconMask_Circle",
+		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Circle",
+		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Circle",
+		descriptionKey = "Circle button style",
 	},
 }
 
@@ -90,11 +97,17 @@ end
 -- Get mask texture path for a style
 function ButtonStyles.GetMaskPath(styleName)
 	local style = ButtonStyles.GetStyle(styleName)
-	return style and style.maskTexture or ButtonStyles.styles["Round"].maskTexture
+	return style and style.maskTexture or ButtonStyles.styles["Square"].maskTexture
 end
 
 -- Get border texture path for a style
 function ButtonStyles.GetBorderPath(styleName)
 	local style = ButtonStyles.GetStyle(styleName)
-	return style and style.borderTexture or ButtonStyles.styles["Round"].borderTexture
+	return style and style.borderTexture or ButtonStyles.styles["Square"].borderTexture
+end
+
+-- Get border texture path for a style
+function ButtonStyles.GetHighlightPath(styleName)
+	local style = ButtonStyles.GetStyle(styleName)
+	return style and style.highlightTexture or ButtonStyles.styles["Square"].highlightTexture
 end
