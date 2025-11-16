@@ -41,13 +41,12 @@ ButtonStyles.styles = {
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Octagon",
 		descriptionKey = "Octagon button style",
 	},
-	--[[
     ["OctagonFlipped"] = {
 		nameKey = "Octagon Flipped",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_OctagonFlipped",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_OctagonFlipped",
 		descriptionKey = "Octagon flipped button style",
-	}, ]]--
+	},
 	["Hexagon"] = {
 		nameKey = "Hexagon",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Hexagon",
