@@ -1,4 +1,5 @@
 -- zBarButtonBG - Action bar button background customization addon
+-- Credit: Architectural patterns inspired by Masque
 
 ---@class addonTableZBarButtonBG
 local addonTable = select(2, ...)
@@ -266,18 +267,15 @@ local getBorderPath = Utilities.getBorderPath
 local getHighlightPath = Utilities.getHighlightPath
 local getColorTable = Utilities.getColorTable
 local getFontPath = Utilities.getFontPath
+local ClearSetPoint = Utilities.ClearSetPoint
 local updateButtonNormalTexture = Styling.updateButtonNormalTexture
 local applyAllTextStyling = Styling.applyAllTextStyling
 local applyBackdropPositioning = Styling.applyBackdropPositioning
 local applyTextPositioning = Styling.applyTextPositioning
 
--- Process all button regions in one consolidated pass
--- This replaces scattered region-specific logic throughout the code
+-- Initialize all button regions from metadata
 local function initializeButtonRegions(button)
-	local regions = ButtonStyles.GetRegionList()
-	for regionName, regionDef in pairs(regions) do
-		ButtonStyles.ProcessRegion(button, regionName, regionDef)
-	end
+	ButtonStyles.InitializeButton(button)
 end
 
 -- Create and apply button mask efficiently

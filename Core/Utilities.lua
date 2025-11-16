@@ -1,5 +1,5 @@
 -- Utility helper functions for zBarButtonBG
--- Provides centralized sizing, positioning, masking, and color management
+-- Handles sizing, positioning, masking, coloring, and font management
 
 ---@class addonTableZBarButtonBG
 local addonTable = select(2, ...)
@@ -7,6 +7,10 @@ local addonTable = select(2, ...)
 addonTable.Core.Utilities = {}
 local Util = addonTable.Core.Utilities
 local C = addonTable.Core.Constants
+
+-- ############################################################
+-- DEBUG & PRINT
+-- ############################################################
 
 -- Print helper that prefixes our addon name
 function Util.print(arg)
@@ -18,19 +22,47 @@ function Util.print(arg)
 	return false
 end
 
--- Get color table with optional class color override
-function Util.getColorTable(colorKey, useClassColorKey)
-	if zBarButtonBG.charSettings[useClassColorKey] then
-		local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
-		return { r = classColor.r, g = classColor.g, b = classColor.b, a = 1 }
+-- ############################################################
+-- COLOR MANAGEMENT
+-- ############################################################
+
+-- Get color values as individual components or table
+function Util.GetColor(colorData, alpha)
+	if type(colorData) == "table" then
+		return colorData.r or 1, colorData.g or 1, colorData.b or 1, alpha or colorData.a or 1
 	else
-		local c = zBarButtonBG.charSettings[colorKey]
-		return { r = c.r, g = c.g, b = c.b, a = c.a }
+		return 1, 1, 1, alpha or 1
 	end
 end
 
--- Get all texture paths (mask, border, highlight) for current button style
--- Consolidated from three separate functions to reduce duplication
+-- Get color table with optional class color override
+-- Returns normalized color table with r, g, b, a components
+function Util.getColorTable(colorKey, useClassColorKey)
+	if zBarButtonBG.charSettings[useClassColorKey] then
+		local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
+		return { 
+			r = classColor.r, 
+			g = classColor.g, 
+			b = classColor.b, 
+			a = 1 
+		}
+	else
+		local c = zBarButtonBG.charSettings[colorKey]
+		return { 
+			r = c.r, 
+			g = c.g, 
+			b = c.b, 
+			a = c.a 
+		}
+	end
+end
+
+-- ############################################################
+-- TEXTURE PATH UTILITIES
+-- ############################################################
+-- Consolidated texture path lookups
+
+-- Get all texture paths for current button style
 function Util.getTexturePaths(styleName)
 	local ButtonStyles = addonTable.Core.ButtonStyles
 	return ButtonStyles.GetPaths(styleName)
@@ -38,38 +70,65 @@ end
 
 -- Get mask texture path based on current button style
 function Util.getMaskPath(styleName)
-	local paths = Util.getTexturePaths(styleName)
-	return paths.mask
+	local ButtonStyles = addonTable.Core.ButtonStyles
+	return ButtonStyles.GetMaskPath(styleName)
 end
 
 -- Get border texture path based on current button style
 function Util.getBorderPath(styleName)
-	local paths = Util.getTexturePaths(styleName)
-	return paths.border
+	local ButtonStyles = addonTable.Core.ButtonStyles
+	return ButtonStyles.GetBorderPath(styleName)
 end
 
 -- Get highlight texture path based on current button style
 function Util.getHighlightPath(styleName)
-	local paths = Util.getTexturePaths(styleName)
-	return paths.highlight
+	local ButtonStyles = addonTable.Core.ButtonStyles
+	return ButtonStyles.GetHighlightPath(styleName)
 end
 
--- Check if current button style is "Square" (for positioning logic)
-function Util.isSquareButtonStyle()
-	return zBarButtonBG.charSettings.buttonStyle == "Square"
+-- ############################################################
+-- POSITIONING UTILITIES
+-- ############################################################
+
+-- Clear all points and set a single point
+function Util.ClearSetPoint(region, point, anchor, relPoint, offsetX, offsetY, setAllPoints)
+	if not region then return end
+	anchor = anchor or region:GetParent()
+	
+	region:ClearAllPoints()
+	
+	if setAllPoints then
+		region:SetAllPoints(anchor)
+	else
+		region:SetPoint(
+			point or "CENTER",
+			anchor,
+			relPoint or "CENTER",
+			offsetX or 0,
+			offsetY or 0
+		)
+	end
 end
 
--- Helper to apply/remove a mask to a texture while tracking what mask is applied
--- Prevents duplicate mask applications and tracks mask state
+-- ############################################################
+-- MASKING UTILITIES
+-- ############################################################
+-- Centralized mask application and removal
+
+-- Apply mask to a texture, tracking it to prevent duplicates
 function Util.applyMaskToTexture(tex, mask)
 	if not tex then return end
-	-- If the mask is already applied to this texture, do nothing
+	
+	-- If this mask is already applied, do nothing
 	if tex._zBBG_appliedMask == mask then return end
-	-- If there is a different mask applied, remove it first
+	
+	-- Remove previous mask if different one is applied
 	if tex._zBBG_appliedMask then
 		tex:RemoveMaskTexture(tex._zBBG_appliedMask)
 		tex._zBBG_appliedMask = nil
 	end
+	
+	-- Apply new mask if provided
 	if mask then
 		tex:AddMaskTexture(mask)
 		tex._zBBG_appliedMask = mask
@@ -79,23 +138,14 @@ end
 -- Remove mask from texture and clear tracking
 function Util.removeMaskFromTexture(tex)
 	if not tex then return end
+	
 	if tex._zBBG_appliedMask then
 		tex:RemoveMaskTexture(tex._zBBG_appliedMask)
 		tex._zBBG_appliedMask = nil
 	end
 end
 
--- Helper function to get font path from LibSharedMedia
-function Util.getFontPath(fontName)
-	local LSM = LibStub("LibSharedMedia-3.0", true)
-	if LSM then
-		return LSM:Fetch("font", fontName) or fontName
-	end
-	return fontName
-end
-
--- Unified function to apply mask to a set of textures
--- Eliminates repeated mask application code scattered throughout
+-- Apply mask to multiple textures in one call (batch operation)
 function Util.applyMaskToSet(mask, ...)
 	for i = 1, select("#", ...) do
 		local tex = select(i, ...)
@@ -105,7 +155,7 @@ function Util.applyMaskToSet(mask, ...)
 	end
 end
 
--- Unified function to remove mask from a set of textures
+-- Remove mask from multiple textures in one call
 function Util.removeMaskFromSet(...)
 	for i = 1, select("#", ...) do
 		local tex = select(i, ...)
@@ -113,4 +163,26 @@ function Util.removeMaskFromSet(...)
 			Util.removeMaskFromTexture(tex)
 		end
 	end
+end
+
+-- ############################################################
+-- FONT UTILITIES
+-- ############################################################
+
+-- Get font path from LibSharedMedia
+function Util.getFontPath(fontName)
+	local LSM = LibStub("LibSharedMedia-3.0", true)
+	if LSM then
+		return LSM:Fetch("font", fontName) or fontName
+	end
+	return fontName
+end
+
+-- ############################################################
+-- STYLE UTILITIES
+-- ############################################################
+
+-- Check if current button style is "Square" (for positioning logic)
+function Util.isSquareButtonStyle()
+	return zBarButtonBG.charSettings.buttonStyle == "Square"
 end

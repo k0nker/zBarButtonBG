@@ -7,74 +7,145 @@ addonTable.Core.Styling = {}
 local Styling = addonTable.Core.Styling
 local Util = addonTable.Core.Utilities
 
+-- ############################################################
+-- TEXT ELEMENT METADATA
+-- ############################################################
+
+Styling.textElements = {
+	MacroName = {
+		key = "Name",
+		fontSettingKey = "macroNameFont",
+		fontSizeKey = "macroNameFontSize",
+		fontFlagsKey = "macroNameFontFlags",
+		colorKey = "macroNameColor",
+		widthKey = "macroNameWidth",
+		heightKey = "macroNameHeight",
+		justifyHKey = "macroNameJustification",
+		justifyVKey = "macroNamePosition",
+		offsetXKey = "macroNameOffsetX",
+		offsetYKey = "macroNameOffsetY",
+		point = "BOTTOM",
+		relPoint = "BOTTOM",
+		baseOffsetX = 0,
+		baseOffsetY = 2,
+		drawLayer = "BORDER",
+		drawOrder = 1,
+	},
+	Count = {
+		key = "Count",
+		fontSettingKey = "countFont",
+		fontSizeKey = "countFontSize",
+		fontFlagsKey = "countFontFlags",
+		colorKey = "countColor",
+		widthKey = "countWidth",
+		heightKey = "countHeight",
+		offsetXKey = "countOffsetX",
+		offsetYKey = "countOffsetY",
+		point = "BOTTOMRIGHT",
+		relPoint = "BOTTOMRIGHT",
+		baseOffsetX = 0,
+		baseOffsetY = 3,
+		drawLayer = "OVERLAY",
+		drawOrder = 0,
+	},
+	Keybind = {
+		key = "HotKey",
+		fontSettingKey = "keybindFont",
+		fontSizeKey = "keybindFontSize",
+		fontFlagsKey = "keybindFontFlags",
+		colorKey = "keybindColor",
+		widthKey = "keybindWidth",
+		heightKey = "keybindHeight",
+		justifyHKey = nil,
+		justifyVKey = nil,
+		offsetXKey = "keybindOffsetX",
+		offsetYKey = "keybindOffsetY",
+		point = "TOPRIGHT",
+		relPoint = "TOPRIGHT",
+		baseOffsetX = -1,
+		baseOffsetY = -2,
+		drawLayer = "OVERLAY",
+		drawOrder = 0,
+	},
+}
+
+-- ############################################################
+-- CENTRALIZED TEXT SKINNING
+-- ############################################################
+-- Single function handles all text styling following metadata
+
+-- Skin a text element using metadata definition
+function Styling.SkinText(textElement, button, metadata)
+	if not textElement or not metadata then return end
+
+	-- Apply font styling
+	if metadata.fontSettingKey then
+		local fontPath = Util.getFontPath(zBarButtonBG.charSettings[metadata.fontSettingKey])
+		local fontSize = zBarButtonBG.charSettings[metadata.fontSizeKey]
+		local fontFlags = zBarButtonBG.charSettings[metadata.fontFlagsKey]
+		textElement:SetFont(fontPath, fontSize, fontFlags)
+	end
+
+	-- Apply size
+	if metadata.widthKey and metadata.heightKey then
+		local width = zBarButtonBG.charSettings[metadata.widthKey]
+		local height = zBarButtonBG.charSettings[metadata.heightKey]
+		textElement:SetSize(width, height)
+	end
+
+	-- Apply color
+	if metadata.colorKey then
+		local colorTbl = zBarButtonBG.charSettings[metadata.colorKey]
+		textElement:SetTextColor(colorTbl.r, colorTbl.g, colorTbl.b, colorTbl.a)
+	end
+
+	-- Apply justification
+	if metadata.justifyHKey then
+		textElement:SetJustifyH(zBarButtonBG.charSettings[metadata.justifyHKey] or "CENTER")
+	end
+	if metadata.justifyVKey then
+		textElement:SetJustifyV(zBarButtonBG.charSettings[metadata.justifyVKey] or "MIDDLE")
+	end
+
+	-- Apply draw layer
+	if metadata.drawLayer then
+		textElement:SetDrawLayer(metadata.drawLayer, metadata.drawOrder or 0)
+	end
+
+	-- Apply positioning
+	local offsetX = zBarButtonBG.charSettings[metadata.offsetXKey] or 0
+	local offsetY = zBarButtonBG.charSettings[metadata.offsetYKey] or 0
+	local finalOffsetX = (metadata.baseOffsetX or 0) + offsetX
+	local finalOffsetY = (metadata.baseOffsetY or 0) + offsetY
+
+	textElement:ClearAllPoints()
+	textElement:SetPoint(metadata.point or "CENTER", button, metadata.relPoint or "CENTER", finalOffsetX, finalOffsetY)
+end
+
+-- ############################################################
+-- LEGACY TEXT STYLING FUNCTIONS
+-- ############################################################
+-- Maintained for compatibility, but now use centralized SkinText()
+
 -- Apply macro name text styling
 function Styling.applyMacroNameStyling(button)
 	if not button or not button.Name then return end
-
-	button.Name:SetFont(
-		Util.getFontPath(zBarButtonBG.charSettings.macroNameFont),
-		zBarButtonBG.charSettings.macroNameFontSize,
-		zBarButtonBG.charSettings.macroNameFontFlags
-	)
-	button.Name:SetSize(
-		zBarButtonBG.charSettings.macroNameWidth,
-		zBarButtonBG.charSettings.macroNameHeight
-	)
-	local c = zBarButtonBG.charSettings.macroNameColor
-	button.Name:SetTextColor(c.r, c.g, c.b, c.a)
-	button.Name:SetJustifyH(zBarButtonBG.charSettings.macroNameJustification or "CENTER")
-	button.Name:SetJustifyV(zBarButtonBG.charSettings.macroNamePosition or "MIDDLE")
-	-- Set draw layer to appear behind Blizzard's cooldown text
-	button.Name:SetDrawLayer("BORDER", 1)
-	local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
-	local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
-	button.Name:ClearAllPoints()
-	button.Name:SetPoint("BOTTOM", button, "BOTTOM", 0 + xOffset, 2 + yOffset)
+	Styling.SkinText(button.Name, button, Styling.textElements.MacroName)
 end
 
 -- Apply count text styling
 function Styling.applyCountStyling(button)
 	if not button or not button.Count then return end
-
-	button.Count:SetFont(
-		Util.getFontPath(zBarButtonBG.charSettings.countFont),
-		zBarButtonBG.charSettings.countFontSize,
-		zBarButtonBG.charSettings.countFontFlags
-	)
-	button.Count:SetSize(
-		zBarButtonBG.charSettings.countWidth,
-		zBarButtonBG.charSettings.countHeight
-	)
-	local c = zBarButtonBG.charSettings.countColor
-	button.Count:SetTextColor(c.r, c.g, c.b, c.a)
-	local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
-	local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
-	button.Count:ClearAllPoints()
-	button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0 + xOffset, 3 + yOffset)
+	Styling.SkinText(button.Count, button, Styling.textElements.Count)
 end
 
 -- Apply keybind text styling
 function Styling.applyKeybindStyling(button)
 	if not button or not button.HotKey then return end
-
-	button.HotKey:SetFont(
-		Util.getFontPath(zBarButtonBG.charSettings.keybindFont),
-		zBarButtonBG.charSettings.keybindFontSize,
-		zBarButtonBG.charSettings.keybindFontFlags
-	)
-	button.HotKey:SetSize(
-		zBarButtonBG.charSettings.keybindWidth,
-		zBarButtonBG.charSettings.keybindHeight
-	)
-	local c = zBarButtonBG.charSettings.keybindColor
-	button.HotKey:SetTextColor(c.r, c.g, c.b, c.a)
-	local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
-	local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
-	button.HotKey:ClearAllPoints()
-	button.HotKey:SetPoint("TOPRIGHT", button, "TOPRIGHT", -1 + xOffset, -2 + yOffset)
+	Styling.SkinText(button.HotKey, button, Styling.textElements.Keybind)
 end
 
--- Apply all text styling to a button
+-- Apply all text styling to a button using centralized approach
 function Styling.applyAllTextStyling(button)
 	if not button then return end
 
@@ -82,6 +153,10 @@ function Styling.applyAllTextStyling(button)
 	Styling.applyCountStyling(button)
 	Styling.applyKeybindStyling(button)
 end
+
+-- ############################################################
+-- BUTTON ELEMENT STYLING
+-- ############################################################
 
 -- Manage NormalTexture consistently
 function Styling.updateButtonNormalTexture(button)
@@ -109,27 +184,6 @@ end
 function Styling.applyTextPositioning(button)
 	if not button then return end
 
-	-- Apply text positioning after button data is stored
-	if button.Name then
-		button.Name:SetJustifyH(zBarButtonBG.charSettings.macroNameJustification or "CENTER")
-		button.Name:SetJustifyV(zBarButtonBG.charSettings.macroNamePosition or "MIDDLE")
-		-- Set draw layer to appear behind Blizzard's cooldown text
-		button.Name:SetDrawLayer("BORDER", 1)
-		local xOffset = zBarButtonBG.charSettings.macroNameOffsetX or 0
-		local yOffset = zBarButtonBG.charSettings.macroNameOffsetY or 0
-		button.Name:ClearAllPoints()
-		button.Name:SetPoint("BOTTOM", button, "BOTTOM", 0 + xOffset, 2 + yOffset)
-	end
-	if button.Count then
-		local xOffset = zBarButtonBG.charSettings.countOffsetX or 0
-		local yOffset = zBarButtonBG.charSettings.countOffsetY or 0
-		button.Count:ClearAllPoints()
-		button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0 + xOffset, 3 + yOffset)
-	end
-	if button.HotKey then
-		local xOffset = zBarButtonBG.charSettings.keybindOffsetX or 0
-		local yOffset = zBarButtonBG.charSettings.keybindOffsetY or 0
-		button.HotKey:ClearAllPoints()
-		button.HotKey:SetPoint("TOPRIGHT", button, "TOPRIGHT", -1 + xOffset, -2 + yOffset)
-	end
+	-- Re-apply all text styling to ensure positioning is current
+	Styling.applyAllTextStyling(button)
 end

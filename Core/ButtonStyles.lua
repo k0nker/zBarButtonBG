@@ -1,6 +1,5 @@
 -- Button style definitions for zBarButtonBG
--- Defines button shapes, regions, and asset paths
--- Follows data-driven architecture for easy extension
+-- Defines button shapes, regions with metadata, and asset paths
 
 ---@class addonTableZBarButtonBG
 local addonTable = select(2, ...)
@@ -14,7 +13,144 @@ local L = LibStub("AceLocale-3.0"):GetLocale("zBarButtonBG")
 -- Base asset path
 local ASSETS_PATH = "Interface\\AddOns\\zBarButtonBG\\Assets\\"
 
--- Define all available button styles with complete texture assets
+-- ############################################################
+-- REGION METADATA SYSTEM
+-- ############################################################
+-- Defines all button regions with their properties
+-- This drives all region processing instead of scattered conditionals
+-- 
+-- Properties:
+--   * key - The property name on the button object (button.icon, button.NormalTexture, etc.)
+--   * canMask - Whether this region can have a mask applied
+--   * canHide - Whether this region can be hidden
+--   * canColor - Whether this region can be color-tinted
+--   * canTexture - Whether this region can have a new texture applied
+--   * hideByDefault - Whether to hide this region during initial setup
+--   * scale - Default scale for this region
+--   * texCoord - Default texture coordinates { x1, x2, y1, y2 }
+
+ButtonStyles.regions = {
+	-- Icon: The actual spell/ability icon
+	Icon = {
+		key = "icon",
+		canMask = true,
+		canHide = true,
+		canColor = false,
+		canTexture = false,
+		scale = 1.05,
+		texCoord = { 0.07, 0.93, 0.07, 0.93 },
+		description = "Spell/ability icon image",
+	},
+
+	-- Normal: Blizzard's default border texture
+	Normal = {
+		key = "NormalTexture",
+		canMask = false,
+		canHide = true,
+		canColor = true,
+		canTexture = false,
+		hideByDefault = true,
+		alpha = 0,
+		description = "Default border (always hidden)",
+	},
+
+	-- Highlight: Blizzard's hover effect
+	Highlight = {
+		key = "HighlightTexture",
+		canMask = false,
+		canHide = true,
+		canColor = true,
+		canTexture = false,
+		hideByDefault = true,
+		alpha = 0,
+		description = "Hover/highlight effect (always hidden)",
+	},
+
+	-- Pushed: Blizzard's click effect
+	Pushed = {
+		key = "PushedTexture",
+		canMask = false,
+		canHide = true,
+		canColor = true,
+		canTexture = false,
+		hideByDefault = true,
+		alpha = 0,
+		description = "Pushed/clicked effect (always hidden)",
+	},
+
+	-- Checked: Blizzard's toggled state
+	Checked = {
+		key = "CheckedTexture",
+		canMask = false,
+		canHide = true,
+		canColor = true,
+		canTexture = false,
+		hideByDefault = true,
+		alpha = 0,
+		description = "Checked/active state (always hidden)",
+	},
+
+	-- SlotBackground: Background texture behind the icon
+	SlotBackground = {
+		key = "SlotBackground",
+		canMask = true,
+		canHide = true,
+		canColor = true,
+		canTexture = true,
+		description = "Background texture behind icon",
+	},
+
+	-- Cooldown: Spiral showing ability cooldown
+	Cooldown = {
+		key = "cooldown",
+		canMask = false,
+		canHide = false,
+		canColor = false,
+		canTexture = false,
+		fillsButton = true,
+		description = "Cooldown spiral (fills button)",
+	},
+
+	-- SpellCastAnimFrame: Spell cast animation
+	SpellCastAnimFrame = {
+		key = "SpellCastAnimFrame",
+		canMask = false,
+		canHide = true,
+		canColor = false,
+		canTexture = false,
+		hideByDefault = true,
+		description = "Spell cast animation (hidden)",
+	},
+
+	-- InterruptDisplay: Interrupt display
+	InterruptDisplay = {
+		key = "InterruptDisplay",
+		canMask = false,
+		canHide = true,
+		canColor = false,
+		canTexture = false,
+		hideByDefault = true,
+		description = "Interrupt display (hidden)",
+	},
+
+	-- IconMask: Blizzard's original mask (should be removed)
+	IconMask = {
+		key = "IconMask",
+		canMask = false,
+		canHide = true,
+		canColor = false,
+		canTexture = false,
+		hideByDefault = true,
+		description = "Blizzard's original mask (removed)",
+	},
+}
+
+-- ############################################################
+-- BUTTON STYLES (Shape Definitions)
+-- ############################################################
+-- Each style defines the textures for its button shape
+-- Organized separately from region metadata for clarity
+
 ButtonStyles.styles = {
 	["Round"] = {
 		nameKey = "Round",
@@ -37,7 +173,7 @@ ButtonStyles.styles = {
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Octagon",
 		descriptionKey = "Octagon button style",
 	},
-    ["OctagonFlipped"] = {
+	["OctagonFlipped"] = {
 		nameKey = "Octagon Flipped",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_OctagonFlipped",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_OctagonFlipped",
@@ -67,61 +203,21 @@ ButtonStyles.styles = {
 	},
 }
 
--- Region definitions - describes all button sub-elements and their properties
--- This data-driven approach eliminates scattered conditionals and duplicated logic
-ButtonStyles.regions = {
-	-- Icon region: the actual spell/item icon image
-	Icon = {
-		propertyName = "icon",
-		canMask = true,
-		maskable = true,
-		scale = 1.05,
-		texCoordX = { 0.07, 0.93 },
-		texCoordY = { 0.07, 0.93 },
-	},
-	-- Normal texture: Blizzard's default border (always hidden)
-	Normal = {
-		propertyName = "NormalTexture",
-		canMask = false,
-		hidden = true,
-		alpha = 0,
-	},
-	-- Highlight texture: Blizzard's hover effect (always hidden)
-	Highlight = {
-		propertyName = "HighlightTexture",
-		canMask = false,
-		hidden = true,
-		alpha = 0,
-	},
-	-- Pushed texture: Blizzard's click effect (always hidden)
-	Pushed = {
-		propertyName = "PushedTexture",
-		canMask = false,
-		hidden = true,
-		alpha = 0,
-	},
-	-- Checked texture: Blizzard's toggled state (always hidden)
-	Checked = {
-		propertyName = "CheckedTexture",
-		canMask = false,
-		hidden = true,
-		alpha = 0,
-	},
-	-- SlotBackground: the texture behind the icon
-	SlotBackground = {
-		propertyName = "SlotBackground",
-		canMask = true,
-		maskable = true,
-	},
-	-- Cooldown frame: the spiral that shows ability cooldowns
-	Cooldown = {
-		propertyName = "cooldown",
-		canMask = false,
-		fillsButton = true,
-	},
-}
+-- ############################################################
+-- ACCESSOR FUNCTIONS
+-- ############################################################
 
--- Retrieve a specific style definition by name
+-- Get a region definition by name
+function ButtonStyles.GetRegion(regionName)
+	return ButtonStyles.regions[regionName]
+end
+
+-- Get all regions (for iteration)
+function ButtonStyles.GetRegions()
+	return ButtonStyles.regions
+end
+
+-- Get a specific style by name
 function ButtonStyles.GetStyle(styleName)
 	return ButtonStyles.styles[styleName]
 end
@@ -146,8 +242,13 @@ function ButtonStyles.GetStylesForDropdown()
 	return result
 end
 
--- Consolidated path getters: all return correct texture for current button style
--- This eliminates three separate functions with identical logic
+-- ############################################################
+-- CONSOLIDATED TEXTURE PATH GETTERS
+-- ############################################################
+-- These replace scattered texture lookups throughout the codebase
+
+-- Get all texture paths (mask, border, highlight) for a button style
+-- Returns table: { mask = ..., border = ..., highlight = ... }
 function ButtonStyles.GetPaths(styleName)
 	styleName = styleName or zBarButtonBG.charSettings.buttonStyle or "Square"
 	local style = ButtonStyles.GetStyle(styleName)
@@ -161,66 +262,76 @@ function ButtonStyles.GetPaths(styleName)
 	}
 end
 
--- Get current mask path based on active button style
+-- Get mask texture path based on button style
 function ButtonStyles.GetMaskPath(styleName)
 	local paths = ButtonStyles.GetPaths(styleName)
 	return paths.mask
 end
 
--- Get current border path based on active button style
+-- Get border texture path based on button style
 function ButtonStyles.GetBorderPath(styleName)
 	local paths = ButtonStyles.GetPaths(styleName)
 	return paths.border
 end
 
--- Get current highlight path based on active button style
+-- Get highlight texture path based on button style
 function ButtonStyles.GetHighlightPath(styleName)
 	local paths = ButtonStyles.GetPaths(styleName)
 	return paths.highlight
 end
 
--- Get a region definition by name
-function ButtonStyles.GetRegion(regionName)
-	return ButtonStyles.regions[regionName]
-end
+-- ############################################################
+-- REGION PROCESSING
+-- ############################################################
+-- REGION SKINNING
+-- ############################################################
+-- Process regions using metadata instead of scattered conditionals
 
--- Get all regions as a list
-function ButtonStyles.GetRegionList()
-	return ButtonStyles.regions
-end
-
--- Process a button region based on its definition
--- This consolidates all the scattered region-specific logic into one function
-function ButtonStyles.ProcessRegion(button, regionName, regionDef)
+-- Process a single region based on its metadata definition
+-- This function encapsulates all logic for region handling
+function ButtonStyles.SkinRegion(button, regionName, regionDef)
 	if not button or not regionDef then return end
 
-	local element = button[regionDef.propertyName]
-	if not element then return end
+	local region = button[regionDef.key]
+	if not region then return end
 
-	-- Handle hidden regions (make them invisible and block Show calls)
-	if regionDef.hidden then
-		element:SetAlpha(regionDef.alpha or 0)
-		element:Hide()
-		element:SetScript("OnShow", function(self) self:Hide() end)
+	-- Hide regions that should be hidden by default
+	if regionDef.hideByDefault then
+		region:SetAlpha(regionDef.alpha or 0)
+		region:Hide()
+		-- Prevent Blizzard from showing these
+		region:SetScript("OnShow", function(self) self:Hide() end)
 		return
 	end
 
-	-- Handle regions that fill the button (set full bounds)
+	-- Handle regions that fill the button (like Cooldown)
 	if regionDef.fillsButton then
-		element:SetAllPoints(button)
+		region:SetAllPoints(button)
 		return
 	end
 
-	-- Handle icon-specific positioning
-	if regionName == "Icon" and element then
+	-- Handle Icon-specific positioning and texture coordinates
+	if regionName == "Icon" and region then
+		-- Remove Blizzard's original mask
 		if button.IconMask then
-			element:RemoveMaskTexture(button.IconMask)
+			region:RemoveMaskTexture(button.IconMask)
 		end
-		element:SetScale(regionDef.scale or 1.0)
-		local tcx = regionDef.texCoordX
-		local tcy = regionDef.texCoordY
-		element:SetTexCoord(tcx[1], tcx[2], tcy[1], tcy[2])
-		element:ClearAllPoints()
-		element:SetAllPoints(button)
+
+		-- Apply scale and texture coordinates from metadata
+		region:SetScale(regionDef.scale or 1.0)
+		local tc = regionDef.texCoord
+		region:SetTexCoord(tc[1], tc[2], tc[3], tc[4])
+		
+		-- Position to fill button
+		region:ClearAllPoints()
+		region:SetAllPoints(button)
+	end
+end
+
+-- Initialize all button regions in a single pass using metadata
+-- This replaces scattered region-specific code throughout
+function ButtonStyles.InitializeButton(button)
+	for regionName, regionDef in pairs(ButtonStyles.regions) do
+		ButtonStyles.SkinRegion(button, regionName, regionDef)
 	end
 end
