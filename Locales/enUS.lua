@@ -261,6 +261,12 @@ L["Out of Range Overlay"] = "Out of Range Overlay"
 L["Show red overlay when abilities are out of range"] = "Show red overlay when abilities are out of range"
 L["Cooldown Overlay"] = "Cooldown Overlay"
 L["Show dark overlay during ability cooldowns"] = "Show dark overlay during ability cooldowns"
+L["Spell Alerts"] = "Spell Alerts"
+L["Show custom spell alert indicators"] = "Show custom spell alert indicators"
+L["Alert Color"] = "Alert Color"
+L["Color of spell proc alerts"] = "Color of spell proc alerts"
+L["Suggested Action Color"] = "Suggested Action Color"
+L["Color of suggested action indicators"] = "Color of suggested action indicators"
 
 -- ############################################################
 -- Status Messages

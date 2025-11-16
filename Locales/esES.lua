@@ -179,8 +179,14 @@ L["Show the button background fill behind each button icon"] = "Mostrar el relle
 -- ############################################################
 L["Out of Range Overlay"] = "Superposición Fuera de Alcance"
 L["Show red overlay when abilities are out of range"] = "Mostrar superposición roja cuando las habilidades están fuera de alcance"
-L["Cooldown Overlay"] = "Superposición de Enfriamiento"
-L["Show dark overlay during ability cooldowns"] = "Mostrar superposición oscura durante los enfriamientos de habilidades"
+L["Cooldown Overlay"] = "Superposición de enfriamiento"
+L["Show dark overlay during ability cooldowns"] = "Mostrar superposición oscura durante los tiempos de enfriamiento de habilidades"
+L["Spell Alerts"] = "Alertas de hechizo"
+L["Show custom spell alert indicators"] = "Mostrar indicadores de alerta de hechizo personalizados"
+L["Alert Color"] = "Color de alerta"
+L["Color of spell proc alerts"] = "Color de las alertas de proc de hechizo"
+L["Suggested Action Color"] = "Color de acción sugerida"
+L["Color of suggested action indicators"] = "Color de los indicadores de acción sugerida"
 
 -- ############################################################
 -- Status Messages

@@ -175,8 +175,16 @@ L["Show the button background fill behind each button icon"] = "在每个按钮�
 -- ############################################################
 L["Out of Range Overlay"] = "超出范围覆盖层"
 L["Show red overlay when abilities are out of range"] = "当技能超出范围时显示红色覆盖层"
-L["Cooldown Overlay"] = "冷却时间覆盖层"
-L["Show dark overlay during ability cooldowns"] = "在技能冷却时间期间显示暗色覆盖层"
+L["Cooldown Overlay"] = "冷却时间遮蔽"
+L["Show dark overlay during ability cooldowns"] = "在能力冷却期间显示深色遮蔽"
+L["Spell Alerts"] = "法术警报"
+L["Show custom spell alert indicators"] = "显示自定义法术警报指示器"
+L["Alert Color"] = "警报颜色"
+L["Color of spell proc alerts"] = "法术触发警报的颜色"
+L["Suggested Action Color"] = "建议操作颜色"
+L["Color of suggested action indicators"] = "建议操作指示器的颜色"
+
+-- ############################################################
 
 -- ############################################################
 -- Status Messages

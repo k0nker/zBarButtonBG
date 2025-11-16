@@ -918,7 +918,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						desc = L["Reset all indicator-related settings to default values"],
 						confirm = function()
 							return L
-							["Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator and cooldown fade settings.\n\nThis action cannot be undone!"]
+							["Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator, cooldown fade, and spell alert color settings.\n\nThis action cannot be undone!"]
 						end,
 						func = function()
 							-- Reset indicator-specific settings to defaults from aceDefaults table
@@ -930,6 +930,8 @@ function zBarButtonBGAce:GetOptionsTable()
 							self.db.profile.fadeCooldown = defaults.fadeCooldown
 							self.db.profile.cooldownColor = { r = defaults.cooldownColor.r, g = defaults.cooldownColor.g, b =
 							defaults.cooldownColor.b, a = defaults.cooldownColor.a }
+							self.db.profile.spellAlertColor = { r = defaults.spellAlertColor.r, g = defaults.spellAlertColor.g, b = defaults.spellAlertColor.b, a = defaults.spellAlertColor.a }
+							self.db.profile.suggestedActionColor = { r = defaults.suggestedActionColor.r, g = defaults.suggestedActionColor.g, b = defaults.suggestedActionColor.b, a = defaults.suggestedActionColor.a }
 							-- Update native settings
 							zBarButtonBG.charSettings = self.db.profile
 							-- Trigger rebuild
@@ -1022,6 +1024,64 @@ function zBarButtonBGAce:GetOptionsTable()
 						set = function(_, r, g, b, a)
 							self.db.profile.cooldownColor = { r = r, g = g, b = b, a = a }
 							zBarButtonBG.charSettings.cooldownColor = { r = r, g = g, b = b, a = a }
+							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
+								zBarButtonBG.updateColors()
+							end
+						end,
+					},
+					spacer1a = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
+					},
+					showSpellAlerts = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Spell Alerts"],
+						desc = L["Show custom spell alert indicators"],
+						get = function() return self.db.profile.showSpellAlerts end,
+						set = function(_, value)
+							self.db.profile.showSpellAlerts = value
+							zBarButtonBG.charSettings.showSpellAlerts = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					spellAlertColor = {
+						order = nextOrderNumber(),
+						type = "color",
+						name = L["Alert Color"],
+						desc = L["Color of spell proc alerts"],
+						disabled = function() return not self.db.profile.showSpellAlerts end,
+						hasAlpha = true,
+						get = function()
+							local c = self.db.profile.spellAlertColor
+							return c.r, c.g, c.b, c.a
+						end,
+						set = function(_, r, g, b, a)
+							self.db.profile.spellAlertColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.spellAlertColor = { r = r, g = g, b = b, a = a }
+							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
+								zBarButtonBG.updateColors()
+							end
+						end,
+					},
+					suggestedActionColor = {
+						order = nextOrderNumber(),
+						type = "color",
+						name = L["Suggested Action Color"],
+						desc = L["Color of suggested action indicators"],
+						disabled = function() return not self.db.profile.showSpellAlerts end,
+						hasAlpha = true,
+						get = function()
+							local c = self.db.profile.suggestedActionColor
+							return c.r, c.g, c.b, c.a
+						end,
+						set = function(_, r, g, b, a)
+							self.db.profile.suggestedActionColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.suggestedActionColor = { r = r, g = g, b = b, a = a }
 							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
 								zBarButtonBG.updateColors()
 							end

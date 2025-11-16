@@ -244,6 +244,12 @@ L["Out of Range Overlay"] = "Außer-Reichweite-Überlagerung"
 L["Show red overlay when abilities are out of range"] = "Rote Überlagerung anzeigen, wenn Fähigkeiten außer Reichweite sind"
 L["Cooldown Overlay"] = "Abklingzeit-Überlagerung"
 L["Show dark overlay during ability cooldowns"] = "Dunkle Überlagerung während Fähigkeits-Abklingzeiten anzeigen"
+L["Spell Alerts"] = "Zauberalerts"
+L["Show custom spell alert indicators"] = "Benutzerdefinierte Zauberalert-Indikatoren anzeigen"
+L["Alert Color"] = "Alert-Farbe"
+L["Color of spell proc alerts"] = "Farbe der Zauberproc-Alerts"
+L["Suggested Action Color"] = "Empfohlene Aktion Farbe"
+L["Color of suggested action indicators"] = "Farbe der Indikatoren für empfohlene Aktionen"
 
 -- ############################################################
 -- Status Messages

@@ -175,8 +175,16 @@ L["Show the button background fill behind each button icon"] = "Показать
 -- ############################################################
 L["Out of Range Overlay"] = "Наложение вне дистанции"
 L["Show red overlay when abilities are out of range"] = "Показать красное наложение, когда способности вне дистанции"
-L["Cooldown Overlay"] = "Наложение перезарядки"
-L["Show dark overlay during ability cooldowns"] = "Показать тёмное наложение во время перезарядки способностей"
+L["Cooldown Overlay"] = "Оверлей времени восстановления"
+L["Show dark overlay during ability cooldowns"] = "Показывать темный оверлей во время восстановления способностей"
+L["Spell Alerts"] = "Оповещения о заклинаниях"
+L["Show custom spell alert indicators"] = "Показывать пользовательские индикаторы оповещений о заклинаниях"
+L["Alert Color"] = "Цвет оповещения"
+L["Color of spell proc alerts"] = "Цвет оповещений о срабатывании заклинания"
+L["Suggested Action Color"] = "Цвет рекомендуемого действия"
+L["Color of suggested action indicators"] = "Цвет индикаторов рекомендуемого действия"
+
+-- ############################################################
 
 -- ############################################################
 -- Status Messages

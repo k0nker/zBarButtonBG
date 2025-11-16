@@ -179,8 +179,16 @@ L["Show the button background fill behind each button icon"] = "Afficher le remp
 -- ############################################################
 L["Out of Range Overlay"] = "Superposition hors de portée"
 L["Show red overlay when abilities are out of range"] = "Afficher une superposition rouge lorsque les capacités sont hors de portée"
-L["Cooldown Overlay"] = "Superposition de récupération"
-L["Show dark overlay during ability cooldowns"] = "Afficher une superposition sombre pendant les récupérations de capacité"
+L["Cooldown Overlay"] = "Superposition d'intensité d'attaque"
+L["Show dark overlay during ability cooldowns"] = "Afficher la superposition sombre pendant les temps de recharge des capacités"
+L["Spell Alerts"] = "Alertes de sort"
+L["Show custom spell alert indicators"] = "Afficher les indicateurs d'alerte de sort personnalisés"
+L["Alert Color"] = "Couleur d'alerte"
+L["Color of spell proc alerts"] = "Couleur des alertes de proc de sort"
+L["Suggested Action Color"] = "Couleur d'action suggérée"
+L["Color of suggested action indicators"] = "Couleur des indicateurs d'action suggérée"
+
+-- ############################################################
 
 -- ############################################################
 -- Status Messages

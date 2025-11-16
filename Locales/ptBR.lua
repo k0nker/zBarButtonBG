@@ -179,8 +179,14 @@ L["Show the button background fill behind each button icon"] = "Mostrar o preenc
 -- ############################################################
 L["Out of Range Overlay"] = "Sobreposição Fora de Alcance"
 L["Show red overlay when abilities are out of range"] = "Mostrar sobreposição vermelha quando habilidades estão fora de alcance"
-L["Cooldown Overlay"] = "Sobreposição de Tempo de Recarga"
-L["Show dark overlay during ability cooldowns"] = "Mostrar sobreposição escura durante tempos de recarga de habilidades"
+L["Cooldown Overlay"] = "Sobreposição de Tempo de Espera"
+L["Show dark overlay during ability cooldowns"] = "Mostrar sobreposição escura durante o tempo de espera de habilidades"
+L["Spell Alerts"] = "Alertas de Feitiço"
+L["Show custom spell alert indicators"] = "Mostrar indicadores de alerta de feitiço personalizados"
+L["Alert Color"] = "Cor de Alerta"
+L["Color of spell proc alerts"] = "Cor dos alertas de ativação de feitiço"
+L["Suggested Action Color"] = "Cor de Ação Sugerida"
+L["Color of suggested action indicators"] = "Cor dos indicadores de ação sugerida"
 
 -- ############################################################
 -- Status Messages

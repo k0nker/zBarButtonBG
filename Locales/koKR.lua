@@ -180,7 +180,13 @@ L["Show the button background fill behind each button icon"] = "각 버튼 아�
 L["Out of Range Overlay"] = "사거리 밖 오버레이"
 L["Show red overlay when abilities are out of range"] = "기술이 사거리 밖에 있을 때 빨간색 오버레이 표시"
 L["Cooldown Overlay"] = "재사용 대기시간 오버레이"
-L["Show dark overlay during ability cooldowns"] = "기술 재사용 대기시간 동안 어두운 오버레이 표시"
+L["Show dark overlay during ability cooldowns"] = "능력 재사용 대기 시간 중 어두운 오버레이 표시"
+L["Spell Alerts"] = "주문 알림"
+L["Show custom spell alert indicators"] = "사용자 정의 주문 알림 표시기 표시"
+L["Alert Color"] = "경고 색상"
+L["Color of spell proc alerts"] = "주문 발동 경고 색상"
+L["Suggested Action Color"] = "제안된 작업 색상"
+L["Color of suggested action indicators"] = "제안된 작업 표시기의 색상"
 
 -- ############################################################
 -- Status Messages
