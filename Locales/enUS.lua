@@ -267,6 +267,8 @@ L["Alert Color"] = "Alert Color"
 L["Color of spell proc alerts"] = "Color of spell proc alerts"
 L["Suggested Action Color"] = "Suggested Action Color"
 L["Color of suggested action indicators"] = "Color of suggested action indicators"
+L["Equipment Outline"] = "Equipment Outline"
+L["Color of the equipment item border outline"] = "Color of the equipment item border outline"
 
 -- ############################################################
 -- Status Messages

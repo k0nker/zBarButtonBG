@@ -5,3 +5,7 @@ All strings a user sees should be localized, be sure to add them to all localiza
 Don't make extra files to explain changes. No summary documents or anything like that. Not helpful. You can summarize in the chat, but don't make a new file for it.
 
 If we are referencing another addon or library and using something from there or mimicing them, don't reference them in the code comments. Add a single line at the top of our main lua file and just add that as a credits reference. No need to reference them throughout the code.
+
+When possible, use the Defaults.lua file to set default values for new settings. Don't hardcode them in the main code. If the user can also change it, use the users choice, and if the users choice doesn't exist use the default from Defaults.lua.
+
+When making changes, try to keep the style consistent with the existing codebase unless there is a good reason to change it.

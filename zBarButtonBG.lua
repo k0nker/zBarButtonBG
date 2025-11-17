@@ -442,7 +442,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Create custom range indicator overlay (only if enabled)
 					if zBarButtonBG.charSettings.showRangeIndicator then
 						if not button._zBBG_rangeOverlay then
-							button._zBBG_rangeOverlay = button:CreateTexture(nil, "OVERLAY", nil, 1)
+							button._zBBG_rangeOverlay = button:CreateTexture(nil, "BACKGROUND", nil, 0)
 							local c = zBarButtonBG.charSettings.rangeIndicatorColor
 							button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
 							button._zBBG_rangeOverlay:Hide() -- Hidden by default
@@ -453,23 +453,19 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_rangeOverlay = nil
 					end
 
-					-- Apply swipe texture to cooldown frame (same as icon mask, matches button shape)
-					-- This must be done immediately during button setup, not in a hook (following Masque's approach)
-					if button.cooldown and button._zBBG_swipeTexturePath then
-						-- SetSwipeTexture requires all 5 parameters: texture path, R, G, B, A
-						-- Using white color (1,1,1) with 0.8 alpha to match default Blizzard cooldown appearance
-						button.cooldown:SetSwipeTexture(button._zBBG_swipeTexturePath, 1, 1, 1, 0.8)
-					end
-
-					-- Create custom cooldown fade overlay (only if enabled and developer flag allows it)
+				-- Apply swipe texture to cooldown frame (same as icon mask, matches button shape)
+				-- This must be done immediately during button setup, not in a hook (following Masque's approach)
+				if button.cooldown and button._zBBG_swipeTexturePath then
+					-- SetSwipeTexture requires all 5 parameters: texture path, R, G, B, A
+					-- Using white color (1,1,1) with 0.8 alpha to match default Blizzard cooldown appearance
+					button.cooldown:SetSwipeTexture(button._zBBG_swipeTexturePath, 1, 1, 1, 0.8)
+				end					-- Create custom cooldown fade overlay (only if enabled and developer flag allows it)
 					if zBarButtonBG.midnightCooldown and zBarButtonBG.charSettings.fadeCooldown then
-						if not button._zBBG_cooldownOverlay then
-							button._zBBG_cooldownOverlay = button:CreateTexture(nil, "OVERLAY", nil, 2)
-							local c = zBarButtonBG.charSettings.cooldownColor
-							button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
-							button._zBBG_cooldownOverlay:Hide() -- Hidden by default
-
-							-- Hook the cooldown frame's Show/Hide scripts to instantly sync our overlay
+					if not button._zBBG_cooldownOverlay then
+						button._zBBG_cooldownOverlay = button:CreateTexture(nil, "BACKGROUND", nil, 1)
+						local c = zBarButtonBG.charSettings.cooldownColor
+						button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+						button._zBBG_cooldownOverlay:Hide() -- Hidden by default							-- Hook the cooldown frame's Show/Hide scripts to instantly sync our overlay
 							-- This fires immediately when the Blizzard cooldown shows/hides
 							if button.cooldown and not button.cooldown._zBBG_hooked then
 								local originalShow = button.cooldown:GetScript("OnShow") or function() end
@@ -663,7 +659,27 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_blizzardTexturesHooked = true
 					end
 
-				-- Hook animation frames (ProcLoopFlipbook, spell alerts) to apply masks
+				-- Replace equipment border texture with proc flipbook on lower layer
+				if button.Border and not button._zBBG_borderTextureSwapped then
+					-- Replace the border's texture with our proc flipbook
+					button.Border:SetTexture(ButtonStyles.GetProcFlipbookPath())
+					-- Show just the first frame of the flipbook
+					button.Border:SetTexCoord(0, 1/5, 0, 1/6)
+					-- Apply equipment outline color from settings (fallback to defaults if not set)
+					local equipColor = zBarButtonBG.charSettings.equipmentOutlineColor or zBarButtonBGAce.db.defaults.profile.equipmentOutlineColor
+					button.Border:SetVertexColor(equipColor.r, equipColor.g, equipColor.b, equipColor.a)
+					-- Move border to BACKGROUND layer so it's below macro text
+					button.Border:SetDrawLayer("BACKGROUND", 2)
+					
+					-- Hook SetVertexColor to maintain our color even when Blizzard tries to change it
+					local originalSetVertexColor = button.Border.SetVertexColor
+					button.Border.SetVertexColor = function(self, r, g, b, a)
+						local equipColor = zBarButtonBG.charSettings.equipmentOutlineColor or zBarButtonBGAce.db.defaults.profile.equipmentOutlineColor
+						originalSetVertexColor(self, equipColor.r, equipColor.g, equipColor.b, equipColor.a)
+					end
+					
+					button._zBBG_borderTextureSwapped = true
+				end
 				if not button._zBBG_animationHooked then
 					-- Function to apply mask to animation frames
 					local function setupAnimationMasks()
@@ -1077,6 +1093,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					-- Fix normal texture too
 					manageNormalTexture(button)
+					-- Reapply equipment border color (Blizzard resets it on update)
+					if button.Border and button._zBBG_borderTextureSwapped then
+						local equipColor = zBarButtonBG.charSettings.equipmentOutlineColor or zBarButtonBGAce.db.defaults.profile.equipmentOutlineColor
+						button.Border:SetVertexColor(equipColor.r, equipColor.g, equipColor.b, equipColor.a)
+					end
 				end
 			end)
 		end
@@ -1139,6 +1160,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 				local buttonWidth, buttonHeight = actionButton:GetSize()
 				flipbook:SetSize(buttonWidth or 36, buttonHeight or 36)
 				flipbook:SetAllPoints(flipbook:GetParent())
+				
+				-- Set to BACKGROUND layer so text stays on top
+				flipbook:SetDrawLayer("BACKGROUND", 1)
+				-- Also reparent to button to ensure proper layering
+				flipbook:SetParent(actionButton)
+				flipbook:SetAllPoints(actionButton)
 
 				-- Configure the animation from the flipbook's nested AnimationGroup
 				if highlightFrame.Flipbook.Anim then
@@ -1234,6 +1261,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 					alert.ProcLoopFlipbook:SetTexture(procFlipbookTexture)
 					-- Size the flipbook to fill the alert frame
 					alert.ProcLoopFlipbook:SetAllPoints(alert)
+					
+					-- Reparent to button to ensure proper layering
+					alert.ProcLoopFlipbook:SetParent(actionButton)
+					
+					-- Set to BACKGROUND layer so text stays on top
+					alert.ProcLoopFlipbook:SetDrawLayer("BACKGROUND", 1)
 				end
 				
 				if loopAnimation then
@@ -1249,6 +1282,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 					alert.ProcStartFlipbook:SetTexture(procFlipbookTexture)
 					-- Size the flipbook to fill the alert frame
 					alert.ProcStartFlipbook:SetAllPoints(alert)
+					
+					-- Reparent to button to ensure proper layering
+					alert.ProcStartFlipbook:SetParent(actionButton)
+					
+					-- Set to BACKGROUND layer so text stays on top
+					alert.ProcStartFlipbook:SetDrawLayer("BACKGROUND", 1)
 				end
 				
 			if startAnimation then
@@ -1272,6 +1311,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 				-- Size it to fill the alert frame
 				altGlowTexture:SetSize(alertWidth or 36, alertHeight or 36)
 				altGlowTexture:SetAllPoints(alert)
+				
+				-- Reparent to button to ensure proper layering
+				altGlowTexture:SetParent(actionButton)
+				
+				-- Set to BACKGROUND layer so text stays on top
+				altGlowTexture:SetDrawLayer("BACKGROUND", 1)
 				
 				-- Set to show just the first frame (no animation)
 				-- The flipbook is 64x64 with 6 rows x 5 columns, so just display frame 1

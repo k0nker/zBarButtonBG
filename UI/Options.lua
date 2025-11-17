@@ -932,6 +932,7 @@ function zBarButtonBGAce:GetOptionsTable()
 							defaults.cooldownColor.b, a = defaults.cooldownColor.a }
 							self.db.profile.spellAlertColor = { r = defaults.spellAlertColor.r, g = defaults.spellAlertColor.g, b = defaults.spellAlertColor.b, a = defaults.spellAlertColor.a }
 							self.db.profile.suggestedActionColor = { r = defaults.suggestedActionColor.r, g = defaults.suggestedActionColor.g, b = defaults.suggestedActionColor.b, a = defaults.suggestedActionColor.a }
+							self.db.profile.equipmentOutlineColor = { r = defaults.equipmentOutlineColor.r, g = defaults.equipmentOutlineColor.g, b = defaults.equipmentOutlineColor.b, a = defaults.equipmentOutlineColor.a }
 							-- Update native settings
 							zBarButtonBG.charSettings = self.db.profile
 							-- Trigger rebuild
@@ -1084,6 +1085,30 @@ function zBarButtonBGAce:GetOptionsTable()
 							zBarButtonBG.charSettings.suggestedActionColor = { r = r, g = g, b = b, a = a }
 							if zBarButtonBG.enabled and zBarButtonBG.updateColors then
 								zBarButtonBG.updateColors()
+							end
+						end,
+					},
+					spacer2 = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = " ",
+					},
+					equipmentOutlineColor = {
+						order = nextOrderNumber(),
+						type = "color",
+						name = L["Equipment Outline"],
+						desc = L["Color of the equipment item border outline"],
+						hasAlpha = true,
+						get = function()
+							local c = self.db.profile.equipmentOutlineColor
+							return c.r, c.g, c.b, c.a
+						end,
+						set = function(_, r, g, b, a)
+							self.db.profile.equipmentOutlineColor = { r = r, g = g, b = b, a = a }
+							zBarButtonBG.charSettings.equipmentOutlineColor = { r = r, g = g, b = b, a = a }
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
 							end
 						end,
 					},
