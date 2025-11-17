@@ -79,9 +79,6 @@ Styling.textElements = {
 function Styling.SkinText(textElement, button, metadata, barName)
 	if not textElement or not metadata then return end
 
-	-- DEBUG
-	--print("[DEBUG] SkinText called: barName=" .. (barName or "nil") .. ", textElement=" .. tostring(textElement) .. ", metadata.colorKey=" .. (metadata.colorKey or "nil"))
-
 	-- Helper to get setting value (per-bar if barName provided, else global)
 	local function getSetting(key)
 		return zBarButtonBG.GetSettingInfo(barName, key)
@@ -111,7 +108,7 @@ function Styling.SkinText(textElement, button, metadata, barName)
 	-- Apply color
 	if metadata.colorKey then
 		local colorTbl = getSetting(metadata.colorKey)
-		if not colorTbl or type(colorTbl) ~= "table" or not colorTbl.r then
+		if not colorTbl or type(colorTbl) ~= "table" then
 			colorTbl = addonTable.Core.Defaults.profile[metadata.colorKey]
 			if not colorTbl or type(colorTbl) ~= "table" then
 				colorTbl = { r = 1, g = 1, b = 1, a = 1 }
@@ -122,7 +119,6 @@ function Styling.SkinText(textElement, button, metadata, barName)
 		local g = (colorTbl.g ~= nil) and colorTbl.g or 1
 		local b = (colorTbl.b ~= nil) and colorTbl.b or 1
 		local a = (colorTbl.a ~= nil) and colorTbl.a or 1
-		print("[DEBUG] Color for " .. metadata.colorKey .. " = r:" .. r .. " g:" .. g .. " b:" .. b .. " a:" .. a)
 		textElement:SetTextColor(r, g, b, a)
 	end
 

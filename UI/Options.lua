@@ -156,6 +156,8 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 		if profileName and profileName ~= "" then
 			local success, message = self:CreateNewProfile(profileName)
 			if success then
+				-- Ensure ALL default values are explicitly saved to the new profile
+				populateProfileWithDefaults(self.db.profiles[profileName])
 				zBarButtonBG.print(L["Profile created: "] .. profileName)
 				-- Refresh the config to update dropdowns
 				LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
@@ -182,6 +184,8 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 		if profileName and profileName ~= "" then
 			local success, message = self:CreateNewProfile(profileName)
 			if success then
+				-- Ensure ALL default values are explicitly saved to the new profile
+				populateProfileWithDefaults(self.db.profiles[profileName])
 				zBarButtonBG.print(L["Profile created: "] .. profileName)
 				-- Refresh the config to update dropdowns
 				LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
@@ -370,6 +374,8 @@ function zBarButtonBGAce:GetOptionsTable()
 							local success, message = self:CopyProfile(self.selectedProfileForActions,
 								self.db:GetCurrentProfile())
 							if success then
+								-- Ensure ALL default values are explicitly saved to the destination profile
+								populateProfileWithDefaults(self.db.profiles[self.db:GetCurrentProfile()])
 								zBarButtonBG.print(L["Settings copied from: "] ..
 									self.selectedProfileForActions .. "' -> '" .. self.db:GetCurrentProfile())
 								-- Rebuild action bars with updated settings
@@ -538,6 +544,9 @@ function zBarButtonBGAce:GetOptionsTable()
 										zBarButtonBGAce.db.profile[key] = value
 									end
 
+									-- Ensure ALL default values are explicitly saved to the imported profile
+									populateProfileWithDefaults(zBarButtonBGAce.db.profile)
+
 									zBarButtonBG.charSettings = zBarButtonBGAce.db.profile
 
 									-- Rebuild the UI
@@ -577,20 +586,17 @@ function zBarButtonBGAce:GetOptionsTable()
 							local defaults = zBarButtonBGAce.db.defaults.profile
 							self.db.profile.buttonStyle = defaults.buttonStyle
 							self.db.profile.showBorder = defaults.showBorder
-							self.db.profile.borderColor = { r = defaults.borderColor.r, g = defaults.borderColor.g, b =
-							defaults.borderColor.b, a = defaults.borderColor.a }
+							self.db.profile.borderColor = { r = defaults.borderColor.r, g = defaults.borderColor.g, b = defaults.borderColor.b, a = defaults.borderColor.a }
 							self.db.profile.useClassColorBorder = defaults.useClassColorBorder
 							self.db.profile.showBackdrop = defaults.showBackdrop
-							self.db.profile.outerColor = { r = defaults.outerColor.r, g = defaults.outerColor.g, b =
-							defaults.outerColor.b, a = defaults.outerColor.a }
+							self.db.profile.outerColor = { r = defaults.outerColor.r, g = defaults.outerColor.g, b = defaults.outerColor.b, a = defaults.outerColor.a }
 							self.db.profile.useClassColorOuter = defaults.useClassColorOuter
 							self.db.profile.backdropTopAdjustment = defaults.backdropTopAdjustment
 							self.db.profile.backdropBottomAdjustment = defaults.backdropBottomAdjustment
 							self.db.profile.backdropLeftAdjustment = defaults.backdropLeftAdjustment
 							self.db.profile.backdropRightAdjustment = defaults.backdropRightAdjustment
 							self.db.profile.showSlotBackground = defaults.showSlotBackground
-							self.db.profile.innerColor = { r = defaults.innerColor.r, g = defaults.innerColor.g, b =
-							defaults.innerColor.b, a = defaults.innerColor.a }
+							self.db.profile.innerColor = { r = defaults.innerColor.r, g = defaults.innerColor.g, b = defaults.innerColor.b, a = defaults.innerColor.a }
 							self.db.profile.useClassColorInner = defaults.useClassColorInner
 							-- Update native settings
 							zBarButtonBG.charSettings = self.db.profile
@@ -670,7 +676,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.outerColor
-							return c.r, c.g, c.b, c.a
+							return (c.r or 1), (c.g or 1), (c.b or 1), (c.a or 1)
 						end,
 						set = function(_, r, g, b, a)
 							self.db.profile.outerColor = { r = r, g = g, b = b, a = a }
@@ -823,7 +829,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.innerColor
-							return c.r, c.g, c.b, c.a
+							return (c.r or 1), (c.g or 1), (c.b or 1), (c.a or 1)
 						end,
 						set = function(_, r, g, b, a)
 							self.db.profile.innerColor = { r = r, g = g, b = b, a = a }
@@ -890,7 +896,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.borderColor
-							return c.r, c.g, c.b, c.a
+							return (c.r or 1), (c.g or 1), (c.b or 1), (c.a or 1)
 						end,
 						set = function(_, r, g, b, a)
 							self.db.profile.borderColor = { r = r, g = g, b = b, a = a }
@@ -935,12 +941,9 @@ function zBarButtonBGAce:GetOptionsTable()
 							-- Reset indicator-specific settings to defaults from aceDefaults table
 							local defaults = zBarButtonBGAce.db.defaults.profile
 							self.db.profile.showRangeIndicator = defaults.showRangeIndicator
-							self.db.profile.rangeIndicatorColor = { r = defaults.rangeIndicatorColor.r, g = defaults
-							.rangeIndicatorColor.g, b = defaults.rangeIndicatorColor.b, a = defaults.rangeIndicatorColor
-							.a }
+							self.db.profile.rangeIndicatorColor = { r = defaults.rangeIndicatorColor.r, g = defaults.rangeIndicatorColor.g, b = defaults.rangeIndicatorColor.b, a = defaults.rangeIndicatorColor.a }
 							self.db.profile.fadeCooldown = defaults.fadeCooldown
-							self.db.profile.cooldownColor = { r = defaults.cooldownColor.r, g = defaults.cooldownColor.g, b =
-							defaults.cooldownColor.b, a = defaults.cooldownColor.a }
+							self.db.profile.cooldownColor = { r = defaults.cooldownColor.r, g = defaults.cooldownColor.g, b = defaults.cooldownColor.b, a = defaults.cooldownColor.a }
 							self.db.profile.spellAlertColor = { r = defaults.spellAlertColor.r, g = defaults.spellAlertColor.g, b = defaults.spellAlertColor.b, a = defaults.spellAlertColor.a }
 							self.db.profile.suggestedActionColor = { r = defaults.suggestedActionColor.r, g = defaults.suggestedActionColor.g, b = defaults.suggestedActionColor.b, a = defaults.suggestedActionColor.a }
 							-- Update native settings
@@ -987,7 +990,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.rangeIndicatorColor
-							return c.r, c.g, c.b, c.a
+							return (c.r or 0.42), (c.g or 0.07), (c.b or 0.12), (c.a or 0.75)
 						end,
 						set = function(_, r, g, b, a)
 							self.db.profile.rangeIndicatorColor = { r = r, g = g, b = b, a = a }
@@ -1030,7 +1033,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.cooldownColor
-							return c.r, c.g, c.b, c.a
+							return (c.r or 0), (c.g or 0), (c.b or 0), (c.a or 0.5)
 						end,
 						set = function(_, r, g, b, a)
 							self.db.profile.cooldownColor = { r = r, g = g, b = b, a = a }
@@ -1069,7 +1072,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.spellAlertColor
-							return c.r, c.g, c.b, c.a
+							return (c.r or 1.0), (c.g or 0.6), (c.b or 0.2), (c.a or 0.95)
 						end,
 						set = function(_, r, g, b, a)
 							self.db.profile.spellAlertColor = { r = r, g = g, b = b, a = a }
@@ -1088,7 +1091,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.suggestedActionColor
-							return c.r, c.g, c.b, c.a
+							return (c.r or 0.314), (c.g or 0.859), (c.b or 1.0), (c.a or 1)
 						end,
 						set = function(_, r, g, b, a)
 							self.db.profile.suggestedActionColor = { r = r, g = g, b = b, a = a }
@@ -1224,7 +1227,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.macroNameColor
-							return c.r, c.g, c.b, c.a
+							return (c.r or 1), (c.g or 1), (c.b or 1), (c.a or 1)
 						end,
 						set = function(_, r, g, b, a)
 							self.db.profile.macroNameColor = { r = r, g = g, b = b, a = a }
@@ -1488,7 +1491,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.countColor
-							return c.r, c.g, c.b, c.a
+							return (c.r or 1), (c.g or 1), (c.b or 1), (c.a or 1)
 						end,
 						set = function(_, r, g, b, a)
 							self.db.profile.countColor = { r = r, g = g, b = b, a = a }
@@ -1709,7 +1712,7 @@ function zBarButtonBGAce:GetOptionsTable()
 						hasAlpha = true,
 						get = function()
 							local c = self.db.profile.keybindColor
-							return c.r, c.g, c.b, c.a
+							return (c.r or 1), (c.g or 1), (c.b or 1), (c.a or 1)
 						end,
 						set = function(_, r, g, b, a)
 							self.db.profile.keybindColor = { r = r, g = g, b = b, a = a }

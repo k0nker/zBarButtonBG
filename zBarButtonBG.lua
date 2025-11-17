@@ -171,51 +171,70 @@ end
 -- ############################################################
 
 -- Main helper: Get a setting value for a specific bar
--- Checks if bar has a different profile assigned, otherwise uses global profile
+-- Checks per-bar profile first, then falls back to defaults.lua (not saved profiles)
 function zBarButtonBG.GetSettingInfo(barName, settingName)
 	if not settingName then return nil end
+
+	local value = nil
+	local defaults = addonTable.Core.Defaults.profile
 
 	-- Check for per-bar override first
 	if barName and zBarButtonBGAce.db.char and zBarButtonBGAce.db.char.barSettings and zBarButtonBGAce.db.char.barSettings[barName] then
 		local barSetting = zBarButtonBGAce.db.char.barSettings[barName]
-		if barSetting[settingName] ~= nil then
-			return barSetting[settingName]
-		end
+		
+		-- Check if bar has a different profile assigned
 		if barSetting.differentProfile and barSetting.profileName then
 			local profile
-			-- Handle "Default" profile specially - it's the default character profile
-			if barSetting.profileName == "Default" then
-				profile = zBarButtonBGAce.db.profile
-			else
+			-- Try to get the named profile from saved profiles
+			if zBarButtonBGAce.db.profiles and zBarButtonBGAce.db.profiles[barSetting.profileName] then
 				profile = zBarButtonBGAce.db.profiles[barSetting.profileName]
 			end
-			if profile and profile[settingName] ~= nil then
-				-- DEBUG
-				if string.find(settingName, "Font") or string.find(settingName, "Color") or string.find(settingName, "Size") then
-					--print("[DEBUG] GetSettingInfo: Found " .. settingName .. " in per-bar profile '" .. barSetting.profileName .. "' for bar '" .. barName .. "'")
+			
+			if profile then
+				value = profile[settingName]
+				-- If value exists and is a table (like colors), fill in missing components from defaults
+				if value ~= nil and type(value) == "table" and type(defaults[settingName]) == "table" then
+					local defaultTable = defaults[settingName]
+					for key, defaultVal in pairs(defaultTable) do
+						if value[key] == nil then
+							value[key] = defaultVal
+						end
+					end
 				end
-				return profile[settingName]
 			end
+			
+			-- If still not found, use defaults
+			if value == nil then
+				value = defaults[settingName]
+			end
+			
+			return value
 		end
 	end
-	-- Fallback to current profile
+	
+	-- No different profile assigned - use user's current global profile
 	local profileToUse = zBarButtonBGAce.db:GetCurrentProfile()
 	local profile = zBarButtonBGAce.db.profiles[profileToUse]
 	if not profile then
 		profile = zBarButtonBGAce.db.profile
 	end
-	local value = profile[settingName]
-	if value == nil then
-		value = addonTable.Core.Defaults.profile[settingName]
-	end
-	-- DEBUG
-	if string.find(settingName, "Font") or string.find(settingName, "Color") or string.find(settingName, "Size") then
-		local source = "default"
-		if value and value ~= addonTable.Core.Defaults.profile[settingName] then
-			source = "current profile '" .. profileToUse .. "'"
+	
+	value = profile[settingName]
+	-- If value exists and is a table (like colors), fill in missing components from defaults
+	if value ~= nil and type(value) == "table" and type(defaults[settingName]) == "table" then
+		local defaultTable = defaults[settingName]
+		for key, defaultVal in pairs(defaultTable) do
+			if value[key] == nil then
+				value[key] = defaultVal
+			end
 		end
-		--print("[DEBUG] GetSettingInfo: Using " .. source .. " for " .. settingName .. " (barName=" .. (barName or "nil") .. ")")
 	end
+	
+	-- If still not found, use defaults
+	if value == nil then
+		value = defaults[settingName]
+	end
+	
 	return value
 end
 
@@ -276,38 +295,12 @@ function zBarButtonBG.updateColors()
 		if data and data.button then
 			-- Get per-bar settings for this button
 			local barName = zBarButtonBG.buttonGroups[buttonName]
-			local outerColor = Utilities.getColorTable("outerColor", "useClassColorOuter", barName)
-			local innerColor = Utilities.getColorTable("innerColor", "useClassColorInner", barName)
-			local borderColor = Utilities.getColorTable("borderColor", "useClassColorBorder", barName)
-			local rangeColor = zBarButtonBG.GetSettingInfo(barName, "rangeIndicatorColor")
-			local cooldownColor = zBarButtonBG.GetSettingInfo(barName, "cooldownColor")
-			local showBorder = zBarButtonBG.GetSettingInfo(barName, "showBorder")
-
-			-- Update outer background color
-			if data.outerBg then
-				data.outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
-			end
-
-			-- Update inner background color
-			if data.bg then
-				data.bg:SetColorTexture(innerColor.r, innerColor.g, innerColor.b, innerColor.a)
-			end
-
-			-- Update border color
-			if showBorder and data.customBorderTexture then
-				data.customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
-			end
-
-			-- Update range indicator color
-			if data.button._zBBG_rangeOverlay then
-				data.button._zBBG_rangeOverlay:SetColorTexture(rangeColor.r, rangeColor.g, rangeColor.b, rangeColor.a)
-			end
-
-			-- Update cooldown overlay color
-			if data.button._zBBG_cooldownOverlay then
-				data.button._zBBG_cooldownOverlay:SetColorTexture(cooldownColor.r, cooldownColor.g, cooldownColor.b,
-					cooldownColor.a)
-			end
+			-- Use modular function to update all color-related elements
+			ButtonSkinning.setOuterBackground(data.button, barName)
+			ButtonSkinning.setInnerBackground(data.button, barName)
+			ButtonSkinning.setBorder(data.button, barName)
+			Overlays.setRangeOverlay(data.button, barName)
+			Overlays.setCooldownOverlay(data.button, barName)
 		end
 	end
 end
@@ -320,7 +313,7 @@ function zBarButtonBG.updateFonts()
 		if data and data.button then
 			local barName = zBarButtonBG.buttonGroups[buttonName]
 			if barName then
-				Styling.applyAllTextStyling(data.button, barName)
+				Styling.setTextStyling(data.button, barName)
 			end
 		end
 	end
@@ -346,85 +339,12 @@ end)
 -- ############################################################
 -- ACTION BAR BACKGROUNDS
 -- ############################################################
--- Local aliases for module functions to work within this file
-local applyMaskToTexture = Utilities.applyMaskToTexture
-local removeMaskFromTexture = Utilities.removeMaskFromTexture
-local applyMaskToSet = Utilities.applyMaskToSet
-local removeMaskFromSet = Utilities.removeMaskFromSet
-local getMaskPath = Utilities.getMaskPath
-local getBorderPath = Utilities.getBorderPath
-local getHighlightPath = Utilities.getHighlightPath
-local getColorTable = Utilities.getColorTable
-local getFontPath = Utilities.getFontPath
-local ClearSetPoint = Utilities.ClearSetPoint
+-- Local alias for updateButtonNormalTexture used in button creation loop
 local updateButtonNormalTexture = Styling.updateButtonNormalTexture
-local applyAllTextStyling = Styling.applyAllTextStyling
-local applyBackdropPositioning = Styling.applyBackdropPositioning
-local applyTextPositioning = Styling.applyTextPositioning
 
 -- Initialize all button regions from metadata
 local function initializeButtonRegions(button)
 	ButtonStyles.InitializeButton(button)
-end
-
--- Create and apply button mask efficiently
-local function createAndApplyMask(button, maskTexture)
-	if not button then return end
-	if not button._zBBG_customMask then
-		button._zBBG_customMask = button:CreateMaskTexture()
-	end
-	button._zBBG_customMask:SetTexture(maskTexture)
-	button._zBBG_customMask:SetAllPoints(button)
-
-	-- Apply mask to all maskable elements
-	if button.icon then
-		applyMaskToTexture(button.icon, button._zBBG_customMask)
-	end
-	if button.SlotBackground then
-		applyMaskToTexture(button.SlotBackground, button._zBBG_customMask)
-	end
-	return button._zBBG_customMask
-end
-
--- Create a background layer frame with texture and optional mask
--- Consolidates the duplicated background creation logic
-local function createBackgroundLayer(button, colorData, drawLayer, drawOrder)
-	local bgFrame = CreateFrame("Frame", nil, button)
-	bgFrame:SetAllPoints(button)
-	bgFrame:SetFrameLevel(0)
-	bgFrame:SetFrameStrata("BACKGROUND")
-
-	local bgTexture = bgFrame:CreateTexture(nil, "BACKGROUND", nil, drawOrder)
-	bgTexture:SetAllPoints(bgFrame)
-	bgTexture:SetColorTexture(colorData.r, colorData.g, colorData.b, colorData.a)
-
-	return { frame = bgFrame, texture = bgTexture }
-end
-
--- Recreate and reapply mask when button style changes
-local function updateButtonMask(button, maskTexture, ...)
-	if not button or not button._zBBG_customMask then return end
-
-	-- Remove old masks from all maskable textures
-	removeMaskFromSet(button.icon, button.SlotBackground, ...)
-
-	-- Destroy and recreate mask with new texture
-	button._zBBG_customMask = button:CreateMaskTexture()
-	button._zBBG_customMask:SetTexture(maskTexture)
-	button._zBBG_customMask:SetAllPoints(button)
-
-	-- Reapply mask to all maskable elements
-	applyMaskToSet(button._zBBG_customMask, button.icon, button.SlotBackground, ...)
-
-	-- Update cooldown swipe texture when button style changes
-	if button.cooldown then
-		local buttonName = button:GetName()
-		local barName = zBarButtonBG.buttonGroups[buttonName]
-		local swipeMaskPath = ButtonStyles.GetSwipeMaskPath(barName)
-		if swipeMaskPath then
-			button.cooldown:SetSwipeTexture(swipeMaskPath, 1, 1, 1, 0.8)
-		end
-	end
 end
 
 function zBarButtonBG.removeActionBarBackgrounds()
@@ -434,7 +354,7 @@ function zBarButtonBG.removeActionBarBackgrounds()
 			if data.button then
 				-- Clean up the mask texture so it gets reapplied with the new setting
 				if data.button._zBBG_customMask then
-					removeMaskFromTexture(data.button.icon)
+					Utilities.removeMaskFromTexture(data.button.icon)
 					data.button._zBBG_customMask = nil
 				end
 				-- Clear the styled flag so button gets reprocessed
@@ -583,6 +503,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 				if showBorderForButton then
 					-- Round buttons with borders: make visible and color it
+					local borderColor = Utilities.getColorTable("borderColor", "useClassColorBorder", barName)
 					button.NormalTexture:Show()
 					button.NormalTexture:SetAlpha(1)
 					button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
