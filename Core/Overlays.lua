@@ -80,17 +80,23 @@ function Overlays.updateCooldownOverlay(button)
 		return
 	end
 
+	local overlay = button._zBBG_cooldownOverlay
+
 	if not zBarButtonBG.charSettings.fadeCooldown or not button.cooldown then
-		button._zBBG_cooldownOverlay:Hide()
+		-- Only call Hide if it's currently shown
+		if overlay:IsShown() then
+			overlay:Hide()
+		end
 		return
 	end
 
 	-- Check if the Blizzard cooldown frame is visible
-	-- If the built-in cooldown is showing, display our overlay; otherwise hide it
-	if button.cooldown:IsShown() then
-		button._zBBG_cooldownOverlay:Show()
-	else
-		button._zBBG_cooldownOverlay:Hide()
+	-- Only call Show/Hide if state needs to change
+	local cooldownShown = button.cooldown:IsShown()
+	if cooldownShown and not overlay:IsShown() then
+		overlay:Show()
+	elseif not cooldownShown and overlay:IsShown() then
+		overlay:Hide()
 	end
 end
 
@@ -104,59 +110,55 @@ function Overlays.updateRangeOverlay(button)
 		return
 	end
 
-	if not zBarButtonBG.charSettings.showRangeIndicator then
-		button._zBBG_rangeOverlay:Hide()
-		return
-	end
+	local overlay = button._zBBG_rangeOverlay
+	local shouldShow = false
 
-	-- Check if we have a valid target first
-	if not UnitExists("target") then
-		button._zBBG_rangeOverlay:Hide()
-		return
-	end
+	if zBarButtonBG.charSettings.showRangeIndicator and UnitExists("target") then
+		local inRange = nil
 
-	local inRange = nil
-
-	-- Get the action from the button - this is key!
-	local action = button.action
-	if action and action > 0 then
-		-- Regular action buttons - use WoW's native range checking
-		inRange = IsActionInRange(action, "target")
-
-		if zBarButtonBG._debug then
-			local actionType, id = GetActionInfo(action)
-			zBarButtonBG.print("Button: " ..
-				(button:GetName() or "Unknown") ..
-				", Action: " ..
-				action ..
-				", Type: " .. tostring(actionType) .. ", ID: " .. tostring(id) .. ", InRange: " .. tostring(inRange))
-		end
-	elseif button.GetAction then
-		-- Try to get action from the button (some addon buttons)
-		action = button:GetAction()
+		-- Get the action from the button - this is key!
+		local action = button.action
 		if action and action > 0 then
+			-- Regular action buttons - use WoW's native range checking
 			inRange = IsActionInRange(action, "target")
-		end
-	elseif button.spellID then
-		-- Direct spell buttons
-		if IsSpellInRange then
-			inRange = IsSpellInRange(button.spellID, "target")
-		end
-	end
 
-	-- IsActionInRange returns: true = in range, false = out of range, nil = no target/not applicable
-	if inRange == false then
-		-- Out of range - show overlay
-		button._zBBG_rangeOverlay:Show()
-		if zBarButtonBG._debug then
-			zBarButtonBG.print("Showing range overlay for " .. (button:GetName() or "Unknown"))
+			if zBarButtonBG._debug then
+				local actionType, id = GetActionInfo(action)
+				zBarButtonBG.print("Button: " ..
+					(button:GetName() or "Unknown") ..
+					", Action: " ..
+					action ..
+					", Type: " .. tostring(actionType) .. ", ID: " .. tostring(id) .. ", InRange: " .. tostring(inRange))
+			end
+		elseif button.GetAction then
+			-- Try to get action from the button (some addon buttons)
+			action = button:GetAction()
+			if action and action > 0 then
+				inRange = IsActionInRange(action, "target")
+			end
+		elseif button.spellID then
+			-- Direct spell buttons
+			if IsSpellInRange then
+				inRange = IsSpellInRange(button.spellID, "target")
+			end
 		end
-	else
-		-- In range or no valid range check - hide overlay
-		button._zBBG_rangeOverlay:Hide()
-		if zBarButtonBG._debug and inRange == true then
+
+		-- IsActionInRange returns: true = in range, false = out of range, nil = no target/not applicable
+		if inRange == false then
+			shouldShow = true
+			if zBarButtonBG._debug then
+				zBarButtonBG.print("Showing range overlay for " .. (button:GetName() or "Unknown"))
+			end
+		elseif zBarButtonBG._debug and inRange == true then
 			zBarButtonBG.print("Hiding range overlay for " .. (button:GetName() or "Unknown") .. " (in range)")
 		end
+	end
+
+	-- Only call Show/Hide if state needs to change (huge performance improvement)
+	if shouldShow and not overlay:IsShown() then
+		overlay:Show()
+	elseif not shouldShow and overlay:IsShown() then
+		overlay:Hide()
 	end
 end
 
@@ -171,15 +173,13 @@ function Overlays.setHighlightOverlay(button, barName)
 	if not button._zBBG_customHighlight then
 		button._zBBG_customHighlight = button:CreateTexture(nil, "OVERLAY")
 		button._zBBG_customHighlight:SetColorTexture(1, 0.82, 0, 0.5) -- Golden highlight
+		button._zBBG_customHighlight:SetAllPoints(button.icon)
 		button._zBBG_customHighlight:Hide()
 	end
 	
-	button._zBBG_customHighlight:ClearAllPoints()
-	button._zBBG_customHighlight:SetAllPoints(button.icon)
-	
-	-- Mask is automatically applied via button._zBBG_customMask
-	if button._zBBG_customMask then
-		Util.applyMaskToTexture(button._zBBG_customHighlight, button._zBBG_customMask)
+	-- Mask with swipe mask texture
+	if button._zBBG_swipeMask then
+		Util.applyMaskToTexture(button._zBBG_customHighlight, button._zBBG_swipeMask)
 	end
 end
 
@@ -194,11 +194,9 @@ function Overlays.setCheckedOverlay(button, barName)
 	if not button._zBBG_customChecked then
 		button._zBBG_customChecked = button:CreateTexture(nil, "OVERLAY", nil, 3)
 		button._zBBG_customChecked:SetColorTexture(0, 1, 0, 0.3) -- Green checked state
+		button._zBBG_customChecked:SetAllPoints(button.icon)
 		button._zBBG_customChecked:Hide()
 	end
-	
-	button._zBBG_customChecked:ClearAllPoints()
-	button._zBBG_customChecked:SetAllPoints(button.icon)
 	
 	if button._zBBG_customMask then
 		Util.applyMaskToTexture(button._zBBG_customChecked, button._zBBG_customMask)
@@ -216,18 +214,16 @@ function Overlays.setRangeOverlay(button, barName)
 			button._zBBG_rangeOverlay = button:CreateTexture(nil, "OVERLAY", nil, 1)
 			local c = zBarButtonBG.GetSettingInfo(barName, "rangeIndicatorColor")
 			button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+			button._zBBG_rangeOverlay:SetAllPoints(button.icon)
 			button._zBBG_rangeOverlay:Hide()
 		end
 		
-		button._zBBG_rangeOverlay:ClearAllPoints()
-		button._zBBG_rangeOverlay:SetAllPoints(button.icon)
-		
-		if button._zBBG_customMask then
-			Util.applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_customMask)
+		if button._zBBG_swipeMask then
+			Util.applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_swipeMask)
 		end
+		button._zBBG_rangeOverlay:Show()
 	elseif button._zBBG_rangeOverlay then
 		button._zBBG_rangeOverlay:Hide()
-		button._zBBG_rangeOverlay = nil
 	end
 end
 
@@ -267,15 +263,11 @@ function Overlays.setCooldownOverlay(button, barName)
 			end
 		end
 		
-		button._zBBG_cooldownOverlay:ClearAllPoints()
-		button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
-		
-		if button._zBBG_customMask then
-			Util.applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_customMask)
+		if button._zBBG_swipeMask then
+			Util.applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_swipeMask)
 		end
 	elseif button._zBBG_cooldownOverlay then
 		button._zBBG_cooldownOverlay:Hide()
-		button._zBBG_cooldownOverlay = nil
 	end
 end
 

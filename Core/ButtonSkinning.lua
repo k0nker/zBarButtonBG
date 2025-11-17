@@ -123,6 +123,13 @@ function ButtonSkinning.setButtonMask(button, barName)
 	button._zBBG_customMask:SetTexture(getMaskPath(styleName))
 	button._zBBG_customMask:SetAllPoints(button)
 	
+	-- Create swipe mask for overlays (range, highlight, cooldown)
+	if not button._zBBG_swipeMask then
+		button._zBBG_swipeMask = button:CreateMaskTexture()
+	end
+	button._zBBG_swipeMask:SetTexture(ButtonStyles.GetSwipeMaskPath(styleName))
+	button._zBBG_swipeMask:SetAllPoints(button)
+	
 	-- Apply mask to all maskable elements
 	if button.icon then
 		applyMaskToTexture(button.icon, button._zBBG_customMask)
@@ -248,6 +255,10 @@ function ButtonSkinning.setBorder(button, barName)
 	local showBorder = zBarButtonBG.GetSettingInfo(barName, "showBorder")
 	local borderColor = getColorTable("borderColor", "useClassColorBorder", barName)
 	
+	-- Cache the border setting on the button for fast lookup in frequently-called hooks
+	button._zBBG_showBorder = showBorder
+	button._zBBG_borderBarName = barName
+	
 	if showBorder then
 		if not button._zBBG_borderFrame then
 			button._zBBG_borderFrame = CreateFrame("Frame", nil, button)
@@ -338,24 +349,30 @@ function ButtonSkinning.setupHighlightInteractions(button, barName)
 	
 	button:HookScript("OnEnter", function(self)
 		if self._zBBG_customHighlight and self:GetButtonState() ~= "PUSHED" then
-			self._zBBG_customHighlight:Show()
+			if not self._zBBG_customHighlight:IsShown() then
+				self._zBBG_customHighlight:Show()
+			end
 		end
 	end)
 	button:HookScript("OnLeave", function(self)
 		if self._zBBG_customHighlight and self:GetButtonState() ~= "PUSHED" then
-			self._zBBG_customHighlight:Hide()
+			if self._zBBG_customHighlight:IsShown() then
+				self._zBBG_customHighlight:Hide()
+			end
 		end
 	end)
 	
 	button:HookScript("OnMouseDown", function(self)
 		if self._zBBG_customHighlight then
-			self._zBBG_customHighlight:Show()
+			if not self._zBBG_customHighlight:IsShown() then
+				self._zBBG_customHighlight:Show()
+			end
 		end
 	end)
 	button:HookScript("OnMouseUp", function(self)
 		if self._zBBG_customHighlight then
 			local cursorType = GetCursorInfo()
-			if not self:IsMouseOver() or cursorType then
+			if (not self:IsMouseOver() or cursorType) and self._zBBG_customHighlight:IsShown() then
 				self._zBBG_customHighlight:Hide()
 			end
 		end
@@ -364,9 +381,13 @@ function ButtonSkinning.setupHighlightInteractions(button, barName)
 	hooksecurefunc(button, "SetButtonState", function(self, state)
 		if self._zBBG_customHighlight then
 			if state == "PUSHED" then
-				self._zBBG_customHighlight:Show()
+				if not self._zBBG_customHighlight:IsShown() then
+					self._zBBG_customHighlight:Show()
+				end
 			elseif state == "NORMAL" and not self:IsMouseOver() then
-				self._zBBG_customHighlight:Hide()
+				if self._zBBG_customHighlight:IsShown() then
+					self._zBBG_customHighlight:Hide()
+				end
 			end
 		end
 	end)
@@ -380,9 +401,12 @@ function ButtonSkinning.setupCheckedInteractions(button, barName)
 	
 	local function updateCheckedState(self)
 		if self._zBBG_customChecked then
-			if self:GetChecked() then
+			local shouldShow = self:GetChecked()
+			local isShown = self._zBBG_customChecked:IsShown()
+			
+			if shouldShow and not isShown then
 				self._zBBG_customChecked:Show()
-			else
+			elseif not shouldShow and isShown then
 				self._zBBG_customChecked:Hide()
 			end
 		end

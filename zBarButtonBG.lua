@@ -515,19 +515,55 @@ function zBarButtonBG.createActionBarBackgrounds()
 		-- Keep it invisible when we want square buttons, or color it when we need borders
 		local function manageNormalTexture(button)
 			if button and button.NormalTexture and button._zBBG_styled and zBarButtonBG.enabled then
-				local buttonName = button:GetName()
-				local barName = zBarButtonBG.buttonGroups[buttonName]
-				local showBorderForButton = zBarButtonBG.GetSettingInfo(barName, "showBorder")
+				-- Use cached border setting from last setBorder call instead of calling GetSettingInfo every time
+				local showBorderForButton = button._zBBG_showBorder
+				
+				-- If cache doesn't exist, fall back to GetSettingInfo (shouldn't happen but safe fallback)
+				if showBorderForButton == nil then
+					local buttonName = button:GetName()
+					local barName = zBarButtonBG.buttonGroups[buttonName]
+					showBorderForButton = zBarButtonBG.GetSettingInfo(barName, "showBorder")
+				end
 
+				-- Cache current state to avoid redundant texture operations
+				local normalTexture = button.NormalTexture
+				local currentAlpha = normalTexture:GetAlpha()
+				
 				if showBorderForButton then
 					-- Round buttons with borders: make visible and color it
+					-- Only call Show if it's not already shown
+					if currentAlpha == 0 then
+						normalTexture:Show()
+					end
+					
+					-- Get border color and update vertex color
+					local barName = button._zBBG_borderBarName
+					if not barName then
+						local buttonName = button:GetName()
+						barName = zBarButtonBG.buttonGroups[buttonName]
+					end
 					local borderColor = Utilities.getColorTable("borderColor", "useClassColorBorder", barName)
-					button.NormalTexture:Show()
-					button.NormalTexture:SetAlpha(1)
-					button.NormalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+					
+					-- Cache previous color to avoid redundant SetVertexColor calls
+					if not button._zBBG_borderColorCache or 
+					   button._zBBG_borderColorCache.r ~= borderColor.r or
+					   button._zBBG_borderColorCache.g ~= borderColor.g or
+					   button._zBBG_borderColorCache.b ~= borderColor.b or
+					   button._zBBG_borderColorCache.a ~= borderColor.a then
+						normalTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+						button._zBBG_borderColorCache = {r = borderColor.r, g = borderColor.g, b = borderColor.b, a = borderColor.a}
+					end
+					
+					-- Set alpha to 1 if not already
+					if currentAlpha ~= 1 then
+						normalTexture:SetAlpha(1)
+					end
 				else
 					-- Round buttons without borders: make it transparent
-					button.NormalTexture:SetAlpha(0)
+					-- Only call SetAlpha if it's not already 0
+					if currentAlpha ~= 0 then
+						normalTexture:SetAlpha(0)
+					end
 				end
 			end
 		end
