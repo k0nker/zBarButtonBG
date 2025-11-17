@@ -281,3 +281,10 @@ L["Action bar backgrounds disabled"] = "Action bar backgrounds disabled"
 -- ############################################################
 L["Value must be a number"] = "Value must be a number"
 L["Value must be between -50 and 50"] = "Value must be between -50 and 50"
+
+-- ############################################################
+-- Bar Settings
+-- ############################################################
+L["Action Bars"] = "Action Bars"
+L["Here you can select action bars to have their own profiles applied independent of the currently selected profile."] = "Here you can select action bars to have their own profiles applied independent of the currently selected profile."
+L["Main Action Bar"] = "Main Action Bar"

@@ -239,7 +239,7 @@ function zBarButtonBGAce:GetOptionsTable()
 			},
 			]]--
 			general = {
-				order = 1,
+				order = nextOrderNumber(),
 				type = "group",
 				name = L["General"],
 				args = {
@@ -548,7 +548,7 @@ function zBarButtonBGAce:GetOptionsTable()
 				},
 			},
 			buttonSettings = {
-				order = 2,
+				order = nextOrderNumber(),
 				type = "group",
 				name = "Buttons",
 				args = {
@@ -907,7 +907,7 @@ function zBarButtonBGAce:GetOptionsTable()
 				},
 			},
 			indicators = {
-				order = 3,
+				order = nextOrderNumber(),
 				type = "group",
 				name = "Indicators",
 				args = {
@@ -1095,7 +1095,7 @@ function zBarButtonBGAce:GetOptionsTable()
 				},
 			},
 			textSettings = {
-				order = 4,
+				order = nextOrderNumber(),
 				type = "group",
 				name = "Text Fields",
 				args = {
@@ -1801,6 +1801,28 @@ function zBarButtonBGAce:GetOptionsTable()
 							end
 							return true
 						end,
+					},
+				},
+			},
+			barSettings = {
+				order = nextOrderNumber(),
+				type = "group",
+				name = L["Action Bars"],
+				args = {
+					actionBarDesc = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = L["Here you can select action bars to have their own profiles applied independent of the currently selected profile."],
+					},
+					actionBarHeader = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = L["Action Bars"],
+					},
+					mainActionBarHeader = {
+						order = nextOrderNumber(),
+						type = "description",
+						name = L["Main Action Bar"],
 					},
 				},
 			},
