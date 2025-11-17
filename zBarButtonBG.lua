@@ -689,8 +689,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 				local alert = actionButton.SpellActivationAlert
 
+				-- Get the button's bar name for per-bar settings
+				local buttonNameForStyle = actionButton:GetName()
+				local barNameForStyle = zBarButtonBG.buttonGroups[buttonNameForStyle]
+
 				-- Get the button style's flipbook textures
-				local styleName = zBarButtonBG.GetSettingInfo(barName, "buttonStyle") or "Square"
+				local styleName = zBarButtonBG.GetSettingInfo(barNameForStyle, "buttonStyle") or "Square"
 				local procFlipbookTexture = ButtonStyles.GetProcFlipbookPath(styleName)
 				local buttonWidth, buttonHeight = actionButton:GetSize()
 				-- Alert frame should be a little.. smaller, so the countdown covers it
