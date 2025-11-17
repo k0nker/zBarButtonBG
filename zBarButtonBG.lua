@@ -162,6 +162,71 @@ function zBarButtonBGAce:DeleteProfile(profileName)
 end
 
 -- ############################################################
+-- Setting retrieval with per-bar profile support
+-- ############################################################
+
+-- Main helper: Get a setting value for a specific bar
+-- Checks if bar has a different profile assigned, otherwise uses global profile
+function zBarButtonBG.GetSettingInfo(barName, settingName)
+	-- Start with the global profile
+	local profileToUse = zBarButtonBGAce.db:GetCurrentProfile()
+	
+	-- Check if this bar has been set to use a different profile
+	if zBarButtonBGAce.db.char and zBarButtonBGAce.db.char.barSettings and zBarButtonBGAce.db.char.barSettings[barName] then
+		local barSetting = zBarButtonBGAce.db.char.barSettings[barName]
+		if barSetting.differentProfile then
+			-- This bar uses a custom profile
+			profileToUse = barSetting.profileName
+		end
+	end
+	
+	-- Get the profile object
+	local profile = zBarButtonBGAce.db.profiles[profileToUse]
+	
+	-- If profile doesn't exist, fall back to current profile
+	if not profile then
+		profile = zBarButtonBGAce.db.profile
+	end
+	
+	-- Get the setting from the profile
+	local value = profile[settingName]
+	
+	-- If setting is nil, fall back to defaults
+	if value == nil then
+		value = addonTable.Core.Defaults.profile[settingName]
+	end
+	
+	return value
+end
+
+-- Helper: Extract bar base name from button name
+-- e.g. "ActionButton5" -> "ActionButton", "MultiBarBottomLeftButton3" -> "MultiBarBottomLeftButton"
+function zBarButtonBG.GetBarNameFromButton(buttonName)
+	if not buttonName then return nil end
+	
+	local barBases = {
+		"ActionButton",
+		"MultiBarBottomLeftButton",
+		"MultiBarBottomRightButton",
+		"MultiBarRightButton",
+		"MultiBarLeftButton",
+		"MultiBar5Button",
+		"MultiBar6Button",
+		"MultiBar7Button",
+		"PetActionButton",
+		"StanceButton",
+	}
+	
+	for _, baseName in ipairs(barBases) do
+		if buttonName:sub(1, #baseName) == baseName then
+			return baseName
+		end
+	end
+	
+	return nil
+end
+
+-- ############################################################
 -- Command and toggle functions
 -- ############################################################
 
@@ -441,7 +506,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if zBarButtonBG.charSettings.showRangeIndicator then
 						if not button._zBBG_rangeOverlay then
 							button._zBBG_rangeOverlay = button:CreateTexture(nil, "BACKGROUND", nil, 0)
-							local c = zBarButtonBG.charSettings.rangeIndicatorColor
+							local barName = zBarButtonBG.GetBarNameFromButton(buttonName)
+							local c = zBarButtonBG.GetSettingInfo(barName, "rangeIndicatorColor")
 							button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
 							button._zBBG_rangeOverlay:Hide() -- Hidden by default
 						end
@@ -461,7 +527,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 					if zBarButtonBG.midnightCooldown and zBarButtonBG.charSettings.fadeCooldown then
 					if not button._zBBG_cooldownOverlay then
 						button._zBBG_cooldownOverlay = button:CreateTexture(nil, "BACKGROUND", nil, 1)
-						local c = zBarButtonBG.charSettings.cooldownColor
+						local barName = zBarButtonBG.GetBarNameFromButton(buttonName)
+						local c = zBarButtonBG.GetSettingInfo(barName, "cooldownColor")
 						button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
 						button._zBBG_cooldownOverlay:Hide() -- Hidden by default							-- Hook the cooldown frame's Show/Hide scripts to instantly sync our overlay
 							-- This fires immediately when the Blizzard cooldown shows/hides
@@ -701,7 +768,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 					button._zBBG_animationHooked = true
 				end					-- Replace the beveled SlotBackground with a flat texture if borders are enabled
 					if button.SlotBackground then
-						if zBarButtonBG.charSettings.showBorder then
+						local barName = zBarButtonBG.GetBarNameFromButton(buttonName)
+						if zBarButtonBG.GetSettingInfo(barName, "showBorder") then
 							-- Use a flat white texture we can make transparent
 							button.SlotBackground:SetTexture("Interface/Buttons/WHITE8X8")
 							button.SlotBackground:SetVertexColor(0, 0, 0, 0)
@@ -734,7 +802,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 					-- Create the outer background frame that extends 5px past the button edges (if enabled)
 					local outerFrame, outerBg
-					if zBarButtonBG.charSettings.showBackdrop then
+					local barName = zBarButtonBG.GetBarNameFromButton(buttonName)
+					if zBarButtonBG.GetSettingInfo(barName, "showBackdrop") then
 						outerFrame = CreateFrame("Frame", nil, button)
 						applyBackdropPositioning(outerFrame, button)
 						outerFrame:SetFrameLevel(0)
@@ -748,7 +817,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 					-- Create the inner background that sits right behind the button (if enabled)
 					local bgFrame, bg
-					if zBarButtonBG.charSettings.showSlotBackground then
+					if zBarButtonBG.GetSettingInfo(barName, "showSlotBackground") then
 						local bgData = createBackgroundLayer(button, innerColor, "BACKGROUND", -7)
 						bgFrame = bgData.frame
 						bg = bgData.texture
@@ -761,7 +830,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 					-- Create the border if that option is turned on
 					local borderFrame, customBorderTexture
-					if zBarButtonBG.charSettings.showBorder and button.icon and button:IsShown() then
+					if zBarButtonBG.GetSettingInfo(barName, "showBorder") and button.icon and button:IsShown() then
 						-- Create a frame to hold the custom border texture
 						borderFrame = CreateFrame("Frame", nil, button)
 						borderFrame:SetAllPoints(button)

@@ -198,6 +198,15 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 end
 
 function zBarButtonBGAce:GetOptionsTable()
+	-- Helper function to get profile list for dropdowns
+	local function getProfileList()
+		local profiles = {}
+		for profileName, _ in pairs(self.db.profiles) do
+			profiles[profileName] = profileName
+		end
+		return profiles
+	end
+
 	local options = {
 		type = "group",
 		name = "zBarButtonBG",
@@ -1819,10 +1828,587 @@ function zBarButtonBGAce:GetOptionsTable()
 						type = "header",
 						name = L["Action Bars"],
 					},
+					-- Main Action Bar
 					mainActionBarHeader = {
 						order = nextOrderNumber(),
-						type = "description",
+						type = "header",
 						name = L["Main Action Bar"],
+					},
+					mainActionBarToggle = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Use Different Profile"],
+						desc = L["Select which profile to use"],
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["ActionButton"] then
+								return self.db.char.barSettings["ActionButton"].differentProfile or false
+							end
+							return false
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["ActionButton"] then
+								self.db.char.barSettings["ActionButton"] = {}
+							end
+							self.db.char.barSettings["ActionButton"].differentProfile = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					mainActionBarProfile = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = L["Profile"],
+						desc = L["Select which profile to use"],
+						values = getProfileList,
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["ActionButton"] then
+								return self.db.char.barSettings["ActionButton"].profileName or self.db:GetCurrentProfile()
+							end
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["ActionButton"] then
+								self.db.char.barSettings["ActionButton"] = {}
+							end
+							self.db.char.barSettings["ActionButton"].profileName = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+						disabled = function()
+							return not (self.db.char and self.db.char.barSettings and self.db.char.barSettings["ActionButton"] and self.db.char.barSettings["ActionButton"].differentProfile)
+						end,
+					},
+					-- Bottom Left Bar
+					bottomLeftBarHeader = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = L["Bottom Left Bar"],
+					},
+					bottomLeftBarToggle = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Use Different Profile"],
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarBottomLeftButton"] then
+								return self.db.char.barSettings["MultiBarBottomLeftButton"].differentProfile or false
+							end
+							return false
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBarBottomLeftButton"] then
+								self.db.char.barSettings["MultiBarBottomLeftButton"] = {}
+							end
+							self.db.char.barSettings["MultiBarBottomLeftButton"].differentProfile = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					bottomLeftBarProfile = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = L["Profile"],
+						values = getProfileList,
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarBottomLeftButton"] then
+								return self.db.char.barSettings["MultiBarBottomLeftButton"].profileName or self.db:GetCurrentProfile()
+							end
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBarBottomLeftButton"] then
+								self.db.char.barSettings["MultiBarBottomLeftButton"] = {}
+							end
+							self.db.char.barSettings["MultiBarBottomLeftButton"].profileName = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+						disabled = function()
+							return not (self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarBottomLeftButton"] and self.db.char.barSettings["MultiBarBottomLeftButton"].differentProfile)
+						end,
+					},
+					-- Bottom Right Bar
+					bottomRightBarHeader = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = L["Bottom Right Bar"],
+					},
+					bottomRightBarToggle = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Use Different Profile"],
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarBottomRightButton"] then
+								return self.db.char.barSettings["MultiBarBottomRightButton"].differentProfile or false
+							end
+							return false
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBarBottomRightButton"] then
+								self.db.char.barSettings["MultiBarBottomRightButton"] = {}
+							end
+							self.db.char.barSettings["MultiBarBottomRightButton"].differentProfile = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					bottomRightBarProfile = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = L["Profile"],
+						values = getProfileList,
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarBottomRightButton"] then
+								return self.db.char.barSettings["MultiBarBottomRightButton"].profileName or self.db:GetCurrentProfile()
+							end
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBarBottomRightButton"] then
+								self.db.char.barSettings["MultiBarBottomRightButton"] = {}
+							end
+							self.db.char.barSettings["MultiBarBottomRightButton"].profileName = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+						disabled = function()
+							return not (self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarBottomRightButton"] and self.db.char.barSettings["MultiBarBottomRightButton"].differentProfile)
+						end,
+					},
+					-- Right Bar 1
+					rightBar1Header = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = L["Right Bar 1"],
+					},
+					rightBar1Toggle = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Use Different Profile"],
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarRightButton"] then
+								return self.db.char.barSettings["MultiBarRightButton"].differentProfile or false
+							end
+							return false
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBarRightButton"] then
+								self.db.char.barSettings["MultiBarRightButton"] = {}
+							end
+							self.db.char.barSettings["MultiBarRightButton"].differentProfile = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					rightBar1Profile = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = L["Profile"],
+						values = getProfileList,
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarRightButton"] then
+								return self.db.char.barSettings["MultiBarRightButton"].profileName or self.db:GetCurrentProfile()
+							end
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBarRightButton"] then
+								self.db.char.barSettings["MultiBarRightButton"] = {}
+							end
+							self.db.char.barSettings["MultiBarRightButton"].profileName = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+						disabled = function()
+							return not (self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarRightButton"] and self.db.char.barSettings["MultiBarRightButton"].differentProfile)
+						end,
+					},
+					-- Right Bar 2
+					rightBar2Header = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = L["Right Bar 2"],
+					},
+					rightBar2Toggle = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Use Different Profile"],
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarLeftButton"] then
+								return self.db.char.barSettings["MultiBarLeftButton"].differentProfile or false
+							end
+							return false
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBarLeftButton"] then
+								self.db.char.barSettings["MultiBarLeftButton"] = {}
+							end
+							self.db.char.barSettings["MultiBarLeftButton"].differentProfile = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					rightBar2Profile = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = L["Profile"],
+						values = getProfileList,
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarLeftButton"] then
+								return self.db.char.barSettings["MultiBarLeftButton"].profileName or self.db:GetCurrentProfile()
+							end
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBarLeftButton"] then
+								self.db.char.barSettings["MultiBarLeftButton"] = {}
+							end
+							self.db.char.barSettings["MultiBarLeftButton"].profileName = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+						disabled = function()
+							return not (self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBarLeftButton"] and self.db.char.barSettings["MultiBarLeftButton"].differentProfile)
+						end,
+					},
+					-- Bar 5
+					bar5Header = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = L["Bar 5"],
+					},
+					bar5Toggle = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Use Different Profile"],
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBar5Button"] then
+								return self.db.char.barSettings["MultiBar5Button"].differentProfile or false
+							end
+							return false
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBar5Button"] then
+								self.db.char.barSettings["MultiBar5Button"] = {}
+							end
+							self.db.char.barSettings["MultiBar5Button"].differentProfile = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					bar5Profile = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = L["Profile"],
+						values = getProfileList,
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBar5Button"] then
+								return self.db.char.barSettings["MultiBar5Button"].profileName or self.db:GetCurrentProfile()
+							end
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBar5Button"] then
+								self.db.char.barSettings["MultiBar5Button"] = {}
+							end
+							self.db.char.barSettings["MultiBar5Button"].profileName = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+						disabled = function()
+							return not (self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBar5Button"] and self.db.char.barSettings["MultiBar5Button"].differentProfile)
+						end,
+					},
+					-- Bar 6
+					bar6Header = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = L["Bar 6"],
+					},
+					bar6Toggle = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Use Different Profile"],
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBar6Button"] then
+								return self.db.char.barSettings["MultiBar6Button"].differentProfile or false
+							end
+							return false
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBar6Button"] then
+								self.db.char.barSettings["MultiBar6Button"] = {}
+							end
+							self.db.char.barSettings["MultiBar6Button"].differentProfile = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					bar6Profile = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = L["Profile"],
+						values = getProfileList,
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBar6Button"] then
+								return self.db.char.barSettings["MultiBar6Button"].profileName or self.db:GetCurrentProfile()
+							end
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBar6Button"] then
+								self.db.char.barSettings["MultiBar6Button"] = {}
+							end
+							self.db.char.barSettings["MultiBar6Button"].profileName = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+						disabled = function()
+							return not (self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBar6Button"] and self.db.char.barSettings["MultiBar6Button"].differentProfile)
+						end,
+					},
+					-- Bar 7
+					bar7Header = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = L["Bar 7"],
+					},
+					bar7Toggle = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Use Different Profile"],
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBar7Button"] then
+								return self.db.char.barSettings["MultiBar7Button"].differentProfile or false
+							end
+							return false
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBar7Button"] then
+								self.db.char.barSettings["MultiBar7Button"] = {}
+							end
+							self.db.char.barSettings["MultiBar7Button"].differentProfile = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					bar7Profile = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = L["Profile"],
+						values = getProfileList,
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBar7Button"] then
+								return self.db.char.barSettings["MultiBar7Button"].profileName or self.db:GetCurrentProfile()
+							end
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["MultiBar7Button"] then
+								self.db.char.barSettings["MultiBar7Button"] = {}
+							end
+							self.db.char.barSettings["MultiBar7Button"].profileName = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+						disabled = function()
+							return not (self.db.char and self.db.char.barSettings and self.db.char.barSettings["MultiBar7Button"] and self.db.char.barSettings["MultiBar7Button"].differentProfile)
+						end,
+					},
+					-- Pet Action Bar
+					petBarHeader = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = L["Pet Action Bar"],
+					},
+					petBarToggle = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Use Different Profile"],
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["PetActionButton"] then
+								return self.db.char.barSettings["PetActionButton"].differentProfile or false
+							end
+							return false
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["PetActionButton"] then
+								self.db.char.barSettings["PetActionButton"] = {}
+							end
+							self.db.char.barSettings["PetActionButton"].differentProfile = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					petBarProfile = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = L["Profile"],
+						values = getProfileList,
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["PetActionButton"] then
+								return self.db.char.barSettings["PetActionButton"].profileName or self.db:GetCurrentProfile()
+							end
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["PetActionButton"] then
+								self.db.char.barSettings["PetActionButton"] = {}
+							end
+							self.db.char.barSettings["PetActionButton"].profileName = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+						disabled = function()
+							return not (self.db.char and self.db.char.barSettings and self.db.char.barSettings["PetActionButton"] and self.db.char.barSettings["PetActionButton"].differentProfile)
+						end,
+					},
+					-- Stance Bar
+					stanceBarHeader = {
+						order = nextOrderNumber(),
+						type = "header",
+						name = L["Stance Bar"],
+					},
+					stanceBarToggle = {
+						order = nextOrderNumber(),
+						type = "toggle",
+						name = L["Use Different Profile"],
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["StanceButton"] then
+								return self.db.char.barSettings["StanceButton"].differentProfile or false
+							end
+							return false
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["StanceButton"] then
+								self.db.char.barSettings["StanceButton"] = {}
+							end
+							self.db.char.barSettings["StanceButton"].differentProfile = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+					},
+					stanceBarProfile = {
+						order = nextOrderNumber(),
+						type = "select",
+						name = L["Profile"],
+						values = getProfileList,
+						get = function(info)
+							if self.db.char and self.db.char.barSettings and self.db.char.barSettings["StanceButton"] then
+								return self.db.char.barSettings["StanceButton"].profileName or self.db:GetCurrentProfile()
+							end
+							return self.db:GetCurrentProfile()
+						end,
+						set = function(info, value)
+							if not self.db.char.barSettings then
+								self.db.char.barSettings = {}
+							end
+							if not self.db.char.barSettings["StanceButton"] then
+								self.db.char.barSettings["StanceButton"] = {}
+							end
+							self.db.char.barSettings["StanceButton"].profileName = value
+							if zBarButtonBG.enabled then
+								zBarButtonBG.removeActionBarBackgrounds()
+								zBarButtonBG.createActionBarBackgrounds()
+							end
+						end,
+						disabled = function()
+							return not (self.db.char and self.db.char.barSettings and self.db.char.barSettings["StanceButton"] and self.db.char.barSettings["StanceButton"].differentProfile)
+						end,
 					},
 				},
 			},
