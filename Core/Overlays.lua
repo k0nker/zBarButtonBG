@@ -113,34 +113,25 @@ function Overlays.updateRangeOverlay(button)
 	local overlay = button._zBBG_rangeOverlay
 	local shouldShow = false
 
+	-- Early exit if button has no action - most buttons are empty so this saves a lot of work
+	if not button.action or button.action <= 0 then
+		-- Empty button - just hide overlay if it's shown
+		if overlay:IsShown() then
+			overlay:Hide()
+		end
+		return
+	end
+
 	if zBarButtonBG.charSettings.showRangeIndicator and UnitExists("target") then
-		local inRange = nil
+		local inRange = IsActionInRange(button.action, "target")
 
-		-- Get the action from the button - this is key!
-		local action = button.action
-		if action and action > 0 then
-			-- Regular action buttons - use WoW's native range checking
-			inRange = IsActionInRange(action, "target")
-
-			if zBarButtonBG._debug then
-				local actionType, id = GetActionInfo(action)
-				zBarButtonBG.print("Button: " ..
-					(button:GetName() or "Unknown") ..
-					", Action: " ..
-					action ..
-					", Type: " .. tostring(actionType) .. ", ID: " .. tostring(id) .. ", InRange: " .. tostring(inRange))
-			end
-		elseif button.GetAction then
-			-- Try to get action from the button (some addon buttons)
-			action = button:GetAction()
-			if action and action > 0 then
-				inRange = IsActionInRange(action, "target")
-			end
-		elseif button.spellID then
-			-- Direct spell buttons
-			if IsSpellInRange then
-				inRange = IsSpellInRange(button.spellID, "target")
-			end
+		if zBarButtonBG._debug then
+			local actionType, id = GetActionInfo(button.action)
+			zBarButtonBG.print("Button: " ..
+				(button:GetName() or "Unknown") ..
+				", Action: " ..
+				button.action ..
+				", Type: " .. tostring(actionType) .. ", ID: " .. tostring(id) .. ", InRange: " .. tostring(inRange))
 		end
 
 		-- IsActionInRange returns: true = in range, false = out of range, nil = no target/not applicable
@@ -154,7 +145,7 @@ function Overlays.updateRangeOverlay(button)
 		end
 	end
 
-	-- Only call Show/Hide if state needs to change (huge performance improvement)
+	-- Only call Show/Hide if state needs to change
 	if shouldShow and not overlay:IsShown() then
 		overlay:Show()
 	elseif not shouldShow and overlay:IsShown() then
@@ -263,6 +254,11 @@ function Overlays.setCooldownOverlay(button, barName)
 			end
 		end
 		
+		-- Position overlay over the icon
+		button._zBBG_cooldownOverlay:ClearAllPoints()
+		button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
+		
+		-- Apply the button shape mask (uses customMask for the button shape)
 		if button._zBBG_swipeMask then
 			Util.applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_swipeMask)
 		end

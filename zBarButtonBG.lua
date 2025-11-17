@@ -29,6 +29,19 @@ zBarButtonBG.midnightCooldown = Constants.MIDNIGHT_COOLDOWN
 zBarButtonBG.enabled = false
 zBarButtonBG.frames = {}
 
+-- Debug hook call counters for performance profiling
+zBarButtonBG._hookCallCounts = {
+	rangeIndicator = 0,
+	cooldown = 0,
+	cooldownFrameSet = 0,
+	usable = 0,
+	update = 0,
+	state = 0,
+	onEvent = 0,
+}
+zBarButtonBG._lastHookReportTime = 0
+
+
 -- Organize buttons into groups by their bar
 -- Format: buttonName -> barName (e.g., "ActionButton5" -> "ActionButton")
 zBarButtonBG.buttonGroups = {}
@@ -268,6 +281,34 @@ end
 -- ############################################################
 -- Command and toggle functions
 -- ############################################################
+
+-- Print hook call statistics for debugging performance
+function zBarButtonBG.printHookStats()
+	local now = GetTime()
+	local elapsed = now - (zBarButtonBG._lastHookReportTime or 0)
+	
+	if elapsed < 1 then
+		zBarButtonBG.print("Please wait at least 1 second between reports")
+		return
+	end
+	
+	zBarButtonBG._lastHookReportTime = now
+	
+	local counts = zBarButtonBG._hookCallCounts
+	zBarButtonBG.print("=== Hook Call Counts (per second) ===")
+	zBarButtonBG.print(string.format("ActionButton_UpdateRangeIndicator: %d/sec", counts.rangeIndicator / (elapsed or 1)))
+	zBarButtonBG.print(string.format("ActionButton_UpdateCooldown: %d/sec", counts.cooldown / (elapsed or 1)))
+	zBarButtonBG.print(string.format("CooldownFrame_Set: %d/sec", counts.cooldownFrameSet / (elapsed or 1)))
+	zBarButtonBG.print(string.format("ActionButton_UpdateUsable: %d/sec", counts.usable / (elapsed or 1)))
+	zBarButtonBG.print(string.format("ActionButton_Update: %d/sec", counts.update / (elapsed or 1)))
+	zBarButtonBG.print(string.format("ActionButton_UpdateState: %d/sec", counts.state / (elapsed or 1)))
+	zBarButtonBG.print(string.format("ActionButton_OnEvent: %d/sec", counts.onEvent / (elapsed or 1)))
+	
+	-- Reset counters
+	for key in pairs(counts) do
+		counts[key] = 0
+	end
+end
 
 -- Toggle command - turn backgrounds on/off
 function zBarButtonBG.toggle()
@@ -569,65 +610,74 @@ function zBarButtonBG.createActionBarBackgrounds()
 		end
 
 		-- Hook the range indicator function - this runs whenever WoW checks range
-		hooksecurefunc("ActionButton_UpdateRangeIndicator", manageNormalTexture)
-
-		-- Piggyback on WoW's range checking instead of doing our own
+		-- Combine both manageNormalTexture and updateRangeOverlay into a single hook
+		-- to avoid calling the hook function twice for the same event
+		-- Add per-button throttling to reduce range check frequency
+		local rangeCheckThrottle = 0
 		hooksecurefunc("ActionButton_UpdateRangeIndicator", function(button)
 			if button and button._zBBG_styled and zBarButtonBG.enabled then
-				-- Debug spam to see what's happening
 				if zBarButtonBG._debug then
-					local buttonName = button:GetName() or "Unknown"
-					local hasTarget = UnitExists("target")
-					local action = button.action
-					local inRange = action and IsActionInRange(action, "target")
-					zBarButtonBG.print("Range update for " ..
-						buttonName ..
-						" - Target: " ..
-						tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
+					zBarButtonBG._hookCallCounts.rangeIndicator = (zBarButtonBG._hookCallCounts.rangeIndicator or 0) + 1
 				end
-				zBarButtonBG.updateRangeOverlay(button)
+				manageNormalTexture(button)
+				
+				-- Throttle range overlay updates - only check every 2 ticks to reduce CPU usage
+				-- This is safe because range doesn't change that frequently during combat
+				rangeCheckThrottle = (rangeCheckThrottle or 0) + 1
+				if rangeCheckThrottle >= 2 then
+					rangeCheckThrottle = 0
+					
+					-- Debug spam to see what's happening
+					if zBarButtonBG._debug then
+						local buttonName = button:GetName() or "Unknown"
+						local hasTarget = UnitExists("target")
+						local action = button.action
+						local inRange = action and IsActionInRange(action, "target")
+						zBarButtonBG.print("Range update for " ..
+							buttonName ..
+							" - Target: " ..
+							tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
+					end
+					zBarButtonBG.updateRangeOverlay(button)
+				end
 			end
 		end)
 
-		-- Hook cooldown updates so we can show/hide our fade overlay
-		hooksecurefunc("ActionButton_UpdateCooldown", function(button)
-			if button and button._zBBG_cooldownOverlay and button._zBBG_styled and zBarButtonBG.enabled then
-				zBarButtonBG.updateCooldownOverlay(button)
-			end
-		end)
-
-		-- Also catch the general cooldown frame stuff
-		hooksecurefunc("CooldownFrame_Set", function(cooldown, start, duration, enable, forceShowDrawEdge, modRate)
-			if cooldown and cooldown:GetParent() and cooldown:GetParent()._zBBG_styled and zBarButtonBG.enabled then
-				zBarButtonBG.updateCooldownOverlay(cooldown:GetParent())
-			end
-		end)
+		-- Cooldown frame OnShow/OnHide hooks in setCooldownOverlay handle overlay visibility directly
+		-- No need to throttle ActionButton_UpdateCooldown since the cooldown frame hooks are instant
 
 		-- Hook usability updates - way better than spamming events everywhere
 		-- WoW calls this when stuff like mana or range changes
 		if ActionButton_UpdateUsable then
+			-- Add throttling for range overlay to reduce frequency of expensive IsActionInRange calls
+			local usableRangeThrottle = 0
 			hooksecurefunc("ActionButton_UpdateUsable", function(button)
 				if button and button._zBBG_styled and zBarButtonBG.enabled then
-					-- Fix range overlay when usability changes
-					if button._zBBG_rangeOverlay then
-						zBarButtonBG.updateRangeOverlay(button)
+					if zBarButtonBG._debug then
+						zBarButtonBG._hookCallCounts.usable = (zBarButtonBG._hookCallCounts.usable or 0) + 1
 					end
-					-- Keep normal texture in line
+					-- Keep normal texture in line (fast operation)
 					manageNormalTexture(button)
+					
+					-- Throttle range overlay updates - only check every 3 ticks
+					if button._zBBG_rangeOverlay then
+						usableRangeThrottle = (usableRangeThrottle or 0) + 1
+						if usableRangeThrottle >= 3 then
+							usableRangeThrottle = 0
+							zBarButtonBG.updateRangeOverlay(button)
+						end
+					end
 				end
 			end)
 		end
 
 		-- Hook main action updates - catches when buttons get new spells (like mounting)
+		-- Note: Range updates are already handled by ActionButton_UpdateRangeIndicator hook, so we skip redundant calls
 		if ActionButton_Update then
 			hooksecurefunc("ActionButton_Update", function(button)
 				if button and button._zBBG_styled and zBarButtonBG.enabled then
-					-- Update range overlay since the action probably changed
-					if button._zBBG_rangeOverlay then
-						zBarButtonBG.updateRangeOverlay(button)
-					end
-					-- Fix normal texture too
-					--manageNormalTexture(button)
+					-- Just update normal texture state when action changes
+					manageNormalTexture(button)
 				end
 			end)
 		end
@@ -636,6 +686,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 		if ActionButton_UpdateState then
 			hooksecurefunc("ActionButton_UpdateState", function(button)
 				if button and button._zBBG_styled and zBarButtonBG.enabled then
+					if zBarButtonBG._debug then
+						zBarButtonBG._hookCallCounts.state = (zBarButtonBG._hookCallCounts.state or 0) + 1
+					end
 					manageNormalTexture(button)
 				end
 			end)
@@ -647,10 +700,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 			hooksecurefunc("ActionButton_OnEvent", function(button, event, ...)
 				if button and button._zBBG_styled and zBarButtonBG.enabled then
 					if event == "ACTIONBAR_SLOT_CHANGED" or event == "UPDATE_BINDINGS" then
-						-- Update range when the button's action or bindings change
-						if button._zBBG_rangeOverlay then
-							zBarButtonBG.updateRangeOverlay(button)
-						end
+						-- Just update normal texture state, range is handled by ActionButton_UpdateRangeIndicator
 						manageNormalTexture(button)
 					end
 				end

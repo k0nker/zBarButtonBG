@@ -34,8 +34,10 @@ function Init.registerCommands()
 		elseif msg == "hooks" then
 			zBarButtonBG.print("Hook status: " ..
 				(zBarButtonBG.hooksInstalled and "|cFF00FF00installed|r" or "|cFFFF0000not installed|r"))
+		elseif msg == "hookstats" then
+			zBarButtonBG.printHookStats()
 		else
-			zBarButtonBG.print("Available commands: /zbbg debug, /zbbg hooks")
+			zBarButtonBG.print("Available commands: /zbbg debug, /zbbg hooks, /zbbg hookstats")
 		end
 	end
 
