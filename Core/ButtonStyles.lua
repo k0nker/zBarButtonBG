@@ -155,71 +155,71 @@ ButtonStyles.styles = {
 	["Rounded"] = {
 		nameKey = "Rounded",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Rounded",
-		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Rounded",
+		swipeMaskTexture = ASSETS_PATH .. "ButtonIconSwipe_Rounded",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Rounded",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Rounded",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_Rounded",
-		suggestedFlipbookTexture = ASSETS_PATH .. "SuggestedFlipbook_Rounded",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFullMask_Rounded",
 		descriptionKey = "Rounded button style",
 	},
 	["Square"] = {
 		nameKey = "Square",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Square",
-		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Square",
+		swipeMaskTexture = ASSETS_PATH .. "ButtonIconSwipe_Square",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Square",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Square",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_Square",
-		suggestedFlipbookTexture = ASSETS_PATH .. "SuggestedFlipbook_Square",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFullMask_Square",
 		descriptionKey = "Sharp square button style",
 	},
 	["Octagon"] = {
 		nameKey = "Octagon",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Octagon",
-		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Octagon",
+		swipeMaskTexture = ASSETS_PATH .. "ButtonIconSwipe_Octagon",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Octagon",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Octagon",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_Octagon",
-		suggestedFlipbookTexture = ASSETS_PATH .. "SuggestedFlipbook_Octagon",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFullMask_Octagon",
 		descriptionKey = "Octagon button style",
 	},
 	["OctagonFlipped"] = {
 		nameKey = "Octagon Flipped",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_OctagonFlipped",
-		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_OctagonFlipped",
+		swipeMaskTexture = ASSETS_PATH .. "ButtonIconSwipe_OctagonFlipped",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_OctagonFlipped",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_OctagonFlipped",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_OctagonFlipped",
-		suggestedFlipbookTexture = ASSETS_PATH .. "ProcFlipbook_OctagonFlipped",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFullMask_OctagonFlipped",
 		descriptionKey = "Octagon flipped button style",
 	},
 	["Hexagon"] = {
 		nameKey = "Hexagon",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Hexagon",
-		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Hexagon",
+		swipeMaskTexture = ASSETS_PATH .. "ButtonIconSwipe_Hexagon",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Hexagon",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Hexagon",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_Hexagon",
-		suggestedFlipbookTexture = ASSETS_PATH .. "SuggestedFlipbook_Hexagon",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFullMask_Hexagon",
 		descriptionKey = "Hexagon button style",
 	},
 	["HexagonFlipped"] = {
 		nameKey = "Hexagon Flipped",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_HexagonFlipped",
-		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_HexagonFlipped",
+		swipeMaskTexture = ASSETS_PATH .. "ButtonIconSwipe_HexagonFlipped",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_HexagonFlipped",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_HexagonFlipped",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_HexagonFlipped",
-		suggestedFlipbookTexture = ASSETS_PATH .. "SuggestedFlipbook_HexagonFlipped",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFullMask_HexagonFlipped",
 		descriptionKey = "Hexagon flipped button style",
 	},
 	["Circle"] = {
 		nameKey = "Circle",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Circle",
-		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Circle",
+		swipeMaskTexture = ASSETS_PATH .. "ButtonIconSwipe_Circle",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Circle",
 		highlightTexture = ASSETS_PATH .. "ButtonIconHighlight_Circle",
 		procFlipbookTexture = ASSETS_PATH .. "FlipbookSheet_Circle",
-		suggestedFlipbookTexture = ASSETS_PATH .. "SuggestedFlipbook_Circle",
+		fullMaskTexture = ASSETS_PATH .. "ButtonIconFullMask_Circle",
 		descriptionKey = "Circle button style",
 	},
 }
@@ -302,13 +302,13 @@ function ButtonStyles.GetHighlightPath(styleName)
 end
 
 -- Get full mask texture path based on button style (can be used for various overlay purposes)
-function ButtonStyles.GetFullMaskPath(styleName)
+function ButtonStyles.GetSwipeMaskPath(styleName)
 	styleName = styleName or zBarButtonBG.charSettings.buttonStyle or "Square"
 	local style = ButtonStyles.GetStyle(styleName)
 	if not style then
 		style = ButtonStyles.styles["Square"]
 	end
-	return style.fullMaskTexture
+	return style.swipeMaskTexture
 end
 
 -- Get proc flipbook texture path based on button style
@@ -322,13 +322,13 @@ function ButtonStyles.GetProcFlipbookPath(styleName)
 end
 
 -- Get suggested flipbook texture path based on button style
-function ButtonStyles.GetSuggestedFlipbookPath(styleName)
+function ButtonStyles.GetFullMaskPath(styleName)
 	styleName = styleName or zBarButtonBG.charSettings.buttonStyle or "Square"
 	local style = ButtonStyles.GetStyle(styleName)
 	if not style then
 		style = ButtonStyles.styles["Square"]
 	end
-	return style.suggestedFlipbookTexture
+	return style.fullMaskTexture
 end
 
 -- REGION PROCESSING

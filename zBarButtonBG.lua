@@ -328,9 +328,9 @@ local function updateButtonMask(button, maskTexture, ...)
 	
 	-- Update cooldown swipe texture when button style changes
 	if button.cooldown then
-		local fullMaskPath = ButtonStyles.GetFullMaskPath()
-		if fullMaskPath then
-			button.cooldown:SetSwipeTexture(fullMaskPath, 1, 1, 1, 0.8)
+		local swipeMaskPath = ButtonStyles.GetSwipeMaskPath()
+		if swipeMaskPath then
+			button.cooldown:SetSwipeTexture(swipeMaskPath, 1, 1, 1, 0.8)
 		end
 	end
 end
@@ -415,11 +415,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 				-- Apply full mask texture to cooldown swipe (must be done immediately during button setup)
 				if button.cooldown then
-					local fullMaskPath = ButtonStyles.GetFullMaskPath()
-					if fullMaskPath then
+					local swipeMaskPath = ButtonStyles.GetSwipeMaskPath()
+					if swipeMaskPath then
 						-- SetSwipeTexture requires all 5 parameters: texture path, R, G, B, A
 						-- Using white color (1,1,1) with 0.8 alpha to match default Blizzard cooldown appearance
-						button.cooldown:SetSwipeTexture(fullMaskPath, 1, 1, 1, 0.8)
+						button.cooldown:SetSwipeTexture(swipeMaskPath, 1, 1, 1, 0.8)
 					end
 				end				-- Create custom highlight overlay
 					if not button._zBBG_customHighlight then
@@ -1148,13 +1148,12 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Match the button size (get from actionButton dimensions)
 					local buttonWidth, buttonHeight = actionButton:GetSize()
 					flipbook:SetSize(buttonWidth or 36, buttonHeight or 36)
-					flipbook:SetAllPoints(flipbook:GetParent())
+					flipbook:SetPoint("CENTER", actionButton, "CENTER")
 					
 					-- Set to BACKGROUND layer so text stays on top
 					flipbook:SetDrawLayer("BACKGROUND", 1)
 					-- Also reparent to button to ensure proper layering
 					flipbook:SetParent(actionButton)
-					flipbook:SetAllPoints(actionButton)
 
 					-- Configure the animation from the flipbook's nested AnimationGroup
 					if highlightFrame.Flipbook.Anim then
@@ -1204,8 +1203,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 			local procFlipbookTexture = ButtonStyles.GetProcFlipbookPath(styleName)
 				local buttonWidth, buttonHeight = actionButton:GetSize()
 				-- Alert frame should be a little.. smaller, so the countdown covers it
-				local alertWidth = buttonWidth-3 or 33
-				local alertHeight = buttonHeight-3 or 33
+				local alertWidth = buttonWidth or 36
+				local alertHeight = buttonHeight or 36
 				
 				-- Resize the alert frame to match button size (don't make it bigger)
 				alert:SetSize(alertWidth, alertHeight)
@@ -1302,7 +1301,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 				altGlowTexture:SetVertexColor(alertColor.r, alertColor.g, alertColor.b, alertColor.a)
 				
 				-- Size it to fill the alert frame
-				altGlowTexture:SetSize(alertWidth or 33, alertHeight or 33)
+				altGlowTexture:SetSize(alertWidth or 36, alertHeight or 36)
 				altGlowTexture:SetAllPoints(alert)
 				
 				-- Reparent to button to ensure proper layering
