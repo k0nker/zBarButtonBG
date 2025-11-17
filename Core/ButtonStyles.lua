@@ -152,8 +152,8 @@ ButtonStyles.regions = {
 -- Organized separately from region metadata for clarity
 
 ButtonStyles.styles = {
-	["Round"] = {
-		nameKey = "Round",
+	["Rounded"] = {
+		nameKey = "Rounded",
 		maskTexture = ASSETS_PATH .. "ButtonIconMask_Rounded",
 		fullMaskTexture = ASSETS_PATH .. "ButtonIconFull_Rounded",
 		borderTexture = ASSETS_PATH .. "ButtonIconBorder_Rounded",

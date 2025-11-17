@@ -1,5 +1,4 @@
 -- zBarButtonBG - Action bar button background customization addon
--- Credit: Architectural patterns inspired by Masque
 
 ---@class addonTableZBarButtonBG
 local addonTable = select(2, ...)
@@ -415,7 +414,6 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 
 				-- Apply full mask texture to cooldown swipe (must be done immediately during button setup)
-				-- Following Masque's approach for proper swipe texture rendering
 				if button.cooldown then
 					local fullMaskPath = ButtonStyles.GetFullMaskPath()
 					if fullMaskPath then
@@ -454,7 +452,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 
 				-- Apply swipe texture to cooldown frame (same as icon mask, matches button shape)
-				-- This must be done immediately during button setup, not in a hook (following Masque's approach)
+				-- This must be done immediately during button setup, not in a hook
 				if button.cooldown and button._zBBG_swipeTexturePath then
 					-- SetSwipeTexture requires all 5 parameters: texture path, R, G, B, A
 					-- Using white color (1,1,1) with 0.8 alpha to match default Blizzard cooldown appearance
@@ -659,23 +657,18 @@ function zBarButtonBG.createActionBarBackgrounds()
 						button._zBBG_blizzardTexturesHooked = true
 					end
 
-				-- Replace equipment border texture with proc flipbook on lower layer
+				-- Show equipment border with Blizzard's default green color
 				if button.Border and not button._zBBG_borderTextureSwapped then
 					-- Replace the border's texture with our proc flipbook
 					button.Border:SetTexture(ButtonStyles.GetProcFlipbookPath())
 					-- Show just the first frame of the flipbook
 					button.Border:SetTexCoord(0, 1/5, 0, 1/6)
-					-- Apply equipment outline color from settings (fallback to defaults if not set)
-					local equipColor = zBarButtonBG.charSettings.equipmentOutlineColor or zBarButtonBGAce.db.defaults.profile.equipmentOutlineColor
-					button.Border:SetVertexColor(equipColor.r, equipColor.g, equipColor.b, equipColor.a)
-					-- Move border to BACKGROUND layer so it's below macro text
-					button.Border:SetDrawLayer("BACKGROUND", 2)
-					
-					-- Hook SetVertexColor to maintain our color even when Blizzard tries to change it
-					local originalSetVertexColor = button.Border.SetVertexColor
-					button.Border.SetVertexColor = function(self, r, g, b, a)
-						local equipColor = zBarButtonBG.charSettings.equipmentOutlineColor or zBarButtonBGAce.db.defaults.profile.equipmentOutlineColor
-						originalSetVertexColor(self, equipColor.r, equipColor.g, equipColor.b, equipColor.a)
+					-- Use Blizzard's default equipment border color (bright green, 0.5 alpha)
+					button.Border:SetVertexColor(0, 1.0, 0, 0.5)
+					-- Skip SetDrawLayer during combat to avoid protected function interference
+					if not InCombatLockdown() then
+						-- Move border to BACKGROUND layer so it's below macro text
+						button.Border:SetDrawLayer("BACKGROUND", 2)
 					end
 					
 					button._zBBG_borderTextureSwapped = true
@@ -1093,11 +1086,6 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					-- Fix normal texture too
 					manageNormalTexture(button)
-					-- Reapply equipment border color (Blizzard resets it on update)
-					if button.Border and button._zBBG_borderTextureSwapped then
-						local equipColor = zBarButtonBG.charSettings.equipmentOutlineColor or zBarButtonBGAce.db.defaults.profile.equipmentOutlineColor
-						button.Border:SetVertexColor(equipColor.r, equipColor.g, equipColor.b, equipColor.a)
-					end
 				end
 			end)
 		end
@@ -1130,63 +1118,68 @@ function zBarButtonBG.createActionBarBackgrounds()
 		-- Hook AssistedCombatManager to replace suggested action flipbook textures and apply masks
 		if AssistedCombatManager then
 			hooksecurefunc(AssistedCombatManager, "SetAssistedHighlightFrameShown", function(self, actionButton, shown)
-				if not actionButton or not actionButton._zBBG_styled or not shown then
+				if not actionButton or not actionButton._zBBG_styled then
 					return
 				end
 
-				-- Get the highlight frame that was just created
+				-- Get the highlight frame
 				local highlightFrame = actionButton.AssistedCombatHighlightFrame
 				if not highlightFrame or not highlightFrame.Flipbook then
 					return
 				end
 
-				-- Use the same flipbook texture as procs (not a separate suggested texture)
-				local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
-				local procFlipbookTexture = ButtonStyles.GetProcFlipbookPath(styleName)
-
 				local flipbook = highlightFrame.Flipbook
-				
-				-- Replace texture with proc flipbook
-				flipbook:SetTexture(procFlipbookTexture)
-				
-				-- Desaturate the flipbook to greyscale, then apply suggested action color
-				flipbook:SetDesaturated(true)
-				local suggestedColor = zBarButtonBG.charSettings.suggestedActionColor or { r = 0.2, g = 0.8, b = 1.0, a = 0.8 }
-				flipbook:SetVertexColor(suggestedColor.r, suggestedColor.g, suggestedColor.b, suggestedColor.a)
-				
-				-- Ensure flipbook is visible and properly sized
-				flipbook:Show()
-				-- Match the button size (get from actionButton dimensions)
-				local buttonWidth, buttonHeight = actionButton:GetSize()
-				flipbook:SetSize(buttonWidth or 36, buttonHeight or 36)
-				flipbook:SetAllPoints(flipbook:GetParent())
-				
-				-- Set to BACKGROUND layer so text stays on top
-				flipbook:SetDrawLayer("BACKGROUND", 1)
-				-- Also reparent to button to ensure proper layering
-				flipbook:SetParent(actionButton)
-				flipbook:SetAllPoints(actionButton)
 
-				-- Configure the animation from the flipbook's nested AnimationGroup
-				if highlightFrame.Flipbook.Anim then
-					local flipbookAnim = nil
-					local anims = highlightFrame.Flipbook.Anim:GetAnimations()
-					if anims then
-						for _, anim in ipairs(anims) do
-							if anim:GetObjectType() == "FlipBook" then
-								flipbookAnim = anim
-								break
+				if shown then
+					-- Use the same flipbook texture as procs (not a separate suggested texture)
+					local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
+					local procFlipbookTexture = ButtonStyles.GetProcFlipbookPath(styleName)
+					
+					-- Replace texture with proc flipbook
+					flipbook:SetTexture(procFlipbookTexture)
+					
+					-- Desaturate the flipbook to greyscale, then apply suggested action color
+					flipbook:SetDesaturated(true)
+					local suggestedColor = zBarButtonBG.charSettings.suggestedActionColor or { r = 0.2, g = 0.8, b = 1.0, a = 0.8 }
+					flipbook:SetVertexColor(suggestedColor.r, suggestedColor.g, suggestedColor.b, suggestedColor.a)
+					
+					-- Ensure flipbook is visible and properly sized
+					flipbook:Show()
+					-- Match the button size (get from actionButton dimensions)
+					local buttonWidth, buttonHeight = actionButton:GetSize()
+					flipbook:SetSize(buttonWidth or 36, buttonHeight or 36)
+					flipbook:SetAllPoints(flipbook:GetParent())
+					
+					-- Set to BACKGROUND layer so text stays on top
+					flipbook:SetDrawLayer("BACKGROUND", 1)
+					-- Also reparent to button to ensure proper layering
+					flipbook:SetParent(actionButton)
+					flipbook:SetAllPoints(actionButton)
+
+					-- Configure the animation from the flipbook's nested AnimationGroup
+					if highlightFrame.Flipbook.Anim then
+						local flipbookAnim = nil
+						local anims = highlightFrame.Flipbook.Anim:GetAnimations()
+						if anims then
+							for _, anim in ipairs(anims) do
+								if anim:GetObjectType() == "FlipBook" then
+									flipbookAnim = anim
+									break
+								end
 							end
 						end
+						
+						if flipbookAnim then
+							flipbookAnim:SetFlipBookFrameHeight(64)
+							flipbookAnim:SetFlipBookFrameWidth(64)
+							flipbookAnim:SetFlipBookFrames(30)
+							flipbookAnim:SetFlipBookRows(6)
+							flipbookAnim:SetFlipBookColumns(5)
+						end
 					end
-					
-					if flipbookAnim then
-						flipbookAnim:SetFlipBookFrameHeight(64)
-						flipbookAnim:SetFlipBookFrameWidth(64)
-						flipbookAnim:SetFlipBookFrames(30)
-						flipbookAnim:SetFlipBookRows(6)
-						flipbookAnim:SetFlipBookColumns(5)
-					end
+				else
+					-- Hide the flipbook when suggested action is no longer active
+					flipbook:Hide()
 				end
 
 			end)
@@ -1195,7 +1188,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 		-- Hook ActionButtonSpellAlertManager to replace spell activation flipbooks with custom ones
 		if ActionButtonSpellAlertManager then
 			hooksecurefunc(ActionButtonSpellAlertManager, "ShowAlert", function(self, actionButton, alertType)
-				if not actionButton or not actionButton.SpellActivationAlert or not zBarButtonBG.charSettings.showSpellAlerts then
+				if not actionButton or not actionButton.SpellActivationAlert then
 					return
 				end
 				
@@ -1208,11 +1201,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 				
 			-- Get the button style's flipbook textures
 			local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
-			local procFlipbookTexture = ButtonStyles.GetProcFlipbookPath(styleName)				-- Get button size for proper alert sizing (like Masque does)
+			local procFlipbookTexture = ButtonStyles.GetProcFlipbookPath(styleName)
 				local buttonWidth, buttonHeight = actionButton:GetSize()
-				-- Alert frame should be slightly larger (Masque uses 1.4x, but we'll use button size to match our button)
-				local alertWidth = buttonWidth or 36
-				local alertHeight = buttonHeight or 36
+				-- Alert frame should be a little.. smaller, so the countdown covers it
+				local alertWidth = buttonWidth-3 or 33
+				local alertHeight = buttonHeight-3 or 33
 				
 				-- Resize the alert frame to match button size (don't make it bigger)
 				alert:SetSize(alertWidth, alertHeight)
@@ -1309,7 +1302,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 				altGlowTexture:SetVertexColor(alertColor.r, alertColor.g, alertColor.b, alertColor.a)
 				
 				-- Size it to fill the alert frame
-				altGlowTexture:SetSize(alertWidth or 36, alertHeight or 36)
+				altGlowTexture:SetSize(alertWidth or 33, alertHeight or 33)
 				altGlowTexture:SetAllPoints(alert)
 				
 				-- Reparent to button to ensure proper layering
@@ -1323,7 +1316,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 				altGlowTexture:SetTexCoord(0, 1/5, 0, 1/6)
 			end
 		end)
-	end		-- Hook HideAlert to also hide our proc indicator and glow
+	end		-- Hook HideAlert to also hide our proc indicator, glow, and alt glow
 		if ActionButtonSpellAlertManager then
 			hooksecurefunc(ActionButtonSpellAlertManager, "HideAlert", function(self, actionButton)
 				if actionButton then
@@ -1332,6 +1325,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					if actionButton._zBBG_procGlow then
 						actionButton._zBBG_procGlow:Hide()
+					end
+					-- Also hide ProcAltGlow if it exists
+					local alert = actionButton.SpellActivationAlert
+					if alert and alert.ProcAltGlow then
+						alert.ProcAltGlow:Hide()
 					end
 				end
 			end)

@@ -28,7 +28,6 @@ addonTable.Core.Defaults = {
 		showSpellAlerts = true,
 		spellAlertColor = { r = 1.0, g = 0.6, b = 0.2, a = 0.8 },
 		suggestedActionColor = { r = 0.2, g = 0.7, b = 1.0, a = 0.8 },
-		equipmentOutlineColor = { r = 0.2, g = 1.0, b = 0.2, a = 0.7 },
 		macroNameFont = "Homespun",
 		macroNameFontSize = 12,
 		macroNameFontFlags = "OUTLINE",

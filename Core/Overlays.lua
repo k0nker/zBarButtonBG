@@ -11,7 +11,6 @@ local Util = addonTable.Core.Utilities
 -- ############################################################
 -- OVERLAY METADATA
 -- ############################################################
--- Defines overlay types and their properties following Masque's approach
 
 Overlays.overlayTypes = {
 	CooldownOverlay = {
@@ -41,7 +40,7 @@ Overlays.overlayTypes = {
 }
 
 -- ############################################################
--- CENTRALIZED OVERLAY CREATION (Masque-inspired)
+-- CENTRALIZED OVERLAY CREATION
 -- ############################################################
 
 -- Create an overlay texture on a button
