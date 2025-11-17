@@ -28,6 +28,10 @@ zBarButtonBG.midnightCooldown = Constants.MIDNIGHT_COOLDOWN
 zBarButtonBG.enabled = false
 zBarButtonBG.frames = {}
 
+-- Organize buttons into groups by their bar
+-- Format: buttonName -> barName (e.g., "ActionButton5" -> "ActionButton")
+zBarButtonBG.buttonGroups = {}
+
 -- Create the Ace addon instance FIRST so we can attach methods to it
 zBarButtonBGAce = LibStub("AceAddon-3.0"):NewAddon("zBarButtonBG")
 
@@ -252,15 +256,17 @@ end
 function zBarButtonBG.updateColors()
 	if not zBarButtonBG.enabled then return end
 
-	-- Get color tables once using helpers to eliminate repetitive calls
-	local outerColor = Utilities.getColorTable("outerColor", "useClassColorOuter")
-	local innerColor = Utilities.getColorTable("innerColor", "useClassColorInner")
-	local borderColor = Utilities.getColorTable("borderColor", "useClassColorBorder")
-	local rangeColor = zBarButtonBG.charSettings.rangeIndicatorColor
-	local cooldownColor = zBarButtonBG.charSettings.cooldownColor
-
 	for buttonName, data in pairs(zBarButtonBG.frames) do
 		if data and data.button then
+			-- Get per-bar settings for this button
+			local barName = zBarButtonBG.buttonGroups[buttonName]
+			local outerColor = Utilities.getColorTable("outerColor", "useClassColorOuter", barName)
+			local innerColor = Utilities.getColorTable("innerColor", "useClassColorInner", barName)
+			local borderColor = Utilities.getColorTable("borderColor", "useClassColorBorder", barName)
+			local rangeColor = zBarButtonBG.GetSettingInfo(barName, "rangeIndicatorColor")
+			local cooldownColor = zBarButtonBG.GetSettingInfo(barName, "cooldownColor")
+			local showBorder = zBarButtonBG.GetSettingInfo(barName, "showBorder")
+
 			-- Update outer background color
 			if data.outerBg then
 				data.outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
@@ -272,7 +278,7 @@ function zBarButtonBG.updateColors()
 			end
 
 			-- Update border color
-			if zBarButtonBG.charSettings.showBorder and data.customBorderTexture then
+			if showBorder and data.customBorderTexture then
 				data.customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 			end
 
@@ -296,7 +302,8 @@ function zBarButtonBG.updateFonts()
 
 	for buttonName, data in pairs(zBarButtonBG.frames) do
 		if data and data.button then
-			Styling.applyAllTextStyling(data.button)
+			local barName = zBarButtonBG.buttonGroups[buttonName]
+			Styling.applyAllTextStyling(data.button, barName)
 		end
 	end
 end
@@ -393,7 +400,9 @@ local function updateButtonMask(button, maskTexture, ...)
 	
 	-- Update cooldown swipe texture when button style changes
 	if button.cooldown then
-		local swipeMaskPath = ButtonStyles.GetSwipeMaskPath()
+		local buttonName = button:GetName()
+		local barName = zBarButtonBG.buttonGroups[buttonName]
+		local swipeMaskPath = ButtonStyles.GetSwipeMaskPath(barName)
 		if swipeMaskPath then
 			button.cooldown:SetSwipeTexture(swipeMaskPath, 1, 1, 1, 0.8)
 		end
@@ -459,6 +468,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 			-- Process the button whether it's visible or not
 			-- This is important for pet bars that only show up when you summon a pet
 			if button then
+				-- Register this button to its bar group
+				zBarButtonBG.buttonGroups[buttonName] = baseName
+
 				-- Check if we've already set this button up
 				if not zBarButtonBG.frames[buttonName] then
 					-- Mark this button as having our custom styling applied
@@ -467,25 +479,25 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Process all button regions in one pass using consolidated helper
 					initializeButtonRegions(button)
 
-					-- Handle the default border texture based on settings
-					updateButtonNormalTexture(button)
+				-- Handle the default border texture based on settings
+				updateButtonNormalTexture(button)
 
-					-- Create and apply mask to icon and other maskable elements
-					if button.icon then
-						if button.IconMask then
-							button.icon:RemoveMaskTexture(button.IconMask)
-						end
-						createAndApplyMask(button, getMaskPath())
+				-- Create and apply mask to icon and other maskable elements
+				if button.icon then
+					if button.IconMask then
+						button.icon:RemoveMaskTexture(button.IconMask)
 					end
+					createAndApplyMask(button, getMaskPath(baseName))
+				end
 
-				-- Apply full mask texture to cooldown swipe (must be done immediately during button setup)
-				if button.cooldown then
-					local swipeMaskPath = ButtonStyles.GetSwipeMaskPath()
-					if swipeMaskPath then
-						-- SetSwipeTexture requires all 5 parameters: texture path, R, G, B, A
-						-- Using white color (1,1,1) with 0.8 alpha to match default Blizzard cooldown appearance
-						button.cooldown:SetSwipeTexture(swipeMaskPath, 1, 1, 1, 0.8)
-					end
+			-- Apply full mask texture to cooldown swipe (must be done immediately during button setup)
+			if button.cooldown then
+				local swipeMaskPath = ButtonStyles.GetSwipeMaskPath(baseName)
+				if swipeMaskPath then
+					-- SetSwipeTexture requires all 5 parameters: texture path, R, G, B, A
+					-- Using white color (1,1,1) with 0.8 alpha to match default Blizzard cooldown appearance
+					button.cooldown:SetSwipeTexture(swipeMaskPath, 1, 1, 1, 0.8)
+				end
 				end				-- Create custom highlight overlay
 					if not button._zBBG_customHighlight then
 						button._zBBG_customHighlight = button:CreateTexture(nil, "OVERLAY")
@@ -503,10 +515,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 
 					-- Create custom range indicator overlay (only if enabled)
-					if zBarButtonBG.charSettings.showRangeIndicator then
+					local showRangeIndicator = zBarButtonBG.GetSettingInfo(baseName, "showRangeIndicator")
+					if showRangeIndicator then
 						if not button._zBBG_rangeOverlay then
 							button._zBBG_rangeOverlay = button:CreateTexture(nil, "BACKGROUND", nil, 0)
-							local barName = zBarButtonBG.GetBarNameFromButton(buttonName)
+							local barName = zBarButtonBG.buttonGroups[buttonName]
 							local c = zBarButtonBG.GetSettingInfo(barName, "rangeIndicatorColor")
 							button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
 							button._zBBG_rangeOverlay:Hide() -- Hidden by default
@@ -524,10 +537,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Using white color (1,1,1) with 0.8 alpha to match default Blizzard cooldown appearance
 					button.cooldown:SetSwipeTexture(button._zBBG_swipeTexturePath, 1, 1, 1, 0.8)
 				end					-- Create custom cooldown fade overlay (only if enabled and developer flag allows it)
-					if zBarButtonBG.midnightCooldown and zBarButtonBG.charSettings.fadeCooldown then
+					local fadeCooldown = zBarButtonBG.GetSettingInfo(baseName, "fadeCooldown")
+					if zBarButtonBG.midnightCooldown and fadeCooldown then
 					if not button._zBBG_cooldownOverlay then
 						button._zBBG_cooldownOverlay = button:CreateTexture(nil, "BACKGROUND", nil, 1)
-						local barName = zBarButtonBG.GetBarNameFromButton(buttonName)
+						local barName = zBarButtonBG.buttonGroups[buttonName]
 						local c = zBarButtonBG.GetSettingInfo(barName, "cooldownColor")
 						button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
 						button._zBBG_cooldownOverlay:Hide() -- Hidden by default							-- Hook the cooldown frame's Show/Hide scripts to instantly sync our overlay
@@ -768,8 +782,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 					button._zBBG_animationHooked = true
 				end					-- Replace the beveled SlotBackground with a flat texture if borders are enabled
 					if button.SlotBackground then
-						local barName = zBarButtonBG.GetBarNameFromButton(buttonName)
-						if zBarButtonBG.GetSettingInfo(barName, "showBorder") then
+						local barNameForSlot = zBarButtonBG.buttonGroups[buttonName]
+						if zBarButtonBG.GetSettingInfo(barNameForSlot, "showBorder") then
 							-- Use a flat white texture we can make transparent
 							button.SlotBackground:SetTexture("Interface/Buttons/WHITE8X8")
 							button.SlotBackground:SetVertexColor(0, 0, 0, 0)
@@ -798,24 +812,22 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 					if button.InterruptDisplay then
 						button.InterruptDisplay:SetScript("OnShow", function(self) self:Hide() end)
-					end
+				end
 
-					-- Create the outer background frame that extends 5px past the button edges (if enabled)
-					local outerFrame, outerBg
-					local barName = zBarButtonBG.GetBarNameFromButton(buttonName)
-					if zBarButtonBG.GetSettingInfo(barName, "showBackdrop") then
-						outerFrame = CreateFrame("Frame", nil, button)
-						applyBackdropPositioning(outerFrame, button)
-						outerFrame:SetFrameLevel(0)
-						outerFrame:SetFrameStrata("BACKGROUND")
+				-- Create the outer background frame that extends 5px past the button edges (if enabled)
+				local outerFrame, outerBg
+				local barName = zBarButtonBG.buttonGroups[buttonName]
+				if zBarButtonBG.GetSettingInfo(barName, "showBackdrop") then
+					outerFrame = CreateFrame("Frame", nil, button)
+					applyBackdropPositioning(outerFrame, button, barName)
+					outerFrame:SetFrameLevel(0)
+					outerFrame:SetFrameStrata("BACKGROUND")
 
-						-- Fill it with black (or class color if that's enabled)
-						outerBg = outerFrame:CreateTexture(nil, "BACKGROUND", nil, -8)
-						outerBg:SetAllPoints(outerFrame)
-						outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
-					end
-
-					-- Create the inner background that sits right behind the button (if enabled)
+					-- Fill it with black (or class color if that's enabled)
+					outerBg = outerFrame:CreateTexture(nil, "BACKGROUND", nil, -8)
+					outerBg:SetAllPoints(outerFrame)
+					outerBg:SetColorTexture(outerColor.r, outerColor.g, outerColor.b, outerColor.a)
+				end					-- Create the inner background that sits right behind the button (if enabled)
 					local bgFrame, bg
 					if zBarButtonBG.GetSettingInfo(barName, "showSlotBackground") then
 						local bgData = createBackgroundLayer(button, innerColor, "BACKGROUND", -7)
@@ -838,7 +850,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 						-- Create the border texture with appropriate asset for current mode
 						customBorderTexture = borderFrame:CreateTexture(nil, "OVERLAY")
-						customBorderTexture:SetTexture(getBorderPath())
+						customBorderTexture:SetTexture(getBorderPath(barName))
 						customBorderTexture:SetAllPoints(borderFrame)
 						-- Use ADD blend mode which treats black as transparent
 						customBorderTexture:SetBlendMode("ADD")
@@ -847,10 +859,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 						customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
 					end
 
-					-- Apply custom fonts to button text elements using helper
-					applyAllTextStyling(button)
-
-					-- Store references to everything we created so we can update or remove it later
+				-- Apply custom fonts to button text elements using helper
+				applyAllTextStyling(button, barName)					-- Store references to everything we created so we can update or remove it later
 					zBarButtonBG.frames[buttonName] = {
 						outerFrame = outerFrame,
 						outerBg = outerBg,
@@ -871,6 +881,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 				else
 					-- Button already has backgrounds, just update them with current settings
 					local data = zBarButtonBG.frames[buttonName]
+					local barName = zBarButtonBG.buttonGroups[buttonName]
 
 					-- Handle NormalTexture - always keep it transparent
 					updateButtonNormalTexture(button)
@@ -878,7 +889,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Update icon mask when switching modes using consolidated helper
 					if button.icon then
 						-- Use the unified mask update function
-						updateButtonMask(button, getMaskPath(), data.bg)
+						updateButtonMask(button, getMaskPath(barName), data.bg)
 
 						-- Update icon scale and texcoords based on mode
 						button.icon:SetScale(1.0)
@@ -931,7 +942,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 					end -- Update the SlotBackground based on whether borders are on or off
 					if button.SlotBackground then
-						if zBarButtonBG.charSettings.showBorder then
+						local barNameForSlotBg = zBarButtonBG.buttonGroups[buttonName]
+						local showBorderSlot = zBarButtonBG.GetSettingInfo(barNameForSlotBg, "showBorder")
+						if showBorderSlot then
 							-- Flat texture when borders are enabled
 							button.SlotBackground:SetTexture("Interface/Buttons/WHITE8X8")
 							button.SlotBackground:SetVertexColor(0, 0, 0, 0)
@@ -945,8 +958,11 @@ function zBarButtonBG.createActionBarBackgrounds()
 					end
 
 					-- Make sure our background frames are visible (or hidden if disabled)
+					local showBackdrop = zBarButtonBG.GetSettingInfo(barName, "showBackdrop")
+					local showSlotBackground = zBarButtonBG.GetSettingInfo(barName, "showSlotBackground")
+					
 					if data.outerFrame then
-						if zBarButtonBG.charSettings.showBackdrop then
+						if showBackdrop then
 							data.outerFrame:Show()
 							-- Update backdrop positioning in case adjustments changed
 							applyBackdropPositioning(data.outerFrame, button)
@@ -955,7 +971,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 						end
 					end
 					if data.frame then
-						if zBarButtonBG.charSettings.showSlotBackground then
+						if showSlotBackground then
 							data.frame:Show()
 						else
 							data.frame:Hide()
@@ -974,7 +990,8 @@ function zBarButtonBG.createActionBarBackgrounds()
 					applyAllTextStyling(button)
 
 					-- Handle border updates
-					if zBarButtonBG.charSettings.showBorder and button.icon then
+					local showBorderFinal = zBarButtonBG.GetSettingInfo(barName, "showBorder")
+					if showBorderFinal and button.icon then
 						if not data.customBorderTexture then
 							-- Border wasn't created initially, make it now
 							if not data.borderFrame then
@@ -987,14 +1004,14 @@ function zBarButtonBG.createActionBarBackgrounds()
 							data.customBorderTexture:SetAllPoints(data.borderFrame)
 							data.customBorderTexture:SetBlendMode("ADD")
 
-							data.customBorderTexture:SetTexture(getBorderPath())
+							data.customBorderTexture:SetTexture(getBorderPath(barName))
 							data.customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b,
 								borderColor.a)
 						else
 							-- Border exists, update texture for current mode
 							data.borderFrame:Show()
 
-							data.customBorderTexture:SetTexture(getBorderPath())
+							data.customBorderTexture:SetTexture(getBorderPath(barName))
 							data.customBorderTexture:SetVertexColor(borderColor.r, borderColor.g, borderColor.b,
 								borderColor.a)
 						end
@@ -1080,10 +1097,14 @@ function zBarButtonBG.createActionBarBackgrounds()
 		-- Keep it invisible when we want square buttons, or color it when we need borders
 		local function manageNormalTexture(button)
 			if button and button.NormalTexture and button._zBBG_styled and zBarButtonBG.enabled then
+				local buttonName = button:GetName()
+				local barName = zBarButtonBG.buttonGroups[buttonName]
+				local showBorderForButton = zBarButtonBG.GetSettingInfo(barName, "showBorder")
+				
 				if Utilities.isSquareButtonStyle() then
 					-- Square buttons: make it fully transparent
 					button.NormalTexture:SetAlpha(0)
-				elseif zBarButtonBG.charSettings.showBorder then
+				elseif showBorderForButton then
 					-- Round buttons with borders: make visible and color it
 					button.NormalTexture:Show()
 					button.NormalTexture:SetAlpha(1)
@@ -1201,7 +1222,10 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 				if shown then
 					-- Use the same flipbook texture as procs (not a separate suggested texture)
-					local styleName = zBarButtonBG.charSettings.buttonStyle or "Square"
+					-- Get per-bar button style
+					local buttonNameForStyle = actionButton:GetName()
+					local barNameForStyle = zBarButtonBG.buttonGroups[buttonNameForStyle]
+					local styleName = zBarButtonBG.GetSettingInfo(barNameForStyle, "buttonStyle") or "Square"
 					local procFlipbookTexture = ButtonStyles.GetProcFlipbookPath(styleName)
 					
 					-- Replace texture with proc flipbook
@@ -1209,7 +1233,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 					
 					-- Desaturate the flipbook to greyscale, then apply suggested action color
 					flipbook:SetDesaturated(true)
-					local suggestedColor = zBarButtonBG.charSettings.suggestedActionColor or { r = 0.2, g = 0.8, b = 1.0, a = 0.8 }
+					local suggestedColor = zBarButtonBG.GetSettingInfo(barNameForStyle, "suggestedActionColor") or { r = 0.2, g = 0.8, b = 1.0, a = 0.8 }
 					flipbook:SetVertexColor(suggestedColor.r, suggestedColor.g, suggestedColor.b, suggestedColor.a)
 					
 					-- Ensure flipbook is visible and properly sized
@@ -1365,8 +1389,10 @@ function zBarButtonBG.createActionBarBackgrounds()
 				-- Set to static frame (first frame) of the flipbook using the alert color
 				altGlowTexture:SetTexture(procFlipbookTexture)
 				
-				-- Apply alert color to the glow
-				local alertColor = zBarButtonBG.charSettings.spellAlertColor or { r = 1.0, g = 0.5, b = 0.0, a = 0.8 }
+				-- Apply alert color to the glow - get per-bar setting
+				local buttonNameForAlert = actionButton:GetName()
+				local barNameForAlert = zBarButtonBG.buttonGroups[buttonNameForAlert]
+				local alertColor = zBarButtonBG.GetSettingInfo(barNameForAlert, "spellAlertColor") or { r = 1.0, g = 0.5, b = 0.0, a = 0.8 }
 				altGlowTexture:SetVertexColor(alertColor.r, alertColor.g, alertColor.b, alertColor.a)
 				
 				-- Size it to fill the alert frame

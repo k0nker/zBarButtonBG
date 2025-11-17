@@ -75,36 +75,42 @@ Styling.textElements = {
 -- Single function handles all text styling following metadata
 
 -- Skin a text element using metadata definition
-function Styling.SkinText(textElement, button, metadata)
+-- barName parameter (optional) enables per-bar profile lookup
+function Styling.SkinText(textElement, button, metadata, barName)
 	if not textElement or not metadata then return end
+
+	-- Helper to get setting value (per-bar if barName provided, else global)
+	local function getSetting(key)
+		return barName and zBarButtonBG.GetSettingInfo(barName, key) or zBarButtonBG.charSettings[key]
+	end
 
 	-- Apply font styling
 	if metadata.fontSettingKey then
-		local fontPath = Util.getFontPath(zBarButtonBG.charSettings[metadata.fontSettingKey])
-		local fontSize = zBarButtonBG.charSettings[metadata.fontSizeKey]
-		local fontFlags = zBarButtonBG.charSettings[metadata.fontFlagsKey]
+		local fontPath = Util.getFontPath(getSetting(metadata.fontSettingKey))
+		local fontSize = getSetting(metadata.fontSizeKey)
+		local fontFlags = getSetting(metadata.fontFlagsKey)
 		textElement:SetFont(fontPath, fontSize, fontFlags)
 	end
 
 	-- Apply size
 	if metadata.widthKey and metadata.heightKey then
-		local width = zBarButtonBG.charSettings[metadata.widthKey]
-		local height = zBarButtonBG.charSettings[metadata.heightKey]
+		local width = getSetting(metadata.widthKey)
+		local height = getSetting(metadata.heightKey)
 		textElement:SetSize(width, height)
 	end
 
 	-- Apply color
 	if metadata.colorKey then
-		local colorTbl = zBarButtonBG.charSettings[metadata.colorKey]
+		local colorTbl = getSetting(metadata.colorKey)
 		textElement:SetTextColor(colorTbl.r, colorTbl.g, colorTbl.b, colorTbl.a)
 	end
 
 	-- Apply justification
 	if metadata.justifyHKey then
-		textElement:SetJustifyH(zBarButtonBG.charSettings[metadata.justifyHKey] or "CENTER")
+		textElement:SetJustifyH(getSetting(metadata.justifyHKey) or "CENTER")
 	end
 	if metadata.justifyVKey then
-		textElement:SetJustifyV(zBarButtonBG.charSettings[metadata.justifyVKey] or "MIDDLE")
+		textElement:SetJustifyV(getSetting(metadata.justifyVKey) or "MIDDLE")
 	end
 
 	-- Apply draw layer
@@ -113,8 +119,8 @@ function Styling.SkinText(textElement, button, metadata)
 	end
 
 	-- Apply positioning
-	local offsetX = zBarButtonBG.charSettings[metadata.offsetXKey] or 0
-	local offsetY = zBarButtonBG.charSettings[metadata.offsetYKey] or 0
+	local offsetX = getSetting(metadata.offsetXKey) or 0
+	local offsetY = getSetting(metadata.offsetYKey) or 0
 	local finalOffsetX = (metadata.baseOffsetX or 0) + offsetX
 	local finalOffsetY = (metadata.baseOffsetY or 0) + offsetY
 
@@ -167,13 +173,14 @@ function Styling.updateButtonNormalTexture(button)
 end
 
 -- Apply backdrop positioning with adjustable offsets
-function Styling.applyBackdropPositioning(outerFrame, button)
+-- barName parameter (optional) enables per-bar profile lookup
+function Styling.applyBackdropPositioning(outerFrame, button, barName)
 	if not outerFrame or not button then return end
 
-	local topAdj = zBarButtonBG.charSettings.backdropTopAdjustment or 5
-	local bottomAdj = zBarButtonBG.charSettings.backdropBottomAdjustment or 5
-	local leftAdj = zBarButtonBG.charSettings.backdropLeftAdjustment or 5
-	local rightAdj = zBarButtonBG.charSettings.backdropRightAdjustment or 5
+	local topAdj = barName and zBarButtonBG.GetSettingInfo(barName, "backdropTopAdjustment") or zBarButtonBG.charSettings.backdropTopAdjustment or 5
+	local bottomAdj = barName and zBarButtonBG.GetSettingInfo(barName, "backdropBottomAdjustment") or zBarButtonBG.charSettings.backdropBottomAdjustment or 5
+	local leftAdj = barName and zBarButtonBG.GetSettingInfo(barName, "backdropLeftAdjustment") or zBarButtonBG.charSettings.backdropLeftAdjustment or 5
+	local rightAdj = barName and zBarButtonBG.GetSettingInfo(barName, "backdropRightAdjustment") or zBarButtonBG.charSettings.backdropRightAdjustment or 5
 
 	outerFrame:ClearAllPoints()
 	outerFrame:SetPoint("TOPLEFT", button, "TOPLEFT", -leftAdj, topAdj)

@@ -37,8 +37,10 @@ end
 
 -- Get color table with optional class color override
 -- Returns normalized color table with r, g, b, a components
-function Util.getColorTable(colorKey, useClassColorKey)
-	if zBarButtonBG.charSettings[useClassColorKey] then
+-- barName parameter (optional) enables per-bar profile lookup
+function Util.getColorTable(colorKey, useClassColorKey, barName)
+	local useClassColor = barName and zBarButtonBG.GetSettingInfo(barName, useClassColorKey) or zBarButtonBG.charSettings[useClassColorKey]
+	if useClassColor then
 		local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
 		return { 
 			r = classColor.r, 
@@ -47,7 +49,7 @@ function Util.getColorTable(colorKey, useClassColorKey)
 			a = 1 
 		}
 	else
-		local c = zBarButtonBG.charSettings[colorKey]
+		local c = barName and zBarButtonBG.GetSettingInfo(barName, colorKey) or zBarButtonBG.charSettings[colorKey]
 		return { 
 			r = c.r, 
 			g = c.g, 

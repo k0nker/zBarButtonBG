@@ -270,8 +270,19 @@ end
 
 -- Get all texture paths (mask, border, highlight) for a button style
 -- Returns table: { mask = ..., border = ..., highlight = ... }
-function ButtonStyles.GetPaths(styleName)
-	styleName = styleName or zBarButtonBG.charSettings.buttonStyle or "Square"
+-- Accepts either styleName (string) or barName (gets style from per-bar profile)
+function ButtonStyles.GetPaths(styleOrBarName)
+	local styleName
+	
+	-- If it looks like a bar name, get the style from GetSettingInfo
+	if styleOrBarName and not ButtonStyles.styles[styleOrBarName] then
+		-- Likely a bar name, get style from per-bar profile
+		if zBarButtonBG.GetSettingInfo then
+			styleName = zBarButtonBG.GetSettingInfo(styleOrBarName, "buttonStyle")
+		end
+	end
+	
+	styleName = styleName or styleOrBarName or zBarButtonBG.charSettings.buttonStyle or "Square"
 	local style = ButtonStyles.GetStyle(styleName)
 	if not style then
 		style = ButtonStyles.styles["Square"]
@@ -302,8 +313,19 @@ function ButtonStyles.GetHighlightPath(styleName)
 end
 
 -- Get full mask texture path based on button style (can be used for various overlay purposes)
-function ButtonStyles.GetSwipeMaskPath(styleName)
-	styleName = styleName or zBarButtonBG.charSettings.buttonStyle or "Square"
+-- Accepts either styleName (string) or barName (gets style from per-bar profile)
+function ButtonStyles.GetSwipeMaskPath(styleOrBarName)
+	local styleName
+	
+	-- If it looks like a bar name, get the style from GetSettingInfo
+	if styleOrBarName and not ButtonStyles.styles[styleOrBarName] then
+		-- Likely a bar name, get style from per-bar profile
+		if zBarButtonBG.GetSettingInfo then
+			styleName = zBarButtonBG.GetSettingInfo(styleOrBarName, "buttonStyle")
+		end
+	end
+	
+	styleName = styleName or styleOrBarName or zBarButtonBG.charSettings.buttonStyle or "Square"
 	local style = ButtonStyles.GetStyle(styleName)
 	if not style then
 		style = ButtonStyles.styles["Square"]
@@ -312,8 +334,19 @@ function ButtonStyles.GetSwipeMaskPath(styleName)
 end
 
 -- Get proc flipbook texture path based on button style
-function ButtonStyles.GetProcFlipbookPath(styleName)
-	styleName = styleName or zBarButtonBG.charSettings.buttonStyle or "Square"
+-- Accepts either styleName (string) or barName (gets style from per-bar profile)
+function ButtonStyles.GetProcFlipbookPath(styleOrBarName)
+	local styleName
+	
+	-- If it looks like a bar name, get the style from GetSettingInfo
+	if styleOrBarName and not ButtonStyles.styles[styleOrBarName] then
+		-- Likely a bar name, get style from per-bar profile
+		if zBarButtonBG.GetSettingInfo then
+			styleName = zBarButtonBG.GetSettingInfo(styleOrBarName, "buttonStyle")
+		end
+	end
+	
+	styleName = styleName or styleOrBarName or zBarButtonBG.charSettings.buttonStyle or "Square"
 	local style = ButtonStyles.GetStyle(styleName)
 	if not style then
 		style = ButtonStyles.styles["Square"]
