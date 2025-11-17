@@ -80,7 +80,7 @@ function Styling.SkinText(textElement, button, metadata, barName)
 	if not textElement or not metadata then return end
 
 	-- DEBUG
-	print("[DEBUG] SkinText called: barName=" .. (barName or "nil") .. ", textElement=" .. tostring(textElement) .. ", metadata.colorKey=" .. (metadata.colorKey or "nil"))
+	--print("[DEBUG] SkinText called: barName=" .. (barName or "nil") .. ", textElement=" .. tostring(textElement) .. ", metadata.colorKey=" .. (metadata.colorKey or "nil"))
 
 	-- Helper to get setting value (per-bar if barName provided, else global)
 	local function getSetting(key)
