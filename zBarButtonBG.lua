@@ -376,6 +376,24 @@ function zBarButtonBG.removeActionBarBackgrounds()
 	zBarButtonBG.frames = {}
 end
 
+-- Force update any currently visible flipbooks when settings change
+-- Called after button style changes to ensure visible animations use new textures
+function zBarButtonBG.forceUpdateVisibleFlipbooks()
+	for buttonName, data in pairs(zBarButtonBG.frames) do
+		if data and data.button then
+			local button = data.button
+			local barName = zBarButtonBG.buttonGroups[buttonName]
+			
+			if barName then
+				-- Force update any visible flipbooks
+				Overlays.updateEquipmentBorderFlipbook(button, barName)
+				Overlays.updateAssistedHighlightFlipbook(button, barName)
+				Overlays.updateSpellAlertFlipbooks(button, barName)
+			end
+		end
+	end
+end
+
 function zBarButtonBG.createActionBarBackgrounds()
 	-- All the different types of action bar buttons we want to modify
 	local buttonBases = {
@@ -573,7 +591,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 						zBarButtonBG.updateRangeOverlay(button)
 					end
 					-- Fix normal texture too
-					manageNormalTexture(button)
+					--manageNormalTexture(button)
 				end
 			end)
 		end
@@ -618,58 +636,18 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 				local flipbook = highlightFrame.Flipbook
 
-				if shown then
-					-- Use the same flipbook texture as procs (not a separate suggested texture)
-					-- Get per-bar button style
+				-- Only do setup once - just toggle visibility on subsequent calls
+				if not actionButton._zBBG_assistedSetup then
 					local buttonNameForStyle = actionButton:GetName()
 					local barNameForStyle = zBarButtonBG.buttonGroups[buttonNameForStyle]
-					local styleName = zBarButtonBG.GetSettingInfo(barNameForStyle, "buttonStyle") or "Square"
-					local procFlipbookTexture = ButtonStyles.GetProcFlipbookPath(styleName)
+					Overlays.setupAssistedHighlightFlipbook(actionButton, barNameForStyle)
+					actionButton._zBBG_assistedSetup = true
+				end
 
-					-- Replace texture with proc flipbook
-					flipbook:SetTexture(procFlipbookTexture)
-
-					-- Desaturate the flipbook to greyscale, then apply suggested action color
-					flipbook:SetDesaturated(true)
-					local suggestedColor = zBarButtonBG.GetSettingInfo(barNameForStyle, "suggestedActionColor") or
-						{ r = 0.2, g = 0.8, b = 1.0, a = 0.8 }
-					flipbook:SetVertexColor(suggestedColor.r, suggestedColor.g, suggestedColor.b, suggestedColor.a)
-
-					-- Ensure flipbook is visible and properly sized
+				-- Now just toggle visibility
+				if shown then
 					flipbook:Show()
-					-- Match the button size (get from actionButton dimensions)
-					local buttonWidth, buttonHeight = actionButton:GetSize()
-					flipbook:SetSize(buttonWidth or 36, buttonHeight or 36)
-					flipbook:SetPoint("CENTER", actionButton, "CENTER")
-
-					-- Set to BACKGROUND layer so text stays on top
-					flipbook:SetDrawLayer("BACKGROUND", 1)
-					-- Also reparent to button to ensure proper layering
-					flipbook:SetParent(actionButton)
-
-					-- Configure the animation from the flipbook's nested AnimationGroup
-					if highlightFrame.Flipbook.Anim then
-						local flipbookAnim = nil
-						local anims = highlightFrame.Flipbook.Anim:GetAnimations()
-						if anims then
-							for _, anim in ipairs(anims) do
-								if anim:GetObjectType() == "FlipBook" then
-									flipbookAnim = anim
-									break
-								end
-							end
-						end
-
-						if flipbookAnim then
-							flipbookAnim:SetFlipBookFrameHeight(64)
-							flipbookAnim:SetFlipBookFrameWidth(64)
-							flipbookAnim:SetFlipBookFrames(30)
-							flipbookAnim:SetFlipBookRows(6)
-							flipbookAnim:SetFlipBookColumns(5)
-						end
-					end
 				else
-					-- Hide the flipbook when suggested action is no longer active
 					flipbook:Hide()
 				end
 			end)
@@ -687,131 +665,24 @@ function zBarButtonBG.createActionBarBackgrounds()
 					return
 				end
 
-				local alert = actionButton.SpellActivationAlert
+			local alert = actionButton.SpellActivationAlert
 
-				-- Get the button's bar name for per-bar settings
-				local buttonNameForStyle = actionButton:GetName()
-				local barNameForStyle = zBarButtonBG.buttonGroups[buttonNameForStyle]
+			-- Get the button's bar name for per-bar settings
+			local buttonNameForStyle = actionButton:GetName()
+			local barNameForStyle = zBarButtonBG.buttonGroups[buttonNameForStyle]
 
-				-- Get the button style's flipbook textures
+			-- Only configure animation frames once
+			if not actionButton._zBBG_spellAlertConfigured then
+				Overlays.setupSpellAlertFlipbooks(actionButton, barNameForStyle)
+				actionButton._zBBG_spellAlertConfigured = true
+			else
+				-- Already configured - just update textures if style changed
 				local styleName = zBarButtonBG.GetSettingInfo(barNameForStyle, "buttonStyle") or "Square"
-				local procFlipbookTexture = ButtonStyles.GetProcFlipbookPath(styleName)
-				local buttonWidth, buttonHeight = actionButton:GetSize()
-				-- Alert frame should be a little.. smaller, so the countdown covers it
-				local alertWidth = buttonWidth or 36
-				local alertHeight = buttonHeight or 36
-
-				-- Resize the alert frame to match button size (don't make it bigger)
-				alert:SetSize(alertWidth, alertHeight)
-
-				-- Get animation objects (not flipbook textures - those are what have SetFlipBookFrame* methods)
-				local loopAnimGroup = alert.ProcLoop
-				local loopAnimation = nil
-
-				if loopAnimGroup then
-					if loopAnimGroup.FlipAnim then
-						loopAnimation = loopAnimGroup.FlipAnim
-					else
-						local anims = loopAnimGroup:GetAnimations()
-						if anims then
-							for _, anim in ipairs(anims) do
-								if anim:GetObjectType() == "FlipBook" then
-									loopAnimation = anim
-									break
-								end
-							end
-						end
-					end
+				if actionButton._zBBG_lastSpellAlertStyle ~= styleName then
+					Overlays.updateSpellAlertFlipbooks(actionButton, barNameForStyle)
+					actionButton._zBBG_lastSpellAlertStyle = styleName
 				end
-
-				local startAnimGroup = alert.ProcStartAnim
-				local startAnimation = nil
-
-				if startAnimGroup then
-					if startAnimGroup.FlipAnim then
-						startAnimation = startAnimGroup.FlipAnim
-					else
-						local anims = startAnimGroup:GetAnimations()
-						if anims then
-							for _, anim in ipairs(anims) do
-								if anim:GetObjectType() == "FlipBook" then
-									startAnimation = anim
-									break
-								end
-							end
-						end
-					end
-				end
-
-				-- Replace ProcLoopFlipbook texture (no vertex color - it's baked into the texture)
-				if alert.ProcLoopFlipbook then
-					alert.ProcLoopFlipbook:SetTexture(procFlipbookTexture)
-					-- Size the flipbook to fill the alert frame
-					alert.ProcLoopFlipbook:SetAllPoints(alert)
-
-					-- Reparent to button to ensure proper layering
-					alert.ProcLoopFlipbook:SetParent(actionButton)
-
-					-- Set to BACKGROUND layer so text stays on top
-					alert.ProcLoopFlipbook:SetDrawLayer("BACKGROUND", 1)
-				end
-
-				if loopAnimation then
-					loopAnimation:SetFlipBookFrameHeight(64)
-					loopAnimation:SetFlipBookFrameWidth(64)
-					loopAnimation:SetFlipBookFrames(30)
-					loopAnimation:SetFlipBookRows(6)
-					loopAnimation:SetFlipBookColumns(5)
-				end
-
-				-- Replace ProcStartFlipbook texture (no vertex color - it's baked into the texture)
-				if alert.ProcStartFlipbook then
-					alert.ProcStartFlipbook:SetTexture(procFlipbookTexture)
-					-- Size the flipbook to fill the alert frame
-					alert.ProcStartFlipbook:SetAllPoints(alert)
-
-					-- Reparent to button to ensure proper layering
-					alert.ProcStartFlipbook:SetParent(actionButton)
-
-					-- Set to BACKGROUND layer so text stays on top
-					alert.ProcStartFlipbook:SetDrawLayer("BACKGROUND", 1)
-				end
-
-				if startAnimation then
-					startAnimation:SetFlipBookFrameHeight(64)
-					startAnimation:SetFlipBookFrameWidth(64)
-					startAnimation:SetFlipBookFrames(30)
-					startAnimation:SetFlipBookRows(6)
-					startAnimation:SetFlipBookColumns(5)
-				end
-
-				-- Replace ProcAltGlow with a static flipbook frame using the alert color
-				if alert.ProcAltGlow then
-					local altGlowTexture = alert.ProcAltGlow
-					-- Set to static frame (first frame) of the flipbook using the alert color
-					altGlowTexture:SetTexture(procFlipbookTexture)
-
-					-- Apply alert color to the glow - get per-bar setting
-					local buttonNameForAlert = actionButton:GetName()
-					local barNameForAlert = zBarButtonBG.buttonGroups[buttonNameForAlert]
-					local alertColor = zBarButtonBG.GetSettingInfo(barNameForAlert, "spellAlertColor") or
-						{ r = 1.0, g = 0.5, b = 0.0, a = 0.8 }
-					altGlowTexture:SetVertexColor(alertColor.r, alertColor.g, alertColor.b, alertColor.a)
-
-					-- Size it to fill the alert frame
-					altGlowTexture:SetSize(alertWidth or 36, alertHeight or 36)
-					altGlowTexture:SetAllPoints(alert)
-
-					-- Reparent to button to ensure proper layering
-					altGlowTexture:SetParent(actionButton)
-
-					-- Set to BACKGROUND layer so text stays on top
-					altGlowTexture:SetDrawLayer("BACKGROUND", 1)
-
-					-- Set to show just the first frame (no animation)
-					-- The flipbook is 64x64 with 6 rows x 5 columns, so just display frame 1
-					altGlowTexture:SetTexCoord(0, 1 / 5, 0, 1 / 6)
-				end
+			end
 			end)
 		end -- Hook HideAlert to also hide our proc indicator, glow, and alt glow
 		if ActionButtonSpellAlertManager then
@@ -834,4 +705,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 
 		zBarButtonBG.hookInstalled = true
 	end
+	
+	-- Force update any currently visible flipbooks to use new style textures
+	zBarButtonBG.forceUpdateVisibleFlipbooks()
 end

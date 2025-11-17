@@ -70,6 +70,18 @@ end
 function ButtonSkinning.updateButton(button, barName)
 	if not button or not button._zBBG_styled then return end
 	
+	-- Clear all flipbook setup flags so they reconfigure on next show/update
+	-- (button style or other settings may have changed)
+	button._zBBG_assistedSetup = false
+	button._zBBG_spellAlertSetup = false
+	button._zBBG_procAlertSetup = false
+	
+	-- Update flipbook textures for animations that are currently visible or might be visible
+	-- These functions will update textures and reconfigure as needed
+	Overlays.updateEquipmentBorderFlipbook(button, barName)
+	Overlays.updateAssistedHighlightFlipbook(button, barName)
+	Overlays.updateSpellAlertFlipbooks(button, barName)
+	
 	-- Update mask first (affects all overlays)
 	ButtonSkinning.setButtonMask(button, barName)
 	ButtonSkinning.setCooldownSwipeTexture(button, barName)
@@ -291,7 +303,7 @@ end
 function ButtonSkinning.setEquipmentBorder(button, barName)
 	if not button or not button.Border or button._zBBG_borderTextureSwapped then return end
 	
-	button.Border:SetTexture(ButtonStyles.GetProcFlipbookPath())
+	button.Border:SetTexture(ButtonStyles.GetProcFlipbookPath(barName))
 	button.Border:SetTexCoord(0, 1 / 5, 0, 1 / 6)
 	button.Border:SetVertexColor(0, 1.0, 0, 0.5)
 	
