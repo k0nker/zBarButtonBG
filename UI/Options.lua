@@ -200,7 +200,9 @@ end
 function zBarButtonBGAce:GetOptionsTable()
 	-- Helper function to get profile list for dropdowns
 	local function getProfileList()
-		local profiles = {}
+		local profiles = {
+			["Default"] = "Default"  -- Always include the Default profile
+		}
 		for profileName, _ in pairs(self.db.profiles) do
 			profiles[profileName] = profileName
 		end

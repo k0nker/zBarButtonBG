@@ -114,7 +114,7 @@ end
 
 -- Get list of all profiles
 function ProfileManager.getProfileList()
-	local profiles = {}
+	local profiles = { "Default" }  -- Always include Default profile
 	for name, _ in pairs(zBarButtonBGAce.db.profiles) do
 		table.insert(profiles, name)
 	end

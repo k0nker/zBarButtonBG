@@ -39,7 +39,7 @@ end
 -- Returns normalized color table with r, g, b, a components
 -- barName parameter (optional) enables per-bar profile lookup
 function Util.getColorTable(colorKey, useClassColorKey, barName)
-	local useClassColor = barName and zBarButtonBG.GetSettingInfo(barName, useClassColorKey) or zBarButtonBG.charSettings[useClassColorKey]
+	local useClassColor = zBarButtonBG.GetSettingInfo(barName, useClassColorKey)
 	if useClassColor then
 		local classColor = C_ClassColor.GetClassColor(select(2, UnitClass("player")))
 		return { 
@@ -49,7 +49,10 @@ function Util.getColorTable(colorKey, useClassColorKey, barName)
 			a = 1 
 		}
 	else
-		local c = barName and zBarButtonBG.GetSettingInfo(barName, colorKey) or zBarButtonBG.charSettings[colorKey]
+		local c = zBarButtonBG.GetSettingInfo(barName, colorKey)
+		if not c or not c.r then
+			c = addonTable.Core.Defaults.profile[colorKey] or { r = 1, g = 1, b = 1, a = 1 }
+		end
 		return { 
 			r = c.r, 
 			g = c.g, 
@@ -178,13 +181,4 @@ function Util.getFontPath(fontName)
 		return LSM:Fetch("font", fontName) or fontName
 	end
 	return fontName
-end
-
--- ############################################################
--- STYLE UTILITIES
--- ############################################################
-
--- Check if current button style is "Square" (for positioning logic)
-function Util.isSquareButtonStyle()
-	return zBarButtonBG.charSettings.buttonStyle == "Square"
 end

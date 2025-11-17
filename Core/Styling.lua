@@ -79,38 +79,63 @@ Styling.textElements = {
 function Styling.SkinText(textElement, button, metadata, barName)
 	if not textElement or not metadata then return end
 
+	-- DEBUG
+	print("[DEBUG] SkinText called: barName=" .. (barName or "nil") .. ", textElement=" .. tostring(textElement) .. ", metadata.colorKey=" .. (metadata.colorKey or "nil"))
+
 	-- Helper to get setting value (per-bar if barName provided, else global)
 	local function getSetting(key)
-		return barName and zBarButtonBG.GetSettingInfo(barName, key) or zBarButtonBG.charSettings[key]
+		return zBarButtonBG.GetSettingInfo(barName, key)
 	end
 
 	-- Apply font styling
 	if metadata.fontSettingKey then
-		local fontPath = Util.getFontPath(getSetting(metadata.fontSettingKey))
+		local fontName = getSetting(metadata.fontSettingKey)
+		if not fontName then fontName = addonTable.Core.Defaults.profile[metadata.fontSettingKey] end
+		local fontPath = Util.getFontPath(fontName)
 		local fontSize = getSetting(metadata.fontSizeKey)
+		if not fontSize then fontSize = addonTable.Core.Defaults.profile[metadata.fontSizeKey] end
 		local fontFlags = getSetting(metadata.fontFlagsKey)
+		if not fontFlags then fontFlags = addonTable.Core.Defaults.profile[metadata.fontFlagsKey] end
 		textElement:SetFont(fontPath, fontSize, fontFlags)
 	end
 
 	-- Apply size
 	if metadata.widthKey and metadata.heightKey then
 		local width = getSetting(metadata.widthKey)
+		if not width then width = addonTable.Core.Defaults.profile[metadata.widthKey] end
 		local height = getSetting(metadata.heightKey)
+		if not height then height = addonTable.Core.Defaults.profile[metadata.heightKey] end
 		textElement:SetSize(width, height)
 	end
 
 	-- Apply color
 	if metadata.colorKey then
 		local colorTbl = getSetting(metadata.colorKey)
-		textElement:SetTextColor(colorTbl.r, colorTbl.g, colorTbl.b, colorTbl.a)
+		if not colorTbl or type(colorTbl) ~= "table" or not colorTbl.r then
+			colorTbl = addonTable.Core.Defaults.profile[metadata.colorKey]
+			if not colorTbl or type(colorTbl) ~= "table" then
+				colorTbl = { r = 1, g = 1, b = 1, a = 1 }
+			end
+		end
+		-- Ensure all color components exist with safe defaults
+		local r = (colorTbl.r ~= nil) and colorTbl.r or 1
+		local g = (colorTbl.g ~= nil) and colorTbl.g or 1
+		local b = (colorTbl.b ~= nil) and colorTbl.b or 1
+		local a = (colorTbl.a ~= nil) and colorTbl.a or 1
+		print("[DEBUG] Color for " .. metadata.colorKey .. " = r:" .. r .. " g:" .. g .. " b:" .. b .. " a:" .. a)
+		textElement:SetTextColor(r, g, b, a)
 	end
 
 	-- Apply justification
 	if metadata.justifyHKey then
-		textElement:SetJustifyH(getSetting(metadata.justifyHKey) or "CENTER")
+		local justifyH = getSetting(metadata.justifyHKey)
+		if not justifyH then justifyH = addonTable.Core.Defaults.profile[metadata.justifyHKey] or "CENTER" end
+		textElement:SetJustifyH(justifyH)
 	end
 	if metadata.justifyVKey then
-		textElement:SetJustifyV(getSetting(metadata.justifyVKey) or "MIDDLE")
+		local justifyV = getSetting(metadata.justifyVKey)
+		if not justifyV then justifyV = addonTable.Core.Defaults.profile[metadata.justifyVKey] or "MIDDLE" end
+		textElement:SetJustifyV(justifyV)
 	end
 
 	-- Apply draw layer
@@ -119,8 +144,10 @@ function Styling.SkinText(textElement, button, metadata, barName)
 	end
 
 	-- Apply positioning
-	local offsetX = getSetting(metadata.offsetXKey) or 0
-	local offsetY = getSetting(metadata.offsetYKey) or 0
+	local offsetX = getSetting(metadata.offsetXKey)
+	if offsetX == nil then offsetX = addonTable.Core.Defaults.profile[metadata.offsetXKey] or 0 end
+	local offsetY = getSetting(metadata.offsetYKey)
+	if offsetY == nil then offsetY = addonTable.Core.Defaults.profile[metadata.offsetYKey] or 0 end
 	local finalOffsetX = (metadata.baseOffsetX or 0) + offsetX
 	local finalOffsetY = (metadata.baseOffsetY or 0) + offsetY
 
@@ -134,30 +161,30 @@ end
 -- Maintained for compatibility, but now use centralized SkinText()
 
 -- Apply macro name text styling
-function Styling.applyMacroNameStyling(button)
+function Styling.applyMacroNameStyling(button, barName)
 	if not button or not button.Name then return end
-	Styling.SkinText(button.Name, button, Styling.textElements.MacroName)
+	Styling.SkinText(button.Name, button, Styling.textElements.MacroName, barName)
 end
 
 -- Apply count text styling
-function Styling.applyCountStyling(button)
+function Styling.applyCountStyling(button, barName)
 	if not button or not button.Count then return end
-	Styling.SkinText(button.Count, button, Styling.textElements.Count)
+	Styling.SkinText(button.Count, button, Styling.textElements.Count, barName)
 end
 
 -- Apply keybind text styling
-function Styling.applyKeybindStyling(button)
+function Styling.applyKeybindStyling(button, barName)
 	if not button or not button.HotKey then return end
-	Styling.SkinText(button.HotKey, button, Styling.textElements.Keybind)
+	Styling.SkinText(button.HotKey, button, Styling.textElements.Keybind, barName)
 end
 
 -- Apply all text styling to a button using centralized approach
-function Styling.applyAllTextStyling(button)
+function Styling.applyAllTextStyling(button, barName)
 	if not button then return end
 
-	Styling.applyMacroNameStyling(button)
-	Styling.applyCountStyling(button)
-	Styling.applyKeybindStyling(button)
+	Styling.applyMacroNameStyling(button, barName)
+	Styling.applyCountStyling(button, barName)
+	Styling.applyKeybindStyling(button, barName)
 end
 
 -- ############################################################
@@ -188,9 +215,9 @@ function Styling.applyBackdropPositioning(outerFrame, button, barName)
 end
 
 -- Apply text positioning with offsets
-function Styling.applyTextPositioning(button)
+function Styling.applyTextPositioning(button, barName)
 	if not button then return end
 
 	-- Re-apply all text styling to ensure positioning is current
-	Styling.applyAllTextStyling(button)
+	Styling.applyAllTextStyling(button, barName)
 end
