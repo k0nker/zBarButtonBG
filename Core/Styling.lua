@@ -221,3 +221,21 @@ function Styling.applyTextPositioning(button, barName)
 	-- Re-apply all text styling to ensure positioning is current
 	Styling.applyAllTextStyling(button, barName)
 end
+
+-- ############################################################
+-- TEXT SETUP FUNCTIONS (per-bar skinning)
+-- ############################################################
+
+-- Apply text styling
+function Styling.setTextStyling(button, barName)
+	if not button then return end
+	
+	Styling.applyAllTextStyling(button, barName)
+end
+
+-- Apply text positioning
+function Styling.setTextPositioning(button, barName)
+	if not button then return end
+	
+	Styling.applyTextPositioning(button, barName)
+end

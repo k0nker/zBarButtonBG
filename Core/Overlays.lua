@@ -159,3 +159,123 @@ function Overlays.updateRangeOverlay(button)
 		end
 	end
 end
+
+-- ############################################################
+-- OVERLAY SETUP FUNCTIONS (per-bar skinning)
+-- ############################################################
+
+-- Create and position custom highlight overlay
+function Overlays.setHighlightOverlay(button, barName)
+	if not button then return end
+	
+	if not button._zBBG_customHighlight then
+		button._zBBG_customHighlight = button:CreateTexture(nil, "OVERLAY")
+		button._zBBG_customHighlight:SetColorTexture(1, 0.82, 0, 0.5) -- Golden highlight
+		button._zBBG_customHighlight:Hide()
+	end
+	
+	button._zBBG_customHighlight:ClearAllPoints()
+	button._zBBG_customHighlight:SetAllPoints(button.icon)
+	
+	-- Mask is automatically applied via button._zBBG_customMask
+	if button._zBBG_customMask then
+		Util.applyMaskToTexture(button._zBBG_customHighlight, button._zBBG_customMask)
+	end
+end
+
+-- Create and position custom checked overlay (pet buttons only)
+function Overlays.setCheckedOverlay(button, barName)
+	if not button then return end
+	
+	local buttonName = button:GetName()
+	local baseName = zBarButtonBG.GetBarNameFromButton(buttonName)
+	if baseName ~= "PetActionButton" then return end
+	
+	if not button._zBBG_customChecked then
+		button._zBBG_customChecked = button:CreateTexture(nil, "OVERLAY", nil, 3)
+		button._zBBG_customChecked:SetColorTexture(0, 1, 0, 0.3) -- Green checked state
+		button._zBBG_customChecked:Hide()
+	end
+	
+	button._zBBG_customChecked:ClearAllPoints()
+	button._zBBG_customChecked:SetAllPoints(button.icon)
+	
+	if button._zBBG_customMask then
+		Util.applyMaskToTexture(button._zBBG_customChecked, button._zBBG_customMask)
+	end
+end
+
+-- Create and position range indicator overlay
+function Overlays.setRangeOverlay(button, barName)
+	if not button then return end
+	
+	local showRangeIndicator = zBarButtonBG.GetSettingInfo(barName, "showRangeIndicator")
+	
+	if showRangeIndicator then
+		if not button._zBBG_rangeOverlay then
+			button._zBBG_rangeOverlay = button:CreateTexture(nil, "OVERLAY", nil, 1)
+			local c = zBarButtonBG.GetSettingInfo(barName, "rangeIndicatorColor")
+			button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+			button._zBBG_rangeOverlay:Hide()
+		end
+		
+		button._zBBG_rangeOverlay:ClearAllPoints()
+		button._zBBG_rangeOverlay:SetAllPoints(button.icon)
+		
+		if button._zBBG_customMask then
+			Util.applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_customMask)
+		end
+	elseif button._zBBG_rangeOverlay then
+		button._zBBG_rangeOverlay:Hide()
+		button._zBBG_rangeOverlay = nil
+	end
+end
+
+-- Create and position cooldown overlay
+function Overlays.setCooldownOverlay(button, barName)
+	if not button then return end
+	
+	local fadeCooldown = zBarButtonBG.GetSettingInfo(barName, "fadeCooldown")
+	
+	if zBarButtonBG.midnightCooldown and fadeCooldown then
+		if not button._zBBG_cooldownOverlay then
+			button._zBBG_cooldownOverlay = button:CreateTexture(nil, "BACKGROUND", nil, 1)
+			local c = zBarButtonBG.GetSettingInfo(barName, "cooldownColor")
+			button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
+			button._zBBG_cooldownOverlay:Hide()
+			
+			-- Hook cooldown show/hide to sync overlay
+			if button.cooldown and not button.cooldown._zBBG_hooked then
+				local originalShow = button.cooldown:GetScript("OnShow") or function() end
+				local originalHide = button.cooldown:GetScript("OnHide") or function() end
+				
+				button.cooldown:SetScript("OnShow", function(self)
+					originalShow(self)
+					if self:GetParent() and self:GetParent()._zBBG_cooldownOverlay then
+						self:GetParent()._zBBG_cooldownOverlay:Show()
+					end
+				end)
+				
+				button.cooldown:SetScript("OnHide", function(self)
+					originalHide(self)
+					if self:GetParent() and self:GetParent()._zBBG_cooldownOverlay then
+						self:GetParent()._zBBG_cooldownOverlay:Hide()
+					end
+				end)
+				
+				button.cooldown._zBBG_hooked = true
+			end
+		end
+		
+		button._zBBG_cooldownOverlay:ClearAllPoints()
+		button._zBBG_cooldownOverlay:SetAllPoints(button.icon)
+		
+		if button._zBBG_customMask then
+			Util.applyMaskToTexture(button._zBBG_cooldownOverlay, button._zBBG_customMask)
+		end
+	elseif button._zBBG_cooldownOverlay then
+		button._zBBG_cooldownOverlay:Hide()
+		button._zBBG_cooldownOverlay = nil
+	end
+end
+

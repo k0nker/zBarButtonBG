@@ -51,6 +51,7 @@ Core\ButtonStyles.lua
 Core\Utilities.lua
 Core\Styling.lua
 Core\Overlays.lua
+Core\ButtonSkinning.lua
 Core\Init.lua
 
 # Profile management

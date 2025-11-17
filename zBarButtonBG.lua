@@ -12,6 +12,7 @@ local Overlays = addonTable.Core.Overlays
 local Constants = addonTable.Core.Constants
 local Utilities = addonTable.Core.Utilities
 local Styling = addonTable.Core.Styling
+local ButtonSkinning = addonTable.Core.ButtonSkinning
 local ProfileManager = addonTable.Profile.Manager
 local ButtonStyles = addonTable.Core.ButtonStyles
 
