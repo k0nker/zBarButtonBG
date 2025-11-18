@@ -49,6 +49,9 @@ function ButtonSkinning.setupButton(button, barName)
 	Overlays.setRangeOverlay(button, barName)
 	Overlays.setCooldownOverlay(button, barName)
 	
+	-- Force initial range check so overlay starts in correct state (not stuck on)
+	zBarButtonBG.updateRangeOverlay(button)
+	
 	-- Backgrounds
 	ButtonSkinning.setSlotBackground(button, barName)
 	ButtonSkinning.setOuterBackground(button, barName)
@@ -91,6 +94,9 @@ function ButtonSkinning.updateButton(button, barName)
 	Overlays.setCheckedOverlay(button, barName)
 	Overlays.setRangeOverlay(button, barName)
 	Overlays.setCooldownOverlay(button, barName)
+	
+	-- Force range check so overlay shows correct state
+	zBarButtonBG.updateRangeOverlay(button)
 	
 	-- Update backgrounds
 	ButtonSkinning.setSlotBackground(button, barName)

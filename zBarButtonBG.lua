@@ -612,8 +612,6 @@ function zBarButtonBG.createActionBarBackgrounds()
 		-- Hook the range indicator function - this runs whenever WoW checks range
 		-- Combine both manageNormalTexture and updateRangeOverlay into a single hook
 		-- to avoid calling the hook function twice for the same event
-		-- Add per-button throttling to reduce range check frequency
-		local rangeCheckThrottle = 0
 		hooksecurefunc("ActionButton_UpdateRangeIndicator", function(button)
 			if button and button._zBBG_styled and zBarButtonBG.enabled then
 				if zBarButtonBG._debug then
@@ -621,25 +619,19 @@ function zBarButtonBG.createActionBarBackgrounds()
 				end
 				manageNormalTexture(button)
 				
-				-- Throttle range overlay updates - only check every 2 ticks to reduce CPU usage
-				-- This is safe because range doesn't change that frequently during combat
-				rangeCheckThrottle = (rangeCheckThrottle or 0) + 1
-				if rangeCheckThrottle >= 2 then
-					rangeCheckThrottle = 0
-					
-					-- Debug spam to see what's happening
-					if zBarButtonBG._debug then
-						local buttonName = button:GetName() or "Unknown"
-						local hasTarget = UnitExists("target")
-						local action = button.action
-						local inRange = action and IsActionInRange(action, "target")
-						zBarButtonBG.print("Range update for " ..
-							buttonName ..
-							" - Target: " ..
-							tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
-					end
-					zBarButtonBG.updateRangeOverlay(button)
+				-- Update range overlay without throttling - IsActionInRange is only called for buttons with actions
+				-- and we need responsive updates when range status changes
+				if zBarButtonBG._debug then
+					local buttonName = button:GetName() or "Unknown"
+					local hasTarget = UnitExists("target")
+					local action = button.action
+					local inRange = action and IsActionInRange(action, "target")
+					zBarButtonBG.print("Range update for " ..
+						buttonName ..
+						" - Target: " ..
+						tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
 				end
+				zBarButtonBG.updateRangeOverlay(button)
 			end
 		end)
 
@@ -649,8 +641,7 @@ function zBarButtonBG.createActionBarBackgrounds()
 		-- Hook usability updates - way better than spamming events everywhere
 		-- WoW calls this when stuff like mana or range changes
 		if ActionButton_UpdateUsable then
-			-- Add throttling for range overlay to reduce frequency of expensive IsActionInRange calls
-			local usableRangeThrottle = 0
+			-- Update range overlay when usability changes
 			hooksecurefunc("ActionButton_UpdateUsable", function(button)
 				if button and button._zBBG_styled and zBarButtonBG.enabled then
 					if zBarButtonBG._debug then
@@ -659,13 +650,9 @@ function zBarButtonBG.createActionBarBackgrounds()
 					-- Keep normal texture in line (fast operation)
 					manageNormalTexture(button)
 					
-					-- Throttle range overlay updates - only check every 3 ticks
+					-- Update range overlay without throttling - need responsive updates when range changes
 					if button._zBBG_rangeOverlay then
-						usableRangeThrottle = (usableRangeThrottle or 0) + 1
-						if usableRangeThrottle >= 3 then
-							usableRangeThrottle = 0
-							zBarButtonBG.updateRangeOverlay(button)
-						end
+						zBarButtonBG.updateRangeOverlay(button)
 					end
 				end
 			end)

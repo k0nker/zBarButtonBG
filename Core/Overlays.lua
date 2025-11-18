@@ -212,7 +212,7 @@ function Overlays.setRangeOverlay(button, barName)
 		if button._zBBG_swipeMask then
 			Util.applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_swipeMask)
 		end
-		button._zBBG_rangeOverlay:Show()
+		-- Don't show here - let updateRangeOverlay control visibility based on actual range
 	elseif button._zBBG_rangeOverlay then
 		button._zBBG_rangeOverlay:Hide()
 	end
