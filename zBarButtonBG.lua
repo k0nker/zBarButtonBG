@@ -529,7 +529,7 @@ function zBarButtonBG.createActionBarBackgrounds()
         updateFrame:RegisterEvent("UPDATE_BINDINGS")
         updateFrame:RegisterEvent("CURSOR_CHANGED")
         -- These fire when mounting/dismounting messes with the action bars
-        updateFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+        --updateFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
         updateFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
         updateFrame:SetScript("OnEvent", function(self, event)
             if zBarButtonBG.enabled then
@@ -558,9 +558,9 @@ function zBarButtonBG.createActionBarBackgrounds()
                             zBarButtonBG.updateRangeOverlay(data.button)
                         end
                     end
-                elseif event == "ACTIONBAR_SLOT_CHANGED" then
+                --elseif event == "ACTIONBAR_SLOT_CHANGED" then
                     -- do nada
-                else
+                --else
                     -- Just keybinding changes, rebuild everything
                     zBarButtonBG.createActionBarBackgrounds()
                 end
