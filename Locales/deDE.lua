@@ -6,7 +6,7 @@ if not L then return end
 -- Core Interface Sections
 -- ############################################################
 L["General"] = "Allgemein"
-L["Appearance"] = "Aussehen" 
+L["Appearance"] = "Aussehen"
 L["Backdrop"] = "Hintergrund"
 L["Button Background"] = "Schaltflächen-Hintergrund"
 L["Border"] = "Rand"
