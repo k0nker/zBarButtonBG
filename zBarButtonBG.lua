@@ -360,6 +360,19 @@ function zBarButtonBG.updateFonts()
     end
 end
 
+-- Update fonts on a single button without rebuilding everything
+function zBarButtonBG.updateButtonFont(buttonName)
+    if not zBarButtonBG.enabled then return end
+
+    local data = zBarButtonBG.frames[buttonName]
+    if data and data.button then
+        local barName = zBarButtonBG.buttonGroups[buttonName]
+        if barName then
+            Styling.setTextStyling(data.button, barName)
+        end
+    end
+end
+
 -- ############################################################
 -- Load settings when we log in
 -- ############################################################
@@ -438,16 +451,16 @@ end
 function zBarButtonBG.createActionBarBackgrounds()
     -- All the different types of action bar buttons we want to modify
     local buttonBases = {
-        "ActionButton",        -- Main action bar (1-12)
-        "MultiBarBottomLeftButton", -- Bottom left bar
+        "ActionButton",              -- Main action bar (1-12)
+        "MultiBarBottomLeftButton",  -- Bottom left bar
         "MultiBarBottomRightButton", -- Bottom right bar
-        "MultiBarRightButton", -- Right bar 1
-        "MultiBarLeftButton",  -- Right bar 2
-        "MultiBar5Button",     -- Bar 5
-        "MultiBar6Button",     -- Bar 6
-        "MultiBar7Button",     -- Bar 7
-        "PetActionButton",     -- Pet action bar
-        "StanceButton",        -- Stance/form bar
+        "MultiBarRightButton",       -- Right bar 1
+        "MultiBarLeftButton",        -- Right bar 2
+        "MultiBar5Button",           -- Bar 5
+        "MultiBar6Button",           -- Bar 6
+        "MultiBar7Button",           -- Bar 7
+        "PetActionButton",           -- Pet action bar
+        "StanceButton",              -- Stance/form bar
     }
 
     for _, baseName in ipairs(buttonBases) do
@@ -530,7 +543,7 @@ function zBarButtonBG.createActionBarBackgrounds()
                             end
                         end
                     end
-                elseif event == "ACTIONBAR_PAGE_CHANGED" or event == "ACTIONBAR_SLOT_CHANGED" or event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
+                elseif event == "ACTIONBAR_PAGE_CHANGED" or event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
                     -- Action bars changed - need to update our range overlays since buttons might have different spells now
                     if zBarButtonBG._debug then
                         zBarButtonBG.print("Action bar changed (" .. event .. ") - fixing up range overlays")
@@ -545,6 +558,8 @@ function zBarButtonBG.createActionBarBackgrounds()
                             zBarButtonBG.updateRangeOverlay(data.button)
                         end
                     end
+                elseif event == "ACTIONBAR_SLOT_CHANGED" then
+                    -- do nada
                 else
                     -- Just keybinding changes, rebuild everything
                     zBarButtonBG.createActionBarBackgrounds()
@@ -617,7 +632,7 @@ function zBarButtonBG.createActionBarBackgrounds()
                 if zBarButtonBG._debug then
                     zBarButtonBG._hookCallCounts.rangeIndicator = (zBarButtonBG._hookCallCounts.rangeIndicator or 0) + 1
                 end
-                --manageNormalTexture(button)
+                manageNormalTexture(button)
 
                 -- Update range overlay without throttling - IsActionInRange is only called for buttons with actions
                 -- and we need responsive updates when range status changes

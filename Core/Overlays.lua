@@ -118,7 +118,7 @@ function Overlays.updateRangeOverlay(button)
         -- Empty button - just hide overlay if it's shown
         if overlay:IsShown() then
             overlay:Hide()
-            zBarButtonBG.updateFonts(button)
+            zBarButtonBG.updateButtonFont(button)
         end
         return
     end
@@ -151,7 +151,7 @@ function Overlays.updateRangeOverlay(button)
         overlay:Show()
     elseif not shouldShow and overlay:IsShown() then
         overlay:Hide()
-        zBarButtonBG.updateFonts(button)
+        zBarButtonBG.updateButtonFont(button)
     end
 end
 
@@ -209,7 +209,6 @@ function Overlays.setRangeOverlay(button, barName)
             button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
             button._zBBG_rangeOverlay:SetAllPoints(button.icon)
             button._zBBG_rangeOverlay:Hide()
-            zBarButtonBG.updateFonts(button)
         end
 
         if button._zBBG_swipeMask then
@@ -218,7 +217,6 @@ function Overlays.setRangeOverlay(button, barName)
         -- Don't show here - let updateRangeOverlay control visibility based on actual range
     elseif button._zBBG_rangeOverlay then
         button._zBBG_rangeOverlay:Hide()
-        zBarButtonBG.updateFonts(button)
     end
 end
 
