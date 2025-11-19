@@ -4,7 +4,7 @@ if not L then return end
 
 -- ############################################################
 L["General"] = "General"
-L["Appearance"] = "Appearance" 
+L["Appearance"] = "Appearance"
 L["Backdrop"] = "Backdrop"
 L["Button Background"] = "Button Background"
 L["Border"] = "Border"
@@ -43,9 +43,13 @@ L["Profile Name:"] = "Profile Name:"
 L["Enter a name for the new profile"] = "Enter a name for the new profile"
 L["Profile created: "] = "Profile created: "
 L["Profile deleted: "] = "Profile deleted: "
+L["Enter a profile name and press Enter to create it"] = "Enter a profile name and press Enter to create it"
 L["Switched to profile: "] = "Switched to profile: "
 L["Settings copied from: "] = "Settings copied from: "
 L["Current profile reset to defaults!"] = "Current profile reset to defaults!"
+L["Use Combat Profile"] = "Use Combat Profile"
+L["Combat Profile"] = "Combat Profile"
+L["Profile to replace all bars when in combat"] = "Profile to replace all bars when in combat"
 
 -- ############################################################
 -- Profile Import/Export
@@ -65,7 +69,7 @@ L["Reset Profile"] = "Reset Profile"
 L["Reset current profile to defaults"] = "Reset current profile to defaults"
 L["Reset Button Settings"] = "Reset Button Settings"
 L["Reset all button-related settings to default values"] = "Reset all button-related settings to default values"
-L["Reset Indicator Settings"] = "Reset Indicator Settings" 
+L["Reset Indicator Settings"] = "Reset Indicator Settings"
 L["Reset all indicator-related settings to default values"] = "Reset all indicator-related settings to default values"
 L["Reset Macro Settings"] = "Reset Macro Settings"
 L["Reset macro name text settings to default values"] = "Reset macro name text settings to default values"
@@ -146,7 +150,7 @@ L["How far the backdrop extends to the right of the button (in pixels)"] = "How 
 -- ############################################################
 L["Font family"] = "Font family"
 L["Font style flags"] = "Font style flags"
-L["Font Size"] = "Font Size" 
+L["Font Size"] = "Font Size"
 L["Font Flags"] = "Font Flags"
 L["None"] = "None"
 L["Outline"] = "Outline"
@@ -183,7 +187,7 @@ L["Keybind Font Style"] = "Keybind Font Style"
 -- Text Alignment & Position
 -- ############################################################
 L["Left"] = "Left"
-L["Center"] = "Center" 
+L["Center"] = "Center"
 L["Right"] = "Right"
 L["Top"] = "Top"
 L["Bottom"] = "Bottom"

@@ -147,26 +147,15 @@ function zBarButtonBGAce:ShowNewProfileDialog()
     frame:SetWidth(350)
     frame:SetHeight(150)
 
-    -- Create the editbox
-    local editbox = AceGUI:Create("EditBox")
+    -- Track if profile was already created to prevent double-creation
+    local profileCreated = false
+
+    -- Create the editbox using MultiLineEditBox to avoid the built-in accept button
+    local editbox = AceGUI:Create("MultiLineEditBox")
     editbox:SetLabel(L["Profile Name:"])
     editbox:SetWidth(250)
-    editbox:SetCallback("OnEnterPressed", function(widget)
-        local profileName = widget:GetText()
-        if profileName and profileName ~= "" then
-            local success, message = self:CreateNewProfile(profileName)
-            if success then
-                -- Ensure ALL default values are explicitly saved to the new profile
-                populateProfileWithDefaults(self.db.profiles[profileName])
-                zBarButtonBG.print(L["Profile created: "] .. profileName)
-                -- Refresh the config to update dropdowns
-                LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
-                frame:Hide()
-            else
-                zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
-            end
-        end
-    end)
+    editbox:SetNumLines(1)
+    editbox:DisableButton(true)
     frame:AddChild(editbox)
 
     -- Create buttons group
@@ -178,21 +167,29 @@ function zBarButtonBGAce:ShowNewProfileDialog()
     -- Create button
     local createButton = AceGUI:Create("Button")
     createButton:SetText(L["Create"])
-    createButton:SetWidth(80)
+    createButton:SetWidth(100)
     createButton:SetCallback("OnClick", function()
+        if profileCreated then return end -- Prevent double-click
+
         local profileName = editbox:GetText()
-        if profileName and profileName ~= "" then
-            local success, message = self:CreateNewProfile(profileName)
-            if success then
-                -- Ensure ALL default values are explicitly saved to the new profile
-                populateProfileWithDefaults(self.db.profiles[profileName])
-                zBarButtonBG.print(L["Profile created: "] .. profileName)
-                -- Refresh the config to update dropdowns
-                LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
-                frame:Hide()
-            else
-                zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
-            end
+        if not profileName or profileName == "" then
+            zBarButtonBG.print("|cFFFF0000Error:|r Profile name cannot be empty")
+            return
+        end
+
+        local success, message = self:CreateNewProfile(profileName)
+        if success then
+            profileCreated = true
+            -- Ensure ALL default values are explicitly saved to the new profile
+            zBarButtonBG.print(L["Profile created: "] .. profileName)
+
+            -- Refresh the config to update dropdowns
+            LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
+
+            -- Close the dialog by triggering the close callback
+            frame:Fire("OnClose")
+        else
+            zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
         end
     end)
     buttonGroup:AddChild(createButton)
@@ -292,11 +289,23 @@ function zBarButtonBGAce:GetOptionsTable()
                     },
                     createProfile = {
                         order = nextOrderNumber(),
-                        type = "execute",
+                        type = "input",
                         name = L["New Profile"],
-                        desc = L["Create a new profile"],
-                        func = function()
-                            self:ShowNewProfileDialog()
+                        desc = L["Enter a profile name and press Enter to create it"],
+                        multiline = false,
+                        get = function() return "" end,
+                        set = function(_, value)
+                            if not value or value == "" then
+                                return
+                            end
+
+                            local success, message = self:CreateNewProfile(value)
+                            if success then
+                                zBarButtonBG.print(L["Profile created: "] .. value)
+                                LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
+                            else
+                                zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
+                            end
                         end,
                     },
                     spacer2 = {
@@ -323,6 +332,52 @@ function zBarButtonBGAce:GetOptionsTable()
                                 zBarButtonBG.createActionBarBackgrounds()
                             end
                             zBarButtonBG.print(L["Current profile reset to defaults!"])
+                        end,
+                    },
+                    combatSpacer = {
+                        order = nextOrderNumber(),
+                        type = "description",
+                        name = " ",
+                    },
+                    rightBar1Toggle = {
+                        order = nextOrderNumber(),
+                        type = "toggle",
+                        name = L["Use Combat Profile"],
+                        get = function(info)
+                            if self.db.char and self.db.char.useCombatProfile then
+                                return self.db.char.useCombatProfile or false
+                            end
+                            return false
+                        end,
+                        set = function(info, value)
+                            self.db.char.useCombatProfile = value
+                            if zBarButtonBG.enabled then
+                                zBarButtonBG.removeActionBarBackgrounds()
+                                zBarButtonBG.createActionBarBackgrounds()
+                            end
+                        end,
+                    },
+                    selectCombatProfile = {
+                        order = nextOrderNumber(),
+                        type = "select",
+                        name = L["Combat Profile"],
+                        desc = L["Profile to replace all bars when in combat"],
+                        values = function()
+                            local profiles = {}
+                            for name, _ in pairs(self.db.profiles) do
+                                profiles[name] = name
+                            end
+                            return profiles
+                        end,
+                        get = function()
+                            return self.db.char.combatProfileName or "Default"
+                        end,
+                        set = function(_, value)
+                            -- Set combatprofile to the selected profile
+                            self.db.char.combatProfileName = value
+                        end,
+                        disabled = function()
+                            return not (self.db.char and self.db.char.useCombatProfile)
                         end,
                     },
                     spacer3 = {
@@ -375,7 +430,6 @@ function zBarButtonBGAce:GetOptionsTable()
                                 self.db:GetCurrentProfile())
                             if success then
                                 -- Ensure ALL default values are explicitly saved to the destination profile
-                                populateProfileWithDefaults(self.db.profiles[self.db:GetCurrentProfile()])
                                 zBarButtonBG.print(L["Settings copied from: "] ..
                                     self.selectedProfileForActions .. "' -> '" .. self.db:GetCurrentProfile())
                                 -- Rebuild action bars with updated settings
@@ -543,9 +597,6 @@ function zBarButtonBGAce:GetOptionsTable()
                                     for key, value in pairs(profile) do
                                         zBarButtonBGAce.db.profile[key] = value
                                     end
-
-                                    -- Ensure ALL default values are explicitly saved to the imported profile
-                                    populateProfileWithDefaults(zBarButtonBGAce.db.profile)
 
                                     zBarButtonBG.charSettings = zBarButtonBGAce.db.profile
 
@@ -1019,6 +1070,9 @@ function zBarButtonBGAce:GetOptionsTable()
                             if zBarButtonBG.enabled then
                                 zBarButtonBG.removeActionBarBackgrounds()
                                 zBarButtonBG.createActionBarBackgrounds()
+                            end
+                            if zBarButtonBG.enabled and zBarButtonBG.updateColors then
+                                zBarButtonBG.updateColors()
                             end
                         end,
                     },

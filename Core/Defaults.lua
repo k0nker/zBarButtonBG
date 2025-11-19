@@ -24,7 +24,7 @@ addonTable.Core.Defaults = {
         showRangeIndicator = true,
         rangeIndicatorColor = { r = .42, g = 0.07, b = .12, a = 0.75 },
         fadeCooldown = false,
-        cooldownColor = { r = 0, g = 0, b = 0, a = 0.5 },
+        cooldownColor = { r = 0, g = 0, b = 0, a = 0.50 },
         showSpellAlerts = true,
         spellAlertColor = { r = 1.0, g = 0.6, b = 0.2, a = 0.95 },
         suggestedActionColor = { r = 0.314, g = 0.859, b = 1.0, a = 1 },
@@ -56,6 +56,8 @@ addonTable.Core.Defaults = {
         keybindOffsetY = 0
     },
     char = {
+        useCombatProfile = false,
+        combatProfileName = "Default",
         barSettings = {
             ActionButton = {
                 differentProfile = false,

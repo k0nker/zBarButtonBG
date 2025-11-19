@@ -47,6 +47,9 @@ L["Profile deleted: "] = "設定檔已刪除："
 L["Switched to profile: "] = "切換到設定檔："
 L["Settings copied from: "] = "設定已從以下位置複製："
 L["Current profile reset to defaults!"] = "目前設定檔已重設為預設值！"
+L["Use Combat Profile"] = "使用戰鬥設定檔"
+L["Combat Profile"] = "戰鬥設定檔"
+L["Profile to replace all bars when in combat"] = "戰鬥中替換所有工具列的設定檔"
 
 -- ############################################################
 -- Reset Operations & Confirmations

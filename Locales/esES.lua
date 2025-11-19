@@ -47,6 +47,9 @@ L["Profile deleted: "] = "Perfil eliminado: "
 L["Switched to profile: "] = "Cambiado al perfil: "
 L["Settings copied from: "] = "Ajustes copiados de: "
 L["Current profile reset to defaults!"] = "¡Perfil actual restablecido a valores predeterminados!"
+L["Use Combat Profile"] = "Usar Perfil de Combate"
+L["Combat Profile"] = "Perfil de Combate"
+L["Profile to replace all bars when in combat"] = "Perfil para reemplazar todas las barras en combate"
 
 -- ############################################################
 -- Reset Operations & Confirmations

@@ -374,19 +374,168 @@ function zBarButtonBG.updateButtonFont(buttonName)
 end
 
 -- ############################################################
+-- COMBAT MODE PROFILE SWAPPING
+-- ############################################################
+
+-- Store the pre-combat bar profile settings
+zBarButtonBG._preCombatBarSettings = {}
+zBarButtonBG._combatModeActive = false
+
+-- Get the combat profile name from character settings
+function zBarButtonBG.getCombatProfile()
+    local useCombatProfile = zBarButtonBGAce.db.char.useCombatProfile
+    local combatProfileName = zBarButtonBGAce.db.char.combatProfileName
+
+    if not useCombatProfile or not combatProfileName then
+        return nil
+    end
+
+    -- Check if profile exists
+    if not zBarButtonBGAce.db.profiles[combatProfileName] then
+        return nil -- Profile doesn't exist, fall back to defaults
+    end
+
+    return combatProfileName
+end
+
+-- Enter combat mode - swap all bars to combat profile
+function zBarButtonBG.enterCombatMode()
+    if zBarButtonBG._combatModeActive or not zBarButtonBG.enabled then return end
+
+    local combatProfile = zBarButtonBG.getCombatProfile()
+    if not combatProfile then return end
+
+    -- Initialize storage if needed
+    if not zBarButtonBGAce.db.char.barSettings then
+        zBarButtonBGAce.db.char.barSettings = {}
+    end
+
+    -- Get ALL possible bar base names from defaults
+    local barBases = {
+        "ActionButton",
+        "MultiBarBottomLeftButton",
+        "MultiBarBottomRightButton",
+        "MultiBarRightButton",
+        "MultiBarLeftButton",
+        "MultiBar5Button",
+        "MultiBar6Button",
+        "MultiBar7Button",
+        "PetActionButton",
+        "StanceButton",
+    }
+
+    -- Store current settings for ALL bars before modifying
+    for _, barBaseName in ipairs(barBases) do
+        if not zBarButtonBGAce.db.char.barSettings[barBaseName] then
+            zBarButtonBGAce.db.char.barSettings[barBaseName] = {}
+        end
+
+        -- Deep copy current settings
+        zBarButtonBG._preCombatBarSettings[barBaseName] = {
+            differentProfile = zBarButtonBGAce.db.char.barSettings[barBaseName].differentProfile,
+            profileName = zBarButtonBGAce.db.char.barSettings[barBaseName].profileName
+        }
+
+        -- Apply combat profile to this bar
+        zBarButtonBGAce.db.char.barSettings[barBaseName].differentProfile = true
+        zBarButtonBGAce.db.char.barSettings[barBaseName].profileName = combatProfile
+    end
+
+    zBarButtonBG._combatModeActive = true
+    zBarButtonBG.updateColors()
+    zBarButtonBG.removeActionBarBackgrounds()
+    zBarButtonBG.createActionBarBackgrounds()
+end
+
+-- Exit combat mode - restore pre-combat profiles
+function zBarButtonBG.exitCombatMode()
+    if not zBarButtonBG._combatModeActive or not zBarButtonBG.enabled then return end
+
+    -- Restore previous profile assignments from stored snapshot
+    for barBaseName, settings in pairs(zBarButtonBG._preCombatBarSettings) do
+        if not zBarButtonBGAce.db.char.barSettings then
+            zBarButtonBGAce.db.char.barSettings = {}
+        end
+        if not zBarButtonBGAce.db.char.barSettings[barBaseName] then
+            zBarButtonBGAce.db.char.barSettings[barBaseName] = {}
+        end
+
+        zBarButtonBGAce.db.char.barSettings[barBaseName].differentProfile = settings.differentProfile
+        zBarButtonBGAce.db.char.barSettings[barBaseName].profileName = settings.profileName
+    end
+
+    zBarButtonBG._preCombatBarSettings = {}
+    zBarButtonBG._combatModeActive = false
+    zBarButtonBG.updateColors()
+    zBarButtonBG.removeActionBarBackgrounds()
+    zBarButtonBG.createActionBarBackgrounds()
+end
+
+-- ############################################################
 -- Load settings when we log in
 -- ############################################################
 local Frame = CreateFrame("Frame")
 Frame:RegisterEvent("PLAYER_LOGIN")
+Frame:RegisterEvent("PLAYER_REGEN_DISABLED") -- Enter combat
+Frame:RegisterEvent("PLAYER_REGEN_ENABLED")  -- Exit combat
 Frame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_LOGIN" then
         -- If we had this enabled before, turn it back on after a short delay
         if zBarButtonBG.charSettings.enabled then
             zBarButtonBG.enabled = true
             C_Timer.After(3.5, function()
+                -- Check if combat profile is stuck on but we're not in combat
+                -- This handles the reload-while-stuck-in-combat case
+                if not InCombatLockdown() and zBarButtonBGAce.db.char.useCombatProfile then
+                    -- Check if any bar still has combat profile applied
+                    local needsReset = false
+                    local combatProfileName = zBarButtonBGAce.db.char.combatProfileName
+                    if zBarButtonBGAce.db.char.barSettings then
+                        for barBaseName, barSetting in pairs(zBarButtonBGAce.db.char.barSettings) do
+                            if barSetting.profileName == combatProfileName and barSetting.differentProfile then
+                                needsReset = true
+                                break
+                            end
+                        end
+                    end
+
+                    if needsReset then
+                        -- Reset all bars to default (not using different profile)
+                        local barBases = {
+                            "ActionButton",
+                            "MultiBarBottomLeftButton",
+                            "MultiBarBottomRightButton",
+                            "MultiBarRightButton",
+                            "MultiBarLeftButton",
+                            "MultiBar5Button",
+                            "MultiBar6Button",
+                            "MultiBar7Button",
+                            "PetActionButton",
+                            "StanceButton",
+                        }
+                        if not zBarButtonBGAce.db.char.barSettings then
+                            zBarButtonBGAce.db.char.barSettings = {}
+                        end
+                        for _, barBaseName in ipairs(barBases) do
+                            if not zBarButtonBGAce.db.char.barSettings[barBaseName] then
+                                zBarButtonBGAce.db.char.barSettings[barBaseName] = {}
+                            end
+                            zBarButtonBGAce.db.char.barSettings[barBaseName].differentProfile = false
+                            zBarButtonBGAce.db.char.barSettings[barBaseName].profileName = "Default"
+                        end
+                        zBarButtonBG._combatModeActive = false
+                    end
+                end
+
                 zBarButtonBG.createActionBarBackgrounds()
             end)
         end
+    elseif event == "PLAYER_REGEN_DISABLED" then
+        -- Entering combat
+        zBarButtonBG.enterCombatMode()
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        -- Exiting combat
+        zBarButtonBG.exitCombatMode()
     end
 end)
 
@@ -558,9 +707,9 @@ function zBarButtonBG.createActionBarBackgrounds()
                             zBarButtonBG.updateRangeOverlay(data.button)
                         end
                     end
-                --elseif event == "ACTIONBAR_SLOT_CHANGED" then
+                    --elseif event == "ACTIONBAR_SLOT_CHANGED" then
                     -- do nada
-                --else
+                    --else
                     -- Just keybinding changes, rebuild everything
                     zBarButtonBG.createActionBarBackgrounds()
                 end

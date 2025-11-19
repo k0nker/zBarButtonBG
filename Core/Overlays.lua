@@ -205,11 +205,13 @@ function Overlays.setRangeOverlay(button, barName)
     if showRangeIndicator then
         if not button._zBBG_rangeOverlay then
             button._zBBG_rangeOverlay = button:CreateTexture(nil, "OVERLAY", nil, 1)
-            local c = zBarButtonBG.GetSettingInfo(barName, "rangeIndicatorColor")
-            button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
             button._zBBG_rangeOverlay:SetAllPoints(button.icon)
             button._zBBG_rangeOverlay:Hide()
         end
+
+        -- Always update the color (both on creation and when called from updateColors())
+        local c = zBarButtonBG.GetSettingInfo(barName, "rangeIndicatorColor")
+        button._zBBG_rangeOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
 
         if button._zBBG_swipeMask then
             Util.applyMaskToTexture(button._zBBG_rangeOverlay, button._zBBG_swipeMask)
@@ -229,19 +231,55 @@ function Overlays.setCooldownOverlay(button, barName)
     if zBarButtonBG.midnightCooldown and fadeCooldown then
         if not button._zBBG_cooldownOverlay then
             button._zBBG_cooldownOverlay = button:CreateTexture(nil, "BACKGROUND", nil, 1)
-            local c = zBarButtonBG.GetSettingInfo(barName, "cooldownColor")
-            button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
             button._zBBG_cooldownOverlay:Hide()
 
             -- Hook cooldown show/hide to sync overlay
             if button.cooldown and not button.cooldown._zBBG_hooked then
                 local originalShow = button.cooldown:GetScript("OnShow") or function() end
                 local originalHide = button.cooldown:GetScript("OnHide") or function() end
-
                 button.cooldown:SetScript("OnShow", function(self)
                     originalShow(self)
                     if self:GetParent() and self:GetParent()._zBBG_cooldownOverlay then
-                        self:GetParent()._zBBG_cooldownOverlay:Show()
+                        local barName = zBarButtonBG.GetBarNameFromButton(self:GetParent():GetName())
+                        local fadeCooldown = zBarButtonBG.GetSettingInfo(barName, "fadeCooldown")
+                        if fadeCooldown then
+                            self:GetParent()._zBBG_cooldownOverlay:Show()
+                        else
+                            self:GetParent()._zBBG_cooldownOverlay:Hide()
+                        end
+                        --[[
+                        local overlay = self:GetParent()._zBBG_cooldownOverlay
+                        local c = zBarButtonBG.GetSettingInfo(barName, "cooldownColor")
+                        --overlay:SetAlpha(0)
+                        overlay:Show()
+                        --UIFrameFadeIn(overlay, 2, 0, c.a)
+                        if button.action and type(button.action) == "number" and button.action > 0 then
+                            local cooldownInfo = C_ActionBar.GetActionCooldown(button.action)
+                            local start = cooldownInfo.start
+                            local duration = cooldownInfo.duration
+                            local enable = cooldownInfo.enable
+                            local modRate = cooldownInfo.modRate
+                            if duration then
+                                local currentTime = date("%H:%M:%S")
+                                print("[" .. currentTime .. "] Cooldown button " .. (button:GetParent():GetName() or "Unknown") .. ", Start: " .. tostring(start) .. ", Duration: " .. tostring(duration) .. " Enabled: " .. tostring(enable) .. ", ModRate: " .. tostring(modRate))
+                                --run the same getactioncooldown after 1 second to see if the duration changes (it might due to haste or other effects)
+                                C_Timer.After(3, function()
+                                    if button.action and type(button.action) == "number" and button.action > 0 then
+                                        local isUsable, isLackingResources = C_ActionBar.IsUsableAction(button.action)
+                                        local cooldownInfo2 = C_ActionBar.GetActionCooldown(button.action)
+                                        local start2 = cooldownInfo2.start
+                                        local duration2 = cooldownInfo2.duration
+                                        local enable2 = cooldownInfo2.enable
+                                        local modRate2 = cooldownInfo2.modRate
+                                        if duration2 then
+                                            local currentTime2 = date("%H:%M:%S")
+                                            print("[" .. currentTime2 .. "] Updated Cooldown button " .. (button:GetParent():GetName() or "Unknown") .. ", Start: " .. tostring(start2) .. ", Duration: " .. tostring(duration2) .. " Enabled: " .. tostring(enable2) .. ", ModRate: " .. tostring(modRate2) .. ", Usable: " .. tostring(isUsable) .. ", LackingResources: " .. tostring(isLackingResources))
+                                        end
+                                    end
+                                end)
+                            end
+                        end
+                        ]] --
                     end
                 end)
 
@@ -255,6 +293,10 @@ function Overlays.setCooldownOverlay(button, barName)
                 button.cooldown._zBBG_hooked = true
             end
         end
+
+        -- Always update the color (both on creation and when called from updateColors())
+        local c = zBarButtonBG.GetSettingInfo(barName, "cooldownColor")
+        button._zBBG_cooldownOverlay:SetColorTexture(c.r, c.g, c.b, c.a)
 
         -- Position overlay over the icon
         button._zBBG_cooldownOverlay:ClearAllPoints()
