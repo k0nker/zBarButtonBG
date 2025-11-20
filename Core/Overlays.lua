@@ -470,7 +470,7 @@ function Overlays.setupSpellAlertFlipbooks(button, barName)
     -- Setup ProcAltGlow
     if alert.ProcAltGlow then
         alert.ProcAltGlow:SetTexture(procFlipbookTexture)
-        local alertColor = zBarButtonBG.GetSettingInfo(barName, "spellAlertColor") or
+        local alertColor = zBarButtonBG.GetSettingInfo(barName, "procAltGlowColor") or
             { r = 1.0, g = 0.5, b = 0.0, a = 0.8 }
         alert.ProcAltGlow:SetVertexColor(alertColor.r, alertColor.g, alertColor.b, alertColor.a)
         alert.ProcAltGlow:SetSize(alertWidth or 36, alertHeight or 36)
@@ -572,7 +572,7 @@ function Overlays.updateSpellAlertFlipbooks(button, barName)
     if alert.ProcAltGlow then
         alert.ProcAltGlow:SetTexture(procFlipbookTexture)
         -- Reapply color to alt glow
-        local alertColor = zBarButtonBG.GetSettingInfo(barName, "spellAlertColor") or
+        local alertColor = zBarButtonBG.GetSettingInfo(barName, "procAltGlowColor") or
             { r = 1.0, g = 0.5, b = 0.0, a = 0.8 }
         alert.ProcAltGlow:SetVertexColor(alertColor.r, alertColor.g, alertColor.b, alertColor.a)
     end

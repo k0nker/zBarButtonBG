@@ -18,10 +18,6 @@ if LSM then
     end
 
     -- Register custom addon fonts from Assets folder
-    if not LSM:IsValid("font", "Champagne & Limousines Bold") then
-        LSM:Register("font", "Champagne & Limousines Bold",
-            [[Interface\AddOns\zBarButtonBG\Assets\Champagne & Limousines Bold.ttf]])
-    end
     if not LSM:IsValid("font", "HOOGE") then
         LSM:Register("font", "HOOGE", [[Interface\AddOns\zBarButtonBG\Assets\HOOGE.TTF]])
     end
@@ -34,9 +30,6 @@ if LSM then
     if not LSM:IsValid("font", "OpenSans Condensed Light Italic") then
         LSM:Register("font", "OpenSans Condensed Light Italic",
             [[Interface\AddOns\zBarButtonBG\Assets\OpenSans-CondLightItalic.ttf]])
-    end
-    if not LSM:IsValid("font", "Vintage One") then
-        LSM:Register("font", "Vintage One", [[Interface\AddOns\zBarButtonBG\Assets\VintageOne.ttf]])
     end
     if not LSM:IsValid("font", "Homespun") then
         LSM:Register("font", "Homespun", [[Interface\AddOns\zBarButtonBG\Assets\homespun.ttf]])
@@ -710,6 +703,21 @@ function zBarButtonBGAce:GetOptionsTable()
                             end
                         end,
                     },
+                    maskBackdrop = {
+                        order = nextOrderNumber(),
+                        type = "toggle",
+                        name = L["Mask Backdrop"],
+                        desc = L["Mask outer background frame"],
+                        get = function() return self.db.profile.backdropMaskedToButton end,
+                        set = function(_, value)
+                            self.db.profile.backdropMaskedToButton = value
+                            zBarButtonBG.charSettings.backdropMaskedToButton = value
+                            if zBarButtonBG.enabled then
+                                zBarButtonBG.removeActionBarBackgrounds()
+                                zBarButtonBG.createActionBarBackgrounds()
+                            end
+                        end,
+                    },
                     spacer2 = {
                         order = nextOrderNumber(),
                         type = "description",
@@ -995,7 +1003,7 @@ function zBarButtonBGAce:GetOptionsTable()
                             self.db.profile.rangeIndicatorColor = { r = defaults.rangeIndicatorColor.r, g = defaults.rangeIndicatorColor.g, b = defaults.rangeIndicatorColor.b, a = defaults.rangeIndicatorColor.a }
                             self.db.profile.fadeCooldown = defaults.fadeCooldown
                             self.db.profile.cooldownColor = { r = defaults.cooldownColor.r, g = defaults.cooldownColor.g, b = defaults.cooldownColor.b, a = defaults.cooldownColor.a }
-                            self.db.profile.spellAlertColor = { r = defaults.spellAlertColor.r, g = defaults.spellAlertColor.g, b = defaults.spellAlertColor.b, a = defaults.spellAlertColor.a }
+                            self.db.profile.procAltGlowColor = { r = defaults.procAltGlowColor.r, g = defaults.procAltGlowColor.g, b = defaults.procAltGlowColor.b, a = defaults.procAltGlowColor.a }
                             self.db.profile.suggestedActionColor = { r = defaults.suggestedActionColor.r, g = defaults.suggestedActionColor.g, b = defaults.suggestedActionColor.b, a = defaults.suggestedActionColor.a }
                             -- Update native settings
                             zBarButtonBG.charSettings = self.db.profile
@@ -1104,35 +1112,19 @@ function zBarButtonBGAce:GetOptionsTable()
                         type = "description",
                         name = " ",
                     },
-                    --[[ showSpellAlerts = {
-						order = nextOrderNumber(),
-						type = "toggle",
-						name = L["Spell Alerts"],
-						desc = L["Show custom spell alert indicators"],
-						get = function() return self.db.profile.showSpellAlerts end,
-						set = function(_, value)
-							self.db.profile.showSpellAlerts = value
-							zBarButtonBG.charSettings.showSpellAlerts = value
-							if zBarButtonBG.enabled then
-								zBarButtonBG.removeActionBarBackgrounds()
-								zBarButtonBG.createActionBarBackgrounds()
-							end
-						end,
-					},]] --
-                    spellAlertColor = {
+                    procAltGlowColor = {
                         order = nextOrderNumber(),
                         type = "color",
                         name = L["Proc Alt Glow Color"],
                         desc = L["Color of spell proc alerts"],
-                        disabled = function() return not self.db.profile.showSpellAlerts end,
                         hasAlpha = true,
                         get = function()
-                            local c = self.db.profile.spellAlertColor
+                            local c = self.db.profile.procAltGlowColor
                             return (c.r or 1.0), (c.g or 0.6), (c.b or 0.2), (c.a or 0.95)
                         end,
                         set = function(_, r, g, b, a)
-                            self.db.profile.spellAlertColor = { r = r, g = g, b = b, a = a }
-                            zBarButtonBG.charSettings.spellAlertColor = { r = r, g = g, b = b, a = a }
+                            self.db.profile.procAltGlowColor = { r = r, g = g, b = b, a = a }
+                            zBarButtonBG.charSettings.procAltGlowColor = { r = r, g = g, b = b, a = a }
                             if zBarButtonBG.enabled and zBarButtonBG.updateColors then
                                 zBarButtonBG.updateColors()
                             end
@@ -1143,7 +1135,6 @@ function zBarButtonBGAce:GetOptionsTable()
                         type = "color",
                         name = L["Suggested Action Color"],
                         desc = L["Color of suggested action indicators"],
-                        disabled = function() return not self.db.profile.showSpellAlerts end,
                         hasAlpha = true,
                         get = function()
                             local c = self.db.profile.suggestedActionColor

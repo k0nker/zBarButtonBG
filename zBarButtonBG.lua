@@ -560,6 +560,7 @@ function zBarButtonBG.removeActionBarBackgrounds()
                     Utilities.removeMaskFromTexture(data.button.icon)
                     data.button._zBBG_customMask = nil
                 end
+
                 -- Clear the styled flag so button gets reprocessed
                 data.button._zBBG_styled = false
             end

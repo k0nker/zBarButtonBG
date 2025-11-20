@@ -208,11 +208,25 @@ function ButtonSkinning.setOuterBackground(button, barName)
     if showBackdrop then
         if not button._zBBG_outerFrame then
             button._zBBG_outerFrame = CreateFrame("Frame", nil, button)
-            button._zBBG_outerFrame:SetFrameLevel(0)
-            button._zBBG_outerFrame:SetFrameStrata("BACKGROUND")
+        end
+        button._zBBG_outerFrame:SetFrameLevel(0)
+        button._zBBG_outerFrame:SetFrameStrata("BACKGROUND")
 
+        if not button._zBBG_outerBg then
             button._zBBG_outerBg = button._zBBG_outerFrame:CreateTexture(nil, "BACKGROUND", nil, -8)
-            button._zBBG_outerBg:SetAllPoints(button._zBBG_outerFrame)
+        end
+        button._zBBG_outerBg:SetAllPoints(button._zBBG_outerFrame)
+        if zBarButtonBG.GetSettingInfo(barName, "backdropMaskedToButton") then
+            if not button._zBBG_outerMask then
+                button._zBBG_outerMask = button._zBBG_outerFrame:CreateMaskTexture()
+            end
+            button._zBBG_outerMask:SetTexture(ButtonStyles.GetSwipeMaskPath(barName))
+            button._zBBG_outerMask:SetAllPoints(button._zBBG_outerFrame)
+            applyMaskToTexture(button._zBBG_outerBg, button._zBBG_outerMask)
+        else
+            if button._zBBG_outerMask then
+                removeMaskFromTexture(button._zBBG_outerBg, button._zBBG_outerMask)
+            end
         end
 
         button._zBBG_outerFrame:Show()
