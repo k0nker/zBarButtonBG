@@ -347,8 +347,8 @@ function Overlays.setupAssistedHighlightFlipbook(button, barName)
     flipbook:SetSize(buttonWidth or 36, buttonHeight or 36)
     flipbook:SetPoint("CENTER", button, "CENTER")
 
-    -- Set to BACKGROUND layer so text stays on top
-    flipbook:SetDrawLayer("BACKGROUND", 1)
+    -- Set to OVERLAY layer so it appears above cooldown swipe
+    flipbook:SetDrawLayer("OVERLAY", 2)
     flipbook:SetParent(button)
 
     -- Configure the animation frames
@@ -439,7 +439,7 @@ function Overlays.setupSpellAlertFlipbooks(button, barName)
         alert.ProcLoopFlipbook:SetSize(alertWidth or 36, alertHeight or 36)
         alert.ProcLoopFlipbook:SetAllPoints(alert)
         alert.ProcLoopFlipbook:SetParent(button)
-        alert.ProcLoopFlipbook:SetDrawLayer("BACKGROUND", 1)
+        alert.ProcLoopFlipbook:SetDrawLayer("OVERLAY", 2)
     end
 
     if loopAnimation then
@@ -456,7 +456,7 @@ function Overlays.setupSpellAlertFlipbooks(button, barName)
         alert.ProcStartFlipbook:SetSize(alertWidth or 36, alertHeight or 36)
         alert.ProcStartFlipbook:SetAllPoints(alert)
         alert.ProcStartFlipbook:SetParent(button)
-        alert.ProcStartFlipbook:SetDrawLayer("BACKGROUND", 1)
+        alert.ProcStartFlipbook:SetDrawLayer("OVERLAY", 2)
     end
 
     if startAnimation then
@@ -476,7 +476,7 @@ function Overlays.setupSpellAlertFlipbooks(button, barName)
         alert.ProcAltGlow:SetSize(alertWidth or 36, alertHeight or 36)
         alert.ProcAltGlow:SetAllPoints(alert)
         alert.ProcAltGlow:SetParent(button)
-        alert.ProcAltGlow:SetDrawLayer("BACKGROUND", 1)
+        alert.ProcAltGlow:SetDrawLayer("OVERLAY", 2)
         alert.ProcAltGlow:SetTexCoord(0, 1 / 5, 0, 1 / 6)
     end
 end
