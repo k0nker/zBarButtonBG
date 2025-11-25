@@ -5,6 +5,9 @@ local addonTable = select(2, ...)
 
 -- Initialize global namespace
 zBarButtonBG = {}
+-- Get localization table
+local L = LibStub("AceLocale-3.0"):GetLocale("zBarButtonBG")
+
 
 -- Get module references
 local Init = addonTable.Core.Init
@@ -77,11 +80,11 @@ end
 -- Create a new profile
 function zBarButtonBGAce:CreateNewProfile(profileName)
     if not profileName or profileName == "" then
-        return false, "Profile name cannot be empty"
+        return false, L["Profile name cannot be empty"]
     end
 
     if self.db.profiles[profileName] then
-        return false, "Profile already exists"
+        return false, L["Profile already exists"]
     end
 
     -- Create new profile and switch to it
@@ -94,13 +97,13 @@ function zBarButtonBGAce:CreateNewProfile(profileName)
         zBarButtonBG.createActionBarBackgrounds()
     end
 
-    return true, "Profile created successfully"
+    return true, L["Profile created"]
 end
 
 -- Switch to an existing profile
 function zBarButtonBGAce:SwitchProfile(profileName)
     if not profileName or not self.db.profiles[profileName] then
-        return false, "Profile does not exist"
+        return false, L["Profile does not exist"]
     end
 
     -- Switch to profile
@@ -113,13 +116,13 @@ function zBarButtonBGAce:SwitchProfile(profileName)
         zBarButtonBG.createActionBarBackgrounds()
     end
 
-    return true, "Switched to profile: " .. profileName
+    return true, L["Switched to profile"] .. ": " .. profileName
 end
 
 -- Copy profile data from one profile to another
 function zBarButtonBGAce:CopyProfile(sourceProfile, targetProfile)
     if not sourceProfile or not self.db.profiles[sourceProfile] then
-        return false, "Source profile does not exist"
+        return false, L["Source profile does not exist"]
     end
 
     if not targetProfile or targetProfile == "" then
@@ -136,17 +139,17 @@ function zBarButtonBGAce:CopyProfile(sourceProfile, targetProfile)
         zBarButtonBG.createActionBarBackgrounds()
     end
 
-    return true, "Profile copied successfully"
+    return true, L["Profile copied successfully"]
 end
 
 -- Delete a profile
 function zBarButtonBGAce:DeleteProfile(profileName)
     if not profileName or profileName == "Default" then
-        return false, "Cannot delete Default profile"
+        return false, L["Cannot delete Default profile"]
     end
 
     if not self.db.profiles[profileName] then
-        return false, "Profile does not exist"
+        return false, L["Profile does not exist"]
     end
 
     if self.db:GetCurrentProfile() == profileName then
@@ -176,7 +179,7 @@ function zBarButtonBGAce:DeleteProfile(profileName)
         zBarButtonBG.createActionBarBackgrounds()
     end
 
-    return true, "Profile deleted successfully"
+    return true, L["Profile deleted successfully"]
 end
 
 -- ############################################################
@@ -316,10 +319,10 @@ function zBarButtonBG.toggle()
 
     if zBarButtonBG.enabled then
         zBarButtonBG.createActionBarBackgrounds()
-        zBarButtonBG.print("Action bar backgrounds |cFF00FF00enabled|r")
+        zBarButtonBG.print("|cFF00FF00" .. L["Enabled"] .. "|r")
     else
         zBarButtonBG.removeActionBarBackgrounds()
-        zBarButtonBG.print("Action bar backgrounds |cFFFF0000disabled|r")
+        zBarButtonBG.print("|cFFFF0000" .. L["Disabled"] .. "|r")
     end
 
     -- Save the enabled state (zBarButtonBG.charSettings points to Ace profile, so this automatically saves)

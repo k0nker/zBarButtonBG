@@ -145,7 +145,7 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 
     -- Create the editbox using MultiLineEditBox to avoid the built-in accept button
     local editbox = AceGUI:Create("MultiLineEditBox")
-    editbox:SetLabel(L["Profile Name:"])
+    editbox:SetLabel(L["Profile Name"] .. ":")
     editbox:SetWidth(250)
     editbox:SetNumLines(1)
     editbox:DisableButton(true)
@@ -166,7 +166,7 @@ function zBarButtonBGAce:ShowNewProfileDialog()
 
         local profileName = editbox:GetText()
         if not profileName or profileName == "" then
-            zBarButtonBG.print("|cFFFF0000Error:|r Profile name cannot be empty")
+            zBarButtonBG.print("|cFFFF0000" .. L["Error"] .. ":|r " .. L["Profile name cannot be empty"])
             return
         end
 
@@ -174,7 +174,7 @@ function zBarButtonBGAce:ShowNewProfileDialog()
         if success then
             profileCreated = true
             -- Ensure ALL default values are explicitly saved to the new profile
-            zBarButtonBG.print(L["Profile created: "] .. profileName)
+            zBarButtonBG.print(L["Profile created"] .. ": " .. profileName)
 
             -- Refresh the config to update dropdowns
             LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
@@ -182,7 +182,7 @@ function zBarButtonBGAce:ShowNewProfileDialog()
             -- Close the dialog by triggering the close callback
             frame:Fire("OnClose")
         else
-            zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
+            zBarButtonBG.print("|cFFFF0000" .. L["Error"] .. ":|r " .. message)
         end
     end)
     buttonGroup:AddChild(createButton)
@@ -277,7 +277,7 @@ function zBarButtonBGAce:GetOptionsTable()
                                 zBarButtonBG.removeActionBarBackgrounds()
                                 zBarButtonBG.createActionBarBackgrounds()
                             end
-                            zBarButtonBG.print(L["Switched to profile: "] .. value)
+                            zBarButtonBG.print(L["Switched to profile"] .. ": " .. value)
                         end,
                     },
                     createProfile = {
@@ -294,10 +294,10 @@ function zBarButtonBGAce:GetOptionsTable()
 
                             local success, message = self:CreateNewProfile(value)
                             if success then
-                                zBarButtonBG.print(L["Profile created: "] .. value)
+                                zBarButtonBG.print(L["Profile created"] .. ": " .. value)
                                 LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
                             else
-                                zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
+                                zBarButtonBG.print("|cFFFF0000" .. L["Error"] .. ":|r " .. message)
                             end
                         end,
                     },
@@ -412,18 +412,14 @@ function zBarButtonBGAce:GetOptionsTable()
                         desc = L["Copy settings from the chosen profile to the current profile"],
                         disabled = function() return not self.selectedProfileForActions end,
                         confirm = function()
-                            return L["Copy settings from: "] ..
-                                (self.selectedProfileForActions or "") ..
-                                "' to '" ..
-                                self.db:GetCurrentProfile() .. "'?\n\n" .. L
-                                ["This will overwrite all current settings!"]
+                            return L["Copy settings from"] .. ": " .. (self.selectedProfileForActions or "") .. "' to '" .. self.db:GetCurrentProfile() .. "'?\n\n" .. L["This will overwrite all current settings!"]
                         end,
                         func = function()
                             local success, message = self:CopyProfile(self.selectedProfileForActions,
                                 self.db:GetCurrentProfile())
                             if success then
                                 -- Ensure ALL default values are explicitly saved to the destination profile
-                                zBarButtonBG.print(L["Settings copied from: "] ..
+                                zBarButtonBG.print(L["Settings copied from"] .. ": " ..
                                     self.selectedProfileForActions .. "' -> '" .. self.db:GetCurrentProfile())
                                 -- Rebuild action bars with updated settings
                                 if zBarButtonBG.enabled then
@@ -431,7 +427,7 @@ function zBarButtonBGAce:GetOptionsTable()
                                     zBarButtonBG.createActionBarBackgrounds()
                                 end
                             else
-                                zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
+                                zBarButtonBG.print("|cFFFF0000" .. L["Error"] .. ":|r " .. message)
                             end
                         end,
                     },
@@ -444,17 +440,17 @@ function zBarButtonBGAce:GetOptionsTable()
                             return not self.selectedProfileForActions or self.selectedProfileForActions == "Default"
                         end,
                         confirm = function()
-                            return L["Are you sure you want to delete the profile: "] ..
+                            return L["Are you sure you want to delete the profile"] .. ": " ..
                                 (self.selectedProfileForActions or "") .. "'?\n\n" .. L["This action cannot be undone!"]
                         end,
                         func = function()
                             local profileToDelete = self.selectedProfileForActions
                             local success, message = self:DeleteProfile(profileToDelete)
                             if success then
-                                zBarButtonBG.print(L["Profile deleted: "] .. profileToDelete)
+                                zBarButtonBG.print(L["Profile deleted"] .. ": " .. profileToDelete)
                                 self.selectedProfileForActions = nil
                             else
-                                zBarButtonBG.print("|cFFFF0000Error:|r " .. message)
+                                zBarButtonBG.print("|cFFFF0000" .. L["Error"] .. ":|r " .. message)
                             end
                         end,
                     },
@@ -502,7 +498,7 @@ function zBarButtonBGAce:GetOptionsTable()
                                 copyButton:SetCallback("OnClick", function()
                                     ClipboardFrame:SetText(exportString)
                                     ClipboardFrame:Show()
-                                    zBarButtonBG.print("Export string copied to clipboard!")
+                                    zBarButtonBG.print(L["Export string copied to clipboard!"])
                                 end)
                                 frame:AddChild(copyButton)
                             end
@@ -539,13 +535,13 @@ function zBarButtonBGAce:GetOptionsTable()
                             importButton:SetCallback("OnClick", function()
                                 local exportString = editbox:GetText()
                                 if not exportString or exportString == "" then
-                                    zBarButtonBG.print("|cFFFF0000Error:|r Please paste an export string first")
+                                    zBarButtonBG.print("|cFFFF0000" .. L["Error"] .. ":|r " .. L["Please paste an export string first"])
                                     return
                                 end
 
                                 local profile, errorMsg = importProfile(exportString)
                                 if not profile then
-                                    zBarButtonBG.print("|cFFFF0000Error:|r " .. (errorMsg or "Invalid export string"))
+                                    zBarButtonBG.print("|cFFFF0000" .. L["Error"] .. ":|r " .. (errorMsg or L["Invalid export string"]))
                                     return
                                 end
 
@@ -554,14 +550,14 @@ function zBarButtonBGAce:GetOptionsTable()
 
                                 -- Ask for new profile name
                                 local nameDialog = AceGUI:Create("Frame")
-                                nameDialog:SetTitle("Create Profile from Import")
-                                nameDialog:SetStatusText("Enter a name for the new profile")
+                                nameDialog:SetTitle(L["Create Profile from Import"])
+                                nameDialog:SetStatusText(L["Enter a name for the new profile"])
                                 nameDialog:SetLayout("Flow")
                                 nameDialog:SetWidth(350)
                                 nameDialog:SetHeight(150)
 
                                 local nameEditbox = AceGUI:Create("EditBox")
-                                nameEditbox:SetLabel("Profile Name:")
+                                nameEditbox:SetLabel(L["Profile Name"] .. ":")
                                 nameEditbox:SetFullWidth(true)
                                 nameEditbox:DisableButton(true) -- Disable built-in button
                                 nameDialog:AddChild(nameEditbox)
@@ -573,13 +569,13 @@ function zBarButtonBGAce:GetOptionsTable()
                                 createButton:SetCallback("OnClick", function()
                                     local profileName = nameEditbox:GetText()
                                     if not profileName or profileName == "" then
-                                        zBarButtonBG.print("|cFFFF0000Error:|r Profile name cannot be empty")
+                                        zBarButtonBG.print("|cFFFF0000" .. L["Error"] .. ":|r " .. L["Profile name cannot be empty"])
                                         return
                                     end
 
                                     -- Check if profile already exists
                                     if zBarButtonBGAce.db.profiles[profileName] then
-                                        zBarButtonBG.print("|cFFFF0000Error:|r Profile already exists")
+                                        zBarButtonBG.print("|cFFFF0000" .. L["Error"] .. ":|r " .. L["Profile already exists"])
                                         return
                                     end
 
@@ -599,7 +595,7 @@ function zBarButtonBGAce:GetOptionsTable()
                                         zBarButtonBG.createActionBarBackgrounds()
                                     end
 
-                                    zBarButtonBG.print("Profile imported: " .. profileName)
+                                    zBarButtonBG.print(L["Profile imported"] .. ": " .. profileName)
                                     LibStub("AceConfigRegistry-3.0"):NotifyChange("zBarButtonBG")
 
                                     AceGUI:Release(nameDialog)

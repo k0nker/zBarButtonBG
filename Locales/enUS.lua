@@ -1,5 +1,6 @@
 -- English Localization for zBarButtonBG (Base locale)
 local L = LibStub("AceLocale-3.0"):NewLocale("zBarButtonBG", "enUS", true)
+
 if not L then return end
 
 -- ############################################################
@@ -39,17 +40,26 @@ L["Modify Profiles"] = "Modify Profiles"
 -- ############################################################
 -- Profile Management Messages
 -- ############################################################
-L["Profile Name:"] = "Profile Name:"
+L["Profile Name"] = "Profile Name"
 L["Enter a name for the new profile"] = "Enter a name for the new profile"
-L["Profile created: "] = "Profile created: "
-L["Profile deleted: "] = "Profile deleted: "
+L["Profile created"] = "Profile created"
+L["Profile deleted"] = "Profile deleted"
 L["Enter a profile name and press Enter to create it"] = "Enter a profile name and press Enter to create it"
-L["Switched to profile: "] = "Switched to profile: "
-L["Settings copied from: "] = "Settings copied from: "
+L["Switched to profile"] = "Switched to profile"
+L["Settings copied from"] = "Settings copied from"
 L["Current profile reset to defaults!"] = "Current profile reset to defaults!"
 L["Use Combat Profile"] = "Use Combat Profile"
 L["Combat Profile"] = "Combat Profile"
 L["Profile to replace all bars when in combat"] = "Profile to replace all bars when in combat"
+L["Enabled"] = "Enabled"
+L["Disabled"] = "Disabled"
+L["Error"] = "Error"
+L["Profile name cannot be empty"] = "Profile name cannot be empty"
+L["Profile already exists"] = "Profile already exists"
+L["Profile copied successfully"] = "Profile copied successfully"
+L["Profile does not exist"] = "Profile does not exist"
+L["Source profile does not exist"] = "Source profile does not exist"
+L["Cannot delete Default profile"] = "Cannot delete Default profile"
 
 -- ############################################################
 -- Profile Import/Export
@@ -61,6 +71,11 @@ L["Import profile settings from an export string"] = "Import profile settings fr
 L["Invalid export string format"] = "Invalid export string format"
 L["Failed to decode export string"] = "Failed to decode export string"
 L["Invalid export string - not a valid profile"] = "Invalid export string - not a valid profile"
+L["Export string copied to clipboard!"] = "Export string copied to clipboard!"
+L["Invalid export string"] = "Invalid export string"
+L["Please paste an export string first"] = "Please paste an export string first"
+L["Create Profile from Import"] = "Create Profile from Import"
+L["Profile imported"] = "Profile imported"
 
 -- ############################################################
 -- Reset Operations & Confirmations
@@ -88,10 +103,10 @@ L["Keybind text settings reset to defaults!"] = "Keybind text settings reset to 
 -- ############################################################
 -- Confirmation Dialogs
 -- ############################################################
-L["Are you sure you want to delete the profile: "] = "Are you sure you want to delete the profile: "
+L["Are you sure you want to delete the profile"] = "Are you sure you want to delete the profile"
 L["This action cannot be undone!"] = "This action cannot be undone!"
 L["This will overwrite all current settings!"] = "This will overwrite all current settings!"
-L["Copy settings from: "] = "Copy settings from: "
+L["Copy settings from"] = "Copy settings from"
 
 -- Multi-line confirmations
 L["Are you sure you want to reset all button settings to default values?\n\nThis will reset button shape, backdrop, slot background, and border settings.\n\nThis action cannot be undone!"] = "Are you sure you want to reset all button settings to default values?\n\nThis will reset button shape, backdrop, slot background, and border settings.\n\nThis action cannot be undone!"

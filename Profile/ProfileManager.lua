@@ -7,14 +7,18 @@ addonTable.Profile = {}
 addonTable.Profile.Manager = {}
 local ProfileManager = addonTable.Profile.Manager
 
+-- Get localization table
+local L = LibStub("AceLocale-3.0"):GetLocale("zBarButtonBG")
+
+
 -- Create a new profile
 function ProfileManager.createProfile(profileName)
     if not profileName or profileName == "" then
-        return false, "Profile name cannot be empty"
+        return false, L["Profile name cannot be empty"]
     end
 
     if zBarButtonBGAce.db.profiles[profileName] then
-        return false, "Profile already exists"
+        return false, L["Profile already exists"]
     end
 
     -- Create new profile and switch to it
@@ -27,13 +31,13 @@ function ProfileManager.createProfile(profileName)
         zBarButtonBG.createActionBarBackgrounds()
     end
 
-    return true, "Profile created successfully"
+    return true, L["Profile created"]
 end
 
 -- Switch to an existing profile
 function ProfileManager.switchProfile(profileName)
     if not profileName or not zBarButtonBGAce.db.profiles[profileName] then
-        return false, "Profile does not exist"
+        return false, L["Profile does not exist"]
     end
 
     -- Switch to profile
@@ -46,13 +50,13 @@ function ProfileManager.switchProfile(profileName)
         zBarButtonBG.createActionBarBackgrounds()
     end
 
-    return true, "Switched to profile: " .. profileName
+    return true, L["Switched to profile"] .. ": " .. profileName
 end
 
 -- Copy profile data from one profile to another
 function ProfileManager.copyProfile(sourceProfile, targetProfile)
     if not sourceProfile or not zBarButtonBGAce.db.profiles[sourceProfile] then
-        return false, "Source profile does not exist"
+        return false, L["Source profile does not exist"]
     end
 
     if not targetProfile or targetProfile == "" then
@@ -69,17 +73,17 @@ function ProfileManager.copyProfile(sourceProfile, targetProfile)
         zBarButtonBG.createActionBarBackgrounds()
     end
 
-    return true, "Profile copied successfully"
+    return true, L["Profile copied successfully"]
 end
 
 -- Delete a profile
 function ProfileManager.deleteProfile(profileName)
     if not profileName or profileName == "Default" then
-        return false, "Cannot delete Default profile"
+        return false, L["Cannot delete Default profile"]
     end
 
     if not zBarButtonBGAce.db.profiles[profileName] then
-        return false, "Profile does not exist"
+        return false, L["Profile does not exist"]
     end
 
     if zBarButtonBGAce.db:GetCurrentProfile() == profileName then
@@ -109,7 +113,7 @@ function ProfileManager.deleteProfile(profileName)
     -- Delete the profile
     zBarButtonBGAce.db:DeleteProfile(profileName, true)
 
-    return true, "Profile deleted successfully"
+    return true, L["Profile deleted"]
 end
 
 -- Get list of all profiles
