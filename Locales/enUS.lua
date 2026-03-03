@@ -287,6 +287,10 @@ L["Show the button background fill behind each button icon"] = "Show the button 
 -- ############################################################
 -- Overlay System
 -- ############################################################
+L["Hover Overlay"] = "Hover Overlay"
+L["Show color overlay when hovering over buttons"] = "Show color overlay when hovering over buttons"
+L["Hover Overlay Color"] = "Hover Overlay Color"
+L["Color of the hover overlay"] = "Color of the hover overlay"
 L["Out of Range Overlay"] = "Out of Range Overlay"
 L["Show red overlay when abilities are out of range"] = "Show red overlay when abilities are out of range"
 L["Cooldown Overlay"] = "Cooldown Overlay"

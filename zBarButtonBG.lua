@@ -179,7 +179,7 @@ function zBarButtonBGAce:DeleteProfile(profileName)
         zBarButtonBG.createActionBarBackgrounds()
     end
 
-    return true, L["Profile deleted successfully"]
+    return true, L["Profile deleted"]
 end
 
 -- ############################################################
@@ -446,8 +446,16 @@ function zBarButtonBG.enterCombatMode()
 
     zBarButtonBG._combatModeActive = true
     zBarButtonBG.updateColors()
-    zBarButtonBG.removeActionBarBackgrounds()
-    zBarButtonBG.createActionBarBackgrounds()
+    -- Defer the rebuild by one event-batch tick, mirroring exitCombatMode.
+    -- PLAYER_REGEN_DISABLED can fire in the same batch as bar-change events
+    -- (e.g. entering stealth, a vehicle, or an override bar simultaneously
+    -- triggers combat).  Running synchronously here would rebuild before WoW
+    -- finishes updating button.action, leaving icons visually stale.
+    C_Timer.After(0, function()
+        if not zBarButtonBG.enabled then return end
+        zBarButtonBG.removeActionBarBackgrounds()
+        zBarButtonBG.createActionBarBackgrounds()
+    end)
 end
 
 -- Exit combat mode - restore pre-combat profiles
@@ -470,8 +478,17 @@ function zBarButtonBG.exitCombatMode()
     zBarButtonBG._preCombatBarSettings = {}
     zBarButtonBG._combatModeActive = false
     zBarButtonBG.updateColors()
-    zBarButtonBG.removeActionBarBackgrounds()
-    zBarButtonBG.createActionBarBackgrounds()
+    -- Defer the full rebuild by one event-batch tick.  When the player exits combat
+    -- while dismounting (or changing form), WoW queues ACTIONBAR_PAGE_CHANGED in the
+    -- same tick as PLAYER_REGEN_ENABLED.  Running synchronously here would rebuild
+    -- before WoW has updated button.action for the new page, producing a frame where
+    -- the wrong bar state is captured.  C_Timer.After(0) yields until all pending
+    -- events in the current batch have been dispatched, so button.action is correct.
+    C_Timer.After(0, function()
+        if not zBarButtonBG.enabled then return end
+        zBarButtonBG.removeActionBarBackgrounds()
+        zBarButtonBG.createActionBarBackgrounds()
+    end)
 end
 
 -- ############################################################
@@ -681,12 +698,36 @@ function zBarButtonBG.createActionBarBackgrounds()
         updateFrame:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
         updateFrame:RegisterEvent("UPDATE_BINDINGS")
         updateFrame:RegisterEvent("CURSOR_CHANGED")
-        -- These fire when mounting/dismounting messes with the action bars
-        --updateFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+        -- These fire when the effective action bar page changes (mounts, druid forms,
+        -- vehicles, stances, override bars).  All need the same clear+re-eval treatment.
         updateFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+        updateFrame:RegisterEvent("UPDATE_BONUS_ACTIONBAR")   -- druid forms / stances
+        updateFrame:RegisterEvent("UPDATE_VEHICLE_ACTIONBAR")  -- vehicles
+        updateFrame:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR") -- override bars
+        -- Clear and re-evaluate all range overlays when the target changes.
+        -- This is the natural trigger point: a new target may be at a different
+        -- range, and any previously-stuck overlays will be corrected here.
+        updateFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
         updateFrame:SetScript("OnEvent", function(self, event)
             if zBarButtonBG.enabled then
-                if event == "CURSOR_CHANGED" then
+                if event == "PLAYER_TARGET_CHANGED" then
+                    -- Target changed or dropped.  ACTION_RANGE_CHECK_UPDATE does NOT fire
+                    -- when the target is cleared (nothing to measure range against), so
+                    -- Blizzard's HotKey color reset never runs on target-drop.  We call
+                    -- ActionButton_UpdateRangeIndicator directly with args derived from
+                    -- IsActionInRange, which simultaneously resets the HotKey vertex color
+                    -- (Blizzard's code path) AND triggers our hook to update the overlay.
+                    for _, data in pairs(zBarButtonBG.frames) do
+                        local button = data and data.button
+                        if button and button.action and button._zBBG_rangeOverlay then
+                            -- IsActionInRange: true=in range, false=OOR, nil=no requirement/no target
+                            local rangeResult = IsActionInRange(button.action, "target")
+                            local checksRange = rangeResult ~= nil
+                            local inRange     = rangeResult ~= false
+                            ActionButton_UpdateRangeIndicator(button, checksRange, inRange)
+                        end
+                    end
+                elseif event == "CURSOR_CHANGED" then
                     -- Clear stuck highlights when dragging stuff around
                     local cursorType = GetCursorInfo()
                     if cursorType then -- Cursor picked something up
@@ -696,25 +737,49 @@ function zBarButtonBG.createActionBarBackgrounds()
                             end
                         end
                     end
-                elseif event == "ACTIONBAR_PAGE_CHANGED" or event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
-                    -- Action bars changed - need to update our range overlays since buttons might have different spells now
-                    if zBarButtonBG._debug then
-                        zBarButtonBG.print("Action bar changed (" .. event .. ") - fixing up range overlays")
-                    end
-                    if event == "ACTIONBAR_PAGE_CHANGED" or event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
-                        -- Page changes and mounting need a full rebuild
-                        zBarButtonBG.createActionBarBackgrounds()
-                    end
-                    -- Update range overlays since buttons probably have different actions now
-                    for buttonName, data in pairs(zBarButtonBG.frames) do
-                        if data and data.button and data.button._zBBG_rangeOverlay then
-                            zBarButtonBG.updateRangeOverlay(data.button)
+                elseif event == "ACTIONBAR_PAGE_CHANGED"
+                    or event == "PLAYER_MOUNT_DISPLAY_CHANGED"
+                    or event == "UPDATE_BONUS_ACTIONBAR"
+                    or event == "UPDATE_VEHICLE_ACTIONBAR"
+                    or event == "UPDATE_OVERRIDE_ACTIONBAR" then
+                    -- Proactively clear all range overlays before the bar data is replaced.
+                    for _, data in pairs(zBarButtonBG.frames) do
+                        local btn = data and data.button
+                        if btn then
+                            if btn._zBBG_rangeOverlay and btn._zBBG_rangeOverlay:IsShown() then
+                                btn._zBBG_rangeOverlay:Hide()
+                            end
+                            if btn.HotKey then
+                                btn.HotKey:SetVertexColor(ACTIONBAR_HOTKEY_FONT_COLOR:GetRGB())
+                            end
                         end
                     end
-                    --elseif event == "ACTIONBAR_SLOT_CHANGED" then
-                    -- do nada
-                    --else
-                    -- Just keybinding changes, rebuild everything
+                    if zBarButtonBG._debug then
+                        zBarButtonBG.print("Action bar changed (" .. event .. ") - rebuilding skins")
+                    end
+                    zBarButtonBG.createActionBarBackgrounds()
+                    -- ACTION_RANGE_CHECK_UPDATE does not automatically fire for the new
+                    -- action slots after a bar change.  Without this deferred sweep the
+                    -- range overlay would never show on the new bar if the target was
+                    -- already selected before the form/page change.
+                    -- C_Timer.After(0) yields until all pending events in this batch are
+                    -- dispatched, so button.action is current when we read it.
+                    if UnitExists("target") then
+                        C_Timer.After(0, function()
+                            if not zBarButtonBG.enabled then return end
+                            for _, data in pairs(zBarButtonBG.frames) do
+                                local button = data and data.button
+                                if button and button.action and button._zBBG_rangeOverlay then
+                                    local rangeResult = IsActionInRange(button.action, "target")
+                                    local checksRange = rangeResult ~= nil
+                                    local inRange     = rangeResult ~= false
+                                    ActionButton_UpdateRangeIndicator(button, checksRange, inRange)
+                                end
+                            end
+                        end)
+                    end
+                else
+                    -- UPDATE_BINDINGS or similar: keybind-only change, just rebuild
                     zBarButtonBG.createActionBarBackgrounds()
                 end
             end
@@ -777,58 +842,67 @@ function zBarButtonBG.createActionBarBackgrounds()
             end
         end
 
-        -- Hook the range indicator function - this runs whenever WoW checks range
-        -- Combine both manageNormalTexture and updateRangeOverlay into a single hook
-        -- to avoid calling the hook function twice for the same event
-        hooksecurefunc("ActionButton_UpdateRangeIndicator", function(button)
+        -- ActionButton_UpdateRangeIndicator(self, checksRange, inRange) is Blizzard's global
+        -- function that colors the HotKey red when an ability is out of range.  It is called
+        -- by the ACTION_RANGE_CHECK_UPDATE event handler on every button frame.
+        -- checksRange = the ability has a range requirement (bool)
+        -- inRange     = the current target is within range (bool)
+        -- NOTE: button.outOfRange is a LibActionButton-1.0 field; native Blizzard buttons
+        --       never set it.  We must read checksRange/inRange from the call args instead.
+        hooksecurefunc("ActionButton_UpdateRangeIndicator", function(button, checksRange, inRange)
             if button and button._zBBG_styled and zBarButtonBG.enabled then
                 if zBarButtonBG._debug then
                     zBarButtonBG._hookCallCounts.rangeIndicator = (zBarButtonBG._hookCallCounts.rangeIndicator or 0) + 1
+                    zBarButtonBG.print("Range update for " .. (button:GetName() or "Unknown") ..
+                        " - checksRange: " .. tostring(checksRange) .. ", inRange: " .. tostring(inRange))
                 end
                 manageNormalTexture(button)
 
-                -- Update range overlay without throttling - IsActionInRange is only called for buttons with actions
-                -- and we need responsive updates when range status changes
-                if zBarButtonBG._debug then
-                    local buttonName = button:GetName() or "Unknown"
-                    local hasTarget = UnitExists("target")
-                    local action = button.action
-                    local inRange = action and IsActionInRange(action, "target")
-                    zBarButtonBG.print("Range update for " .. buttonName .. " - Target: " .. tostring(hasTarget) .. ", Action: " .. tostring(action) .. ", InRange: " .. tostring(inRange))
+                if button._zBBG_rangeOverlay then
+                    -- Trust Blizzard's args directly.
+                    -- checksRange=true + inRange=false is Blizzard's own OOR condition.
+                    -- Proactive clearing on bar changes is handled by the event handler
+                    -- loop, not here.  No IsActionInRange cross-verify: it returns nil
+                    -- for many legitimately-ranged abilities (hostile-only spells, LoS,
+                    -- etc.) which would cause false negatives.
+                    local shouldShow = checksRange and (inRange == false)
+                        and zBarButtonBG.charSettings.showRangeIndicator
+                        and UnitExists("target")
+                    local overlay = button._zBBG_rangeOverlay
+                    if shouldShow and not overlay:IsShown() then
+                        overlay:Show()
+                    elseif not shouldShow and overlay:IsShown() then
+                        overlay:Hide()
+                        zBarButtonBG.updateButtonFont(button)
+                    end
                 end
-                zBarButtonBG.updateRangeOverlay(button)
             end
         end)
 
         -- Cooldown frame OnShow/OnHide hooks in setCooldownOverlay handle overlay visibility directly
         -- No need to throttle ActionButton_UpdateCooldown since the cooldown frame hooks are instant
 
-        -- Hook usability updates - way better than spamming events everywhere
-        -- WoW calls this when stuff like mana or range changes
+        -- Hook usability updates to keep the NormalTexture in sync.
+        -- Range is NOT derived here; ActionButton_UpdateRangeIndicator is the sole authority.
         if ActionButton_UpdateUsable then
-            -- Update range overlay when usability changes
             hooksecurefunc("ActionButton_UpdateUsable", function(button)
                 if button and button._zBBG_styled and zBarButtonBG.enabled then
                     if zBarButtonBG._debug then
                         zBarButtonBG._hookCallCounts.usable = (zBarButtonBG._hookCallCounts.usable or 0) + 1
                     end
-                    -- Keep normal texture in line (fast operation)
                     manageNormalTexture(button)
-
-                    -- Update range overlay without throttling - need responsive updates when range changes
-                    if button._zBBG_rangeOverlay then
-                        zBarButtonBG.updateRangeOverlay(button)
-                    end
                 end
             end)
         end
 
-        -- Hook main action updates - catches when buttons get new spells (like mounting)
-        -- Note: Range updates are already handled by ActionButton_UpdateRangeIndicator hook, so we skip redundant calls
+        -- Hook main action updates - fires when a button's action slot changes (bar page,
+        -- form swap, mount, etc.).  We clear stale range state here so the overlay doesn't
+        -- carry over from the previous action.  ActionButton_UpdateRangeIndicator (hooked
+        -- above) is the SOLE authority for re-showing the overlay; WoW's range-check system
+        -- will call it automatically once the new action's range is evaluated.
         if ActionButton_Update then
             hooksecurefunc("ActionButton_Update", function(button)
                 if button and button._zBBG_styled and zBarButtonBG.enabled then
-                    -- Just update normal texture state when action changes
                     manageNormalTexture(button)
                 end
             end)

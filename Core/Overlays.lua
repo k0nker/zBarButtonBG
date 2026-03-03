@@ -113,9 +113,10 @@ function Overlays.updateRangeOverlay(button)
     local overlay = button._zBBG_rangeOverlay
     local shouldShow = false
 
-    -- Early exit if button has no action - most buttons are empty so this saves a lot of work
-    if not button.action or button.action <= 0 then
-        -- Empty button - just hide overlay if it's shown
+    -- In Retail, button.action is always a non-zero slot number even on empty slots.
+    -- HasAction() is the correct test for whether a slot actually contains an action.
+    if not button.action or button.action <= 0 or not HasAction(button.action) then
+        -- Empty slot - hide overlay and bail.
         if overlay:IsShown() then
             overlay:Hide()
             zBarButtonBG.updateButtonFont(button)
@@ -165,9 +166,16 @@ function Overlays.setHighlightOverlay(button, barName)
 
     if not button._zBBG_customHighlight then
         button._zBBG_customHighlight = button:CreateTexture(nil, "OVERLAY")
-        button._zBBG_customHighlight:SetColorTexture(1, 0.82, 0, 0.5) -- Golden highlight
         button._zBBG_customHighlight:SetAllPoints(button.icon)
         button._zBBG_customHighlight:Hide()
+    end
+
+    -- Always re-apply color so changes from the options picker take effect immediately
+    local c = zBarButtonBG.GetSettingInfo(barName, "hoverOverlayColor")
+    if c then
+        button._zBBG_customHighlight:SetColorTexture(c.r, c.g, c.b, c.a)
+    else
+        button._zBBG_customHighlight:SetColorTexture(1, 0.82, 0, 0.5) -- golden fallback
     end
 
     -- Mask with swipe mask texture

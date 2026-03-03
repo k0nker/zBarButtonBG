@@ -49,8 +49,10 @@ function ButtonSkinning.setupButton(button, barName)
     Overlays.setRangeOverlay(button, barName)
     Overlays.setCooldownOverlay(button, barName)
 
-    -- Force initial range check so overlay starts in correct state (not stuck on)
-    zBarButtonBG.updateRangeOverlay(button)
+    -- DO NOT call updateRangeOverlay here.  button.action may not yet reflect the
+    -- current bar page at setup time, causing a stale IsActionInRange result that
+    -- leaves the overlay in the wrong state.  The ActionButton_UpdateRangeIndicator
+    -- hook and the PLAYER_TARGET_CHANGED sweep handle initial state correctly.
 
     -- Backgrounds
     ButtonSkinning.setSlotBackground(button, barName)
@@ -95,8 +97,8 @@ function ButtonSkinning.updateButton(button, barName)
     Overlays.setRangeOverlay(button, barName)
     Overlays.setCooldownOverlay(button, barName)
 
-    -- Force range check so overlay shows correct state
-    zBarButtonBG.updateRangeOverlay(button)
+    -- DO NOT call updateRangeOverlay here for the same timing reason as setupButton.
+    -- The hook and event sweep keep the overlay correct without a synchronous call.
 
     -- Update backgrounds
     ButtonSkinning.setSlotBackground(button, barName)
@@ -367,9 +369,15 @@ end
 function ButtonSkinning.setupHighlightInteractions(button, barName)
     if not button or button._zBBG_highlightHooked then return end
 
+    -- Helper: returns true when the hover highlight is enabled for this button's bar
+    local function highlightEnabled(self)
+        local bn = zBarButtonBG.buttonGroups[self:GetName()]
+        return zBarButtonBG.GetSettingInfo(bn, "showHighlightHover") ~= false
+    end
+
     button:HookScript("OnEnter", function(self)
         if self._zBBG_customHighlight and self:GetButtonState() ~= "PUSHED" then
-            if not self._zBBG_customHighlight:IsShown() then
+            if highlightEnabled(self) and not self._zBBG_customHighlight:IsShown() then
                 self._zBBG_customHighlight:Show()
             end
         end
@@ -384,7 +392,7 @@ function ButtonSkinning.setupHighlightInteractions(button, barName)
 
     button:HookScript("OnMouseDown", function(self)
         if self._zBBG_customHighlight then
-            if not self._zBBG_customHighlight:IsShown() then
+            if highlightEnabled(self) and not self._zBBG_customHighlight:IsShown() then
                 self._zBBG_customHighlight:Show()
             end
         end
@@ -401,7 +409,7 @@ function ButtonSkinning.setupHighlightInteractions(button, barName)
     hooksecurefunc(button, "SetButtonState", function(self, state)
         if self._zBBG_customHighlight then
             if state == "PUSHED" then
-                if not self._zBBG_customHighlight:IsShown() then
+                if highlightEnabled(self) and not self._zBBG_customHighlight:IsShown() then
                     self._zBBG_customHighlight:Show()
                 end
             elseif state == "NORMAL" and not self:IsMouseOver() then

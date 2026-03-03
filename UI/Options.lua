@@ -995,6 +995,8 @@ function zBarButtonBGAce:GetOptionsTable()
                         func = function()
                             -- Reset indicator-specific settings to defaults from aceDefaults table
                             local defaults = zBarButtonBGAce.db.defaults.profile
+                            self.db.profile.showHighlightHover = defaults.showHighlightHover
+                            self.db.profile.hoverOverlayColor = { r = defaults.hoverOverlayColor.r, g = defaults.hoverOverlayColor.g, b = defaults.hoverOverlayColor.b, a = defaults.hoverOverlayColor.a }
                             self.db.profile.showRangeIndicator = defaults.showRangeIndicator
                             self.db.profile.rangeIndicatorColor = { r = defaults.rangeIndicatorColor.r, g = defaults.rangeIndicatorColor.g, b = defaults.rangeIndicatorColor.b, a = defaults.rangeIndicatorColor.a }
                             self.db.profile.fadeCooldown = defaults.fadeCooldown
@@ -1021,6 +1023,47 @@ function zBarButtonBGAce:GetOptionsTable()
                         type = "header",
                         name = L["Overlays"],
                     },
+                    showHighlightHover = {
+                        order = nextOrderNumber(),
+                        type = "toggle",
+                        name = L["Hover Overlay"],
+                        desc = L["Show color overlay when hovering over buttons"],
+                        get = function() return self.db.profile.showHighlightHover end,
+                        set = function(_, value)
+                            self.db.profile.showHighlightHover = value
+                            zBarButtonBG.charSettings.showHighlightHover = value
+                            -- If turning off, immediately hide any visible highlights
+                            if not value then
+                                for _, data in pairs(zBarButtonBG.frames) do
+                                    if data and data.button and data.button._zBBG_customHighlight then
+                                        data.button._zBBG_customHighlight:Hide()
+                                    end
+                                end
+                            end
+                        end,
+                    },
+                    hoverOverlayColor = {
+                        order = nextOrderNumber(),
+                        type = "color",
+                        name = L["Hover Overlay Color"],
+                        desc = L["Color of the hover overlay"],
+                        disabled = function() return not self.db.profile.showHighlightHover end,
+                        hasAlpha = true,
+                        get = function()
+                            local c = self.db.profile.hoverOverlayColor
+                            return (c and c.r or 1), (c and c.g or 0.82), (c and c.b or 0), (c and c.a or 0.5)
+                        end,
+                        set = function(_, r, g, b, a)
+                            self.db.profile.hoverOverlayColor = { r = r, g = g, b = b, a = a }
+                            zBarButtonBG.charSettings.hoverOverlayColor = { r = r, g = g, b = b, a = a }
+                            -- Propagate new color to all existing highlight textures
+                            for _, data in pairs(zBarButtonBG.frames) do
+                                if data and data.button and data.button._zBBG_customHighlight then
+                                    data.button._zBBG_customHighlight:SetColorTexture(r, g, b, a)
+                                end
+                            end
+                        end,
+                    },
                     showRangeIndicator = {
                         order = nextOrderNumber(),
                         type = "toggle",
@@ -1033,6 +1076,23 @@ function zBarButtonBGAce:GetOptionsTable()
                             if zBarButtonBG.enabled then
                                 zBarButtonBG.removeActionBarBackgrounds()
                                 zBarButtonBG.createActionBarBackgrounds()
+                                -- Force all buttons to re-evaluate range immediately so both the
+                                -- HotKey color (Blizzard's) and our overlay reflect the current state
+                                -- without waiting for ACTION_RANGE_CHECK_UPDATE to fire naturally.
+                                C_Timer.After(0, function()
+                                    if not zBarButtonBG.enabled then return end
+                                    for _, data in pairs(zBarButtonBG.frames) do
+                                        local button = data and data.button
+                                        if button and button.action then
+                                            local rangeResult = IsActionInRange(button.action, "target")
+                                            -- checksRange: the action has a range requirement
+                                            local checksRange = rangeResult ~= nil
+                                            -- inRange: target is in range (nil treated as in-range / no requirement)
+                                            local inRange = rangeResult ~= false
+                                            ActionButton_UpdateRangeIndicator(button, checksRange, inRange)
+                                        end
+                                    end
+                                end)
                             end
                         end,
                     },

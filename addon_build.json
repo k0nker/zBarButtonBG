@@ -1,0 +1,10 @@
+{
+    "include": [
+        "Assets",
+        "Core",
+        "Libs",
+        "Locales",
+        "Profile",
+        "UI"
+    ]
+}

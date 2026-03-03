@@ -22,6 +22,8 @@ addonTable.Core.Defaults = {
         showSlotBackground = true,
         innerColor = { r = 0.1, g = 0.1, b = 0.1, a = 1 },
         useClassColorInner = false,
+        showHighlightHover = true,
+        hoverOverlayColor = { r = 1, g = 0.82, b = 0, a = 0.5 },
         showRangeIndicator = true,
         rangeIndicatorColor = { r = .42, g = 0.07, b = .12, a = 0.75 },
         fadeCooldown = false,
