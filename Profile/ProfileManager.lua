@@ -23,7 +23,7 @@ function ProfileManager.createProfile(profileName)
 
     -- Create new profile and switch to it
     zBarButtonBGAce.db:SetProfile(profileName)
-    zBarButtonBG.charSettings = zBarButtonBGAce.db.profile
+    zBarButtonBG.SyncAllSignals()
 
     -- Update the action bars
     if zBarButtonBG.enabled then
@@ -42,7 +42,7 @@ function ProfileManager.switchProfile(profileName)
 
     -- Switch to profile
     zBarButtonBGAce.db:SetProfile(profileName)
-    zBarButtonBG.charSettings = zBarButtonBGAce.db.profile
+    zBarButtonBG.SyncAllSignals()
 
     -- Update the action bars
     if zBarButtonBG.enabled then
@@ -65,7 +65,7 @@ function ProfileManager.copyProfile(sourceProfile, targetProfile)
 
     -- Copy profile data
     zBarButtonBGAce.db:CopyProfile(sourceProfile, targetProfile)
-    zBarButtonBG.charSettings = zBarButtonBGAce.db.profile
+    zBarButtonBG.SyncAllSignals()
 
     -- Update the action bars
     if zBarButtonBG.enabled then
@@ -101,7 +101,7 @@ function ProfileManager.deleteProfile(profileName)
         end
 
         zBarButtonBGAce.db:SetProfile(targetProfile)
-        zBarButtonBG.charSettings = zBarButtonBGAce.db.profile
+        zBarButtonBG.SyncAllSignals()
 
         -- Update the action bars
         if zBarButtonBG.enabled then

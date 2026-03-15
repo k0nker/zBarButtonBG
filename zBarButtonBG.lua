@@ -57,20 +57,18 @@ function zBarButtonBGAce:OnInitialize()
     -- Initialize AceDB with profile support
     self.db = LibStub("AceDB-3.0"):New("zBarButtonBGDB", addonTable.Core.Defaults, true)
 
-    -- Make Ace the single source of truth - native system points to Ace profile
-    zBarButtonBG.charSettings = self.db.profile
+    -- Re-sync signal values whenever the active profile changes.
+    self.db.RegisterCallback(self, "OnProfileChanged", function() zBarButtonBG.SyncAllSignals() end)
+    self.db.RegisterCallback(self, "OnProfileCopied",  function() zBarButtonBG.SyncAllSignals() end)
+    self.db.RegisterCallback(self, "OnProfileReset",   function() zBarButtonBG.SyncAllSignals() end)
+
+    -- Seed signals with the real saved values (defaults were used at store creation).
+    zBarButtonBG.SyncAllSignals()
 end
 
 function zBarButtonBGAce:OnEnable()
     -- Register slash commands when enabled
     Init.registerCommands()
-
-    -- Initialize options UI
-    C_Timer.After(0.1, function()
-        if self and type(self.InitializeOptions) == "function" then
-            self:InitializeOptions()
-        end
-    end)
 end
 
 -- ############################################################
@@ -89,7 +87,7 @@ function zBarButtonBGAce:CreateNewProfile(profileName)
 
     -- Create new profile and switch to it
     self.db:SetProfile(profileName)
-    zBarButtonBG.charSettings = self.db.profile
+    zBarButtonBG.SyncAllSignals()
 
     -- Update the action bars
     if zBarButtonBG.enabled then
@@ -108,7 +106,7 @@ function zBarButtonBGAce:SwitchProfile(profileName)
 
     -- Switch to profile
     self.db:SetProfile(profileName)
-    zBarButtonBG.charSettings = self.db.profile
+    zBarButtonBG.SyncAllSignals()
 
     -- Update the action bars
     if zBarButtonBG.enabled then
@@ -131,7 +129,7 @@ function zBarButtonBGAce:CopyProfile(sourceProfile, targetProfile)
 
     -- Copy profile data
     self.db:CopyProfile(sourceProfile, targetProfile)
-    zBarButtonBG.charSettings = self.db.profile
+    zBarButtonBG.SyncAllSignals()
 
     -- Update the action bars
     if zBarButtonBG.enabled then
@@ -167,7 +165,7 @@ function zBarButtonBGAce:DeleteProfile(profileName)
         end
 
         self.db:SetProfile(targetProfile)
-        zBarButtonBG.charSettings = self.db.profile
+        zBarButtonBG.SyncAllSignals()
     end
 
     -- Delete the profile
@@ -343,6 +341,7 @@ function zBarButtonBG.updateColors()
             ButtonSkinning.setOuterBackground(data.button, barName)
             ButtonSkinning.setInnerBackground(data.button, barName)
             ButtonSkinning.setBorder(data.button, barName)
+            Overlays.setHighlightOverlay(data.button, barName)
             Overlays.setRangeOverlay(data.button, barName)
             Overlays.setCooldownOverlay(data.button, barName)
         end
