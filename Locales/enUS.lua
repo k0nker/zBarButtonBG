@@ -97,6 +97,12 @@ L["Reset Count Settings"] = "Reset Count Settings"
 L["Reset count/charge text settings to default values"] = "Reset count/charge text settings to default values"
 L["Reset Keybind Settings"] = "Reset Keybind Settings"
 L["Reset keybind/hotkey text settings to default values"] = "Reset keybind/hotkey text settings to default values"
+L["Show Macro Text"] = "Show Macro Text"
+L["Show or hide the macro name label on buttons"] = "Show or hide the macro name label on buttons"
+L["Show Keybind Text"] = "Show Keybind Text"
+L["Show or hide the keybind/hotkey label on buttons"] = "Show or hide the keybind/hotkey label on buttons"
+L["Shorten Keybind"] = "Shorten Keybind"
+L["Abbreviate modifier keys in keybind text (e.g. Ctrl-Shift-Alt-1 becomes CSA1)"] = "Abbreviate modifier keys in keybind text (e.g. Ctrl-Shift-Alt-1 becomes CSA1)"
 
 -- Reset Status Messages
 L["Button settings reset to defaults!"] = "Button settings reset to defaults!"
@@ -118,7 +124,7 @@ L["Are you sure you want to reset all button settings to default values?\n\nThis
 L["Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator, cooldown fade, and spell alert color settings.\n\nThis action cannot be undone!"] = "Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator, cooldown fade, and spell alert color settings.\n\nThis action cannot be undone!"
 L["Are you sure you want to reset all macro text settings to default values?\n\nThis will reset font, size, color, positioning, and justification settings for macro names.\n\nThis action cannot be undone!"] = "Are you sure you want to reset all macro text settings to default values?\n\nThis will reset font, size, color, positioning, and justification settings for macro names.\n\nThis action cannot be undone!"
 L["Are you sure you want to reset all count/charge text settings to default values?\n\nThis will reset font, size, color, and positioning settings for count/charge numbers.\n\nThis action cannot be undone!"] = "Are you sure you want to reset all count/charge text settings to default values?\n\nThis will reset font, size, color, and positioning settings for count/charge numbers.\n\nThis action cannot be undone!"
-L["Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, and positioning settings for keybind/hotkey text.\n\nThis action cannot be undone!"] = "Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, and positioning settings for keybind/hotkey text.\n\nThis action cannot be undone!"
+L["Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, positioning, and shortening settings for keybind/hotkey text.\n\nThis action cannot be undone!"] = "Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, positioning, and shortening settings for keybind/hotkey text.\n\nThis action cannot be undone!"
 
 -- ############################################################
 -- Class & Color System (WoW Character Classes)

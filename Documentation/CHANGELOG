@@ -1,0 +1,10 @@
+# Changelog
+---
+
+## v2026.0317.01
+
+### New Features
+- Added option to shorten keybinding text, changing ctrl, alt, shift, numpad, mouse to c, a, s, n, m.
+- Added option to toggle showing macro or keybind text.
+
+---

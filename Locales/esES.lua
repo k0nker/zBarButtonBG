@@ -94,6 +94,12 @@ L["Reset Count Settings"] = "Restablecer Configuración de Contador"
 L["Reset count/charge text settings to default values"] = "Restablecer configuración de texto de contador/carga a valores predeterminados"
 L["Reset Keybind Settings"] = "Restablecer Configuración de Atajos"
 L["Reset keybind/hotkey text settings to default values"] = "Restablecer configuración de texto de atajos de teclado a valores predeterminados"
+L["Show Macro Text"] = "Mostrar Texto de Macro"
+L["Show or hide the macro name label on buttons"] = "Mostrar u ocultar la etiqueta del nombre de macro en los botones"
+L["Show Keybind Text"] = "Mostrar Texto de Atajo"
+L["Show or hide the keybind/hotkey label on buttons"] = "Mostrar u ocultar la etiqueta de atajo/hotkey en los botones"
+L["Shorten Keybind"] = "Acortar Atajo"
+L["Abbreviate modifier keys in keybind text (e.g. Ctrl-Shift-Alt-1 becomes CSA1)"] = "Abreviar teclas modificadoras en el texto de atajos (p.ej. Ctrl-Shift-Alt-1 se convierte en CSA1)"
 
 -- Reset Status Messages
 L["Button settings reset to defaults!"] = "¡Configuración de botones restablecida a valores predeterminados!"
@@ -115,7 +121,7 @@ L["Are you sure you want to reset all button settings to default values?\n\nThis
 L["Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator, cooldown fade, and spell alert color settings.\n\nThis action cannot be undone!"] = "¿Estás seguro de que quieres restablecer toda la configuración de indicadores a valores predeterminados?\n\nEsto restablecerá el indicador de alcance, desvanecimiento de enfriamiento y configuración de colores de alerta de hechizos.\n\n¡Esta acción no se puede deshacer!"
 L["Are you sure you want to reset all macro text settings to default values?\n\nThis will reset font, size, color, positioning, and justification settings for macro names.\n\nThis action cannot be undone!"] = "¿Estás seguro de que quieres restablecer toda la configuración de texto de macro a valores predeterminados?\n\nEsto restablecerá la fuente, tamaño, color, posicionamiento y configuración de justificación para nombres de macro.\n\n¡Esta acción no se puede deshacer!"
 L["Are you sure you want to reset all count/charge text settings to default values?\n\nThis will reset font, size, color, and positioning settings for count/charge numbers.\n\nThis action cannot be undone!"] = "¿Estás seguro de que quieres restablecer toda la configuración de texto de contador/carga a valores predeterminados?\n\nEsto restablecerá la fuente, tamaño, color y configuración de posicionamiento para números de contador/carga.\n\n¡Esta acción no se puede deshacer!"
-L["Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, and positioning settings for keybind/hotkey text.\n\nThis action cannot be undone!"] = "¿Estás seguro de que quieres restablecer toda la configuración de texto de atajos a valores predeterminados?\n\nEsto restablecerá la fuente, tamaño, color y configuración de posicionamiento para texto de atajos de teclado.\n\n¡Esta acción no se puede deshacer!"
+L["Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, positioning, and shortening settings for keybind/hotkey text.\n\nThis action cannot be undone!"] = "¿Estás seguro de que quieres restablecer toda la configuración de texto de atajos a valores predeterminados?\n\nEsto restablecerá la fuente, tamaño, color, posicionamiento y configuración de abreviación para texto de atajos de teclado.\n\n¡Esta acción no se puede deshacer!"
 
 -- ############################################################
 -- Class & Color System (WoW Character Classes)

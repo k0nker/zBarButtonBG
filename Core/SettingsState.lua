@@ -157,6 +157,9 @@ local FONT_KEYS = {
     keybindHeight          = true,
     keybindOffsetX         = true,
     keybindOffsetY         = true,
+    keybindShortenText     = true,
+    showMacroName          = true,
+    showKeybindText        = true,
 }
 
 zBarButtonBG.settingsStore:RegisterEffectMap(REBUILD_KEYS, function(key, value)

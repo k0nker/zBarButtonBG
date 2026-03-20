@@ -159,6 +159,11 @@ end
 -- Apply macro name text styling
 function Styling.applyMacroNameStyling(button, barName)
     if not button or not button.Name then return end
+    if not zBarButtonBG.charSettings.showMacroName then
+        button.Name:SetAlpha(0)
+        return
+    end
+    button.Name:SetAlpha(1)
     Styling.SkinText(button.Name, button, Styling.textElements.MacroName, barName)
 end
 
@@ -168,10 +173,88 @@ function Styling.applyCountStyling(button, barName)
     Styling.SkinText(button.Count, button, Styling.textElements.Count, barName)
 end
 
+-- Shorten a keybind string by condensing modifier prefixes and key names.
+-- Blizzard pre-abbreviates modifiers to lowercase letter + hyphen:
+--   "c-s-a-1" -> "CSA1", "a-1" -> "A1"
+-- Mouse/wheel/numpad keys use their GetBindingText forms:
+--   "Mouse Button 4" -> "M4", "Middle Mouse" -> "M3", "MOUSEWHEELUP" -> "MwU", "Num Pad 5" -> "N5"
+function Styling.shortenKeybindText(text)
+    if not text or text == "" then return text end
+    -- Modifier prefixes (Blizzard outputs lowercase letter + hyphen)
+    text = text:gsub("a%-", "A")
+    text = text:gsub("c%-", "C")
+    text = text:gsub("s%-", "S")
+    -- Mouse wheel (arrives as raw uppercase)
+    text = text:gsub("MOUSEWHEELUP",   "MwU")
+    text = text:gsub("MOUSEWHEELDOWN", "MwD")
+    -- Named middle mouse button (macOS)
+    text = text:gsub("Middle Mouse", "M3")
+    -- Mouse buttons: "Mouse Button 4" -> "M4"; raw "BUTTON4" -> "M4" as fallback
+    text = text:gsub("Mouse Button ", "M")
+    text = text:gsub("BUTTON",        "M")
+    -- Numpad: "Num Pad 5" -> "N5"
+    text = text:gsub("Num Pad ", "N")
+    return text
+end
+
+-- Install a SetText hook on button.HotKey that optionally shortens the binding text.
+-- Safe to call multiple times; the hook is only installed once per fontstring.
+function Styling.hookKeybindSetText(button)
+    if not button or not button.HotKey then return end
+    if button.HotKey._zBBG_setTextHooked then return end
+    button.HotKey._zBBG_setTextHooked = true
+
+    local hotkey = button.HotKey
+
+    hooksecurefunc(hotkey, "SetText", function(self, text)
+        if self._zBBG_shortening then return end
+        self._zBBG_origText = text
+        if not zBarButtonBG.charSettings.keybindShortenText then return end
+        if not text or text == "" then return end
+        local shortened = Styling.shortenKeybindText(text)
+        if shortened == text then return end
+        self._zBBG_shortening = true
+        self:SetText(shortened)
+        self._zBBG_shortening = false
+    end)
+
+    -- Apply to text that Blizzard already set before the hook was installed.
+    local currentText = hotkey:GetText()
+    if currentText and currentText ~= "" then
+        hotkey._zBBG_origText = currentText
+        if zBarButtonBG.charSettings.keybindShortenText then
+            local shortened = Styling.shortenKeybindText(currentText)
+            if shortened ~= currentText then
+                hotkey._zBBG_shortening = true
+                hotkey:SetText(shortened)
+                hotkey._zBBG_shortening = false
+            end
+        end
+    end
+end
+
+-- Re-apply the current shorten setting to already-displayed text.
+-- Called when keybindShortenText changes so the display updates immediately.
+function Styling.refreshKeybindText(button)
+    if not button or not button.HotKey then return end
+    local origText = button.HotKey._zBBG_origText
+    if origText ~= nil then
+        button.HotKey._zBBG_shortening = false
+        button.HotKey:SetText(origText)
+    end
+end
+
 -- Apply keybind text styling
 function Styling.applyKeybindStyling(button, barName)
     if not button or not button.HotKey then return end
+    if not zBarButtonBG.charSettings.showKeybindText then
+        button.HotKey:SetAlpha(0)
+        return
+    end
+    button.HotKey:SetAlpha(1)
     Styling.SkinText(button.HotKey, button, Styling.textElements.Keybind, barName)
+    Styling.hookKeybindSetText(button)
+    Styling.refreshKeybindText(button)
 end
 
 -- Apply all text styling to a button using centralized approach

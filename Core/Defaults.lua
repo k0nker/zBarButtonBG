@@ -59,7 +59,10 @@ addonTable.Core.Defaults = {
         keybindHeight = 12,
         keybindColor = { r = 1, g = 1, b = 1, a = 1 },
         keybindOffsetX = 0,
-        keybindOffsetY = 0
+        keybindOffsetY = 0,
+        keybindShortenText = true,
+        showMacroName = true,
+        showKeybindText = true
     },
     char = {
         useCombatProfile = false,

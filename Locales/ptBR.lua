@@ -66,6 +66,12 @@ L["Reset Count Settings"] = "Redefinir Configurações de Contador"
 L["Reset count/charge text settings to default values"] = "Redefinir configurações de texto contador/carga para valores padrão"
 L["Reset Keybind Settings"] = "Redefinir Configurações de Teclas"
 L["Reset keybind/hotkey text settings to default values"] = "Redefinir configurações de texto teclas/atalhos para valores padrão"
+L["Show Macro Text"] = "Mostrar Texto de Macro"
+L["Show or hide the macro name label on buttons"] = "Mostrar ou ocultar o rótulo do nome de macro nos botões"
+L["Show Keybind Text"] = "Mostrar Texto das Teclas"
+L["Show or hide the keybind/hotkey label on buttons"] = "Mostrar ou ocultar o rótulo de teclas/atalhos nos botões"
+L["Shorten Keybind"] = "Abreviar Tecla"
+L["Abbreviate modifier keys in keybind text (e.g. Ctrl-Shift-Alt-1 becomes CSA1)"] = "Abreviar teclas modificadoras no texto de teclas (ex. Ctrl-Shift-Alt-1 torna-se CSA1)"
 
 -- Reset Status Messages
 L["Button settings reset to defaults!"] = "Configurações de botões redefinidas para padrão!"
@@ -73,6 +79,9 @@ L["Indicator settings reset to defaults!"] = "Configurações de indicadores red
 L["Macro text settings reset to defaults!"] = "Configurações de texto de macro redefinidas para padrão!"
 L["Count text settings reset to defaults!"] = "Configurações de texto de contador redefinidas para padrão!"
 L["Keybind text settings reset to defaults!"] = "Configurações de texto de teclas redefinidas para padrão!"
+
+-- Confirmation Dialogs
+L["Are you sure you want to reset all keybind/hotkey text settings to default values?\n\nThis will reset font, size, color, positioning, and shortening settings for keybind/hotkey text.\n\nThis action cannot be undone!"] = "Tem certeza que deseja redefinir todas as configurações de texto de teclas/atalhos para os valores padrão?\n\nIsso redefinirá as configurações de fonte, tamanho, cor, posicionamento e abreviação para o texto de teclas.\n\nEsta ação não pode ser desfeita!"
 
 -- ############################################################
 -- Class & Color System (WoW Character Classes)
