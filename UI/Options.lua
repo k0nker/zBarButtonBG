@@ -4,16 +4,16 @@
 ---@class addonTableZBarButtonBG
 local addonTable = select(2, ...)
 
-local L   = LibStub("AceLocale-3.0"):GetLocale("zBarButtonBG")
-local LSM = LibStub("LibSharedMedia-3.0")
+local L          = LibStub("AceLocale-3.0"):GetLocale("zBarButtonBG")
+local LSM        = LibStub("LibSharedMedia-3.0")
 
 -- ── Font registrations ─────────────────────────────────────────────────────────
-LSM:Register("font", "Homespun",      "Interface\\AddOns\\zBarButtonBG\\Assets\\Fonts\\Homespun.ttf")
-LSM:Register("font", "Celestia",      "Interface\\AddOns\\zBarButtonBG\\Assets\\Fonts\\Celestia.ttf")
-LSM:Register("font", "Morpheus",      "Fonts\\MORPHEUS.TTF")
-LSM:Register("font", "Arial",         "Fonts\\ARIALN.TTF")
+LSM:Register("font", "Homespun", "Interface\\AddOns\\zBarButtonBG\\Assets\\Fonts\\Homespun.ttf")
+LSM:Register("font", "Celestia", "Interface\\AddOns\\zBarButtonBG\\Assets\\Fonts\\Celestia.ttf")
+LSM:Register("font", "Morpheus", "Fonts\\MORPHEUS.TTF")
+LSM:Register("font", "Arial", "Fonts\\ARIALN.TTF")
 LSM:Register("font", "Friz Quadrata", "Fonts\\FRIZQT__.TTF")
-LSM:Register("font", "Skelefont",     "Interface\\AddOns\\zBarButtonBG\\Assets\\Fonts\\Skelefont.ttf")
+LSM:Register("font", "Skelefont", "Interface\\AddOns\\zBarButtonBG\\Assets\\Fonts\\Skelefont.ttf")
 
 -- ── Serialize helpers ──────────────────────────────────────────────────────────
 local function exportProfile(profile)
@@ -72,6 +72,7 @@ local function BarEntries(displayName, barKey)
         },
         {
             widgetType = "toggle",
+            width      = "half",
             name       = L["Use Different Profile"],
             desc       = L["Use a different profile for this action bar"],
             get        = function()
@@ -88,6 +89,7 @@ local function BarEntries(displayName, barKey)
         },
         {
             widgetType  = "select",
+            width       = "half",
             name        = L["Profile"],
             desc        = L["Profile to use for this action bar"],
             get         = function()
@@ -121,16 +123,16 @@ local actionBarsContent = {
         name       = L["Here you can select action bars to have their own profiles applied independent of the currently selected profile."],
     },
 }
-extend(actionBarsContent, BarEntries(L["Main Action Bar"],   "ActionButton"))
-extend(actionBarsContent, BarEntries(L["Bottom Left Bar"],   "MultiBarBottomLeftButton"))
-extend(actionBarsContent, BarEntries(L["Bottom Right Bar"],  "MultiBarBottomRightButton"))
-extend(actionBarsContent, BarEntries(L["Right Bar 1"],       "MultiBarRightButton"))
-extend(actionBarsContent, BarEntries(L["Right Bar 2"],       "MultiBarLeftButton"))
-extend(actionBarsContent, BarEntries(L["Bar 5"],             "MultiBar5Button"))
-extend(actionBarsContent, BarEntries(L["Bar 6"],             "MultiBar6Button"))
-extend(actionBarsContent, BarEntries(L["Bar 7"],             "MultiBar7Button"))
-extend(actionBarsContent, BarEntries(L["Pet Action Bar"],    "PetActionButton"))
-extend(actionBarsContent, BarEntries(L["Stance Bar"],        "StanceButton"))
+extend(actionBarsContent, BarEntries(L["Main Action Bar"], "ActionButton"))
+extend(actionBarsContent, BarEntries(L["Bottom Left Bar"], "MultiBarBottomLeftButton"))
+extend(actionBarsContent, BarEntries(L["Bottom Right Bar"], "MultiBarBottomRightButton"))
+extend(actionBarsContent, BarEntries(L["Right Bar 1"], "MultiBarRightButton"))
+extend(actionBarsContent, BarEntries(L["Right Bar 2"], "MultiBarLeftButton"))
+extend(actionBarsContent, BarEntries(L["Bar 5"], "MultiBar5Button"))
+extend(actionBarsContent, BarEntries(L["Bar 6"], "MultiBar6Button"))
+extend(actionBarsContent, BarEntries(L["Bar 7"], "MultiBar7Button"))
+extend(actionBarsContent, BarEntries(L["Pet Action Bar"], "PetActionButton"))
+extend(actionBarsContent, BarEntries(L["Stance Bar"], "StanceButton"))
 
 -- ── Schema ─────────────────────────────────────────────────────────────────────
 local ZBBG_SCHEMA = {
@@ -375,8 +377,167 @@ local ZBBG_SCHEMA = {
         widgetType = "nav",
         name       = L["Buttons"],
         children   = {
+            { widgetType = "header", name = L["Appearance"] },
+            {
+                widgetType = "select",
+                key        = "buttonStyle",
+                name       = L["Button Style"],
+                desc       = L["Choose button style"],
+                values     = function()
+                    return zBarButtonBG.ButtonStyles.GetStylesForDropdown()
+                end,
+            },
+            { widgetType = "header", name = L["Backdrop"] },
+            {
+                widgetType = "toggle",
+                key        = "showBackdrop",
+                width      = "half",
+                name       = L["Show Backdrop"],
+                desc       = L["Show outer background frame"],
+            },
+            {
+                widgetType  = "toggle",
+                key         = "backdropMaskedToButton",
+                width       = "half",
+                name        = L["Mask Backdrop"],
+                desc        = L["Mask outer background frame to button shape"],
+                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
+                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
+            },
+            {
+                widgetType  = "toggle",
+                key         = "useClassColorOuter",
+                width       = "half",
+                name        = L["Use Class Color"],
+                desc        = L["Tint the backdrop with your class color"],
+                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
+                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
+            },
+            {
+                widgetType  = "colorAlpha",
+                width       = "half",
+                name        = L["Backdrop Color"],
+                desc        = L["Color of the outer backdrop frame"],
+                get         = function() return getColor("outerColor") end,
+                set         = function(value) setColor("outerColor", value) end,
+                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
+                disableWhen = function()
+                    return not zBarButtonBG.charSettings.showBackdrop
+                        or zBarButtonBG.charSettings.useClassColorOuter
+                end,
+            },
+            {
+                widgetType  = "range",
+                key         = "backdropTopAdjustment",
+                width       = "half",
+                name        = L["Top Size"],
+                desc        = L["How far the backdrop extends above the button (in pixels)"],
+                min         = 0,
+                max         = 20,
+                step        = 1,
+                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
+                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
+            },
+            {
+                widgetType  = "range",
+                key         = "backdropBottomAdjustment",
+                width       = "half",
+                name        = L["Bottom Size"],
+                desc        = L["How far the backdrop extends below the button (in pixels)"],
+                min         = 0,
+                max         = 20,
+                step        = 1,
+                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
+                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
+            },
+            {
+                widgetType  = "range",
+                key         = "backdropLeftAdjustment",
+                width       = "half",
+                name        = L["Left Size"],
+                desc        = L["How far the backdrop extends to the left of the button (in pixels)"],
+                min         = 0,
+                max         = 20,
+                step        = 1,
+                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
+                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
+            },
+            {
+                widgetType  = "range",
+                key         = "backdropRightAdjustment",
+                width       = "half",
+                name        = L["Right Size"],
+                desc        = L["How far the backdrop extends to the right of the button (in pixels)"],
+                min         = 0,
+                max         = 20,
+                step        = 1,
+                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
+                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
+            },
+            { widgetType = "header", name = L["Button Background"] },
+            {
+                widgetType = "toggle",
+                key        = "showSlotBackground",
+                width      = "full",
+                name       = L["Show Button Background"],
+                desc       = L["Show the slot background fill behind each button icon"],
+            },
+            {
+                widgetType  = "toggle",
+                key         = "useClassColorInner",
+                width       = "half",
+                name        = L["Use Class Color"],
+                desc        = L["Tint the slot background with your class color"],
+                disableWhen = function()
+                    return not zBarButtonBG.charSettings.showSlotBackground
+                end,
+            },
+            {
+                widgetType  = "colorAlpha",
+                width       = "half",
+                name        = L["Button Background Color"],
+                desc        = L["Color of the button slot background"],
+                get         = function() return getColor("innerColor") end,
+                set         = function(value) setColor("innerColor", value) end,
+                disableWhen = function()
+                    return not zBarButtonBG.charSettings.showSlotBackground
+                        or zBarButtonBG.charSettings.useClassColorInner
+                end,
+            },
+            { widgetType = "header", name = L["Border"] },
+            {
+                widgetType = "toggle",
+                key        = "showBorder",
+                width      = "full",
+                name       = L["Show Border"],
+                desc       = L["Show border around buttons"],
+            },
+            {
+                widgetType  = "toggle",
+                key         = "useClassColorBorder",
+                width       = "half",
+                name        = L["Use Class Color"],
+                desc        = L["Tint the border with your class color"],
+                disableWhen = function() return not zBarButtonBG.charSettings.showBorder end,
+            },
+            {
+                widgetType  = "colorAlpha",
+                width       = "half",
+                name        = L["Border Color"],
+                desc        = L["Color of the button border"],
+                get         = function() return getColor("borderColor") end,
+                set         = function(value) setColor("borderColor", value) end,
+                disableWhen = function()
+                    return not zBarButtonBG.charSettings.showBorder
+                        or zBarButtonBG.charSettings.useClassColorBorder
+                end,
+            },
+            { widgetType = "header" },
+            { widgetType = "filler", width = "third", divider = false },
+            { widgetType = "filler", width = "third", divider = false },
             {
                 widgetType = "button",
+                width      = "third",
                 name       = L["Reset Button Settings"],
                 desc       = L["Reset all button-related settings to default values"],
                 confirm    = L["Are you sure you want to reset all button settings to default values?\n\nThis will reset button shape, backdrop, slot background, and border settings.\n\nThis action cannot be undone!"],
@@ -390,151 +551,6 @@ local ZBBG_SCHEMA = {
                     "showSlotBackground", "innerColor", "useClassColorInner",
                 },
             },
-            { widgetType = "spacer" },
-            { widgetType = "header", name = L["Appearance"] },
-            {
-                widgetType = "select",
-                key        = "buttonStyle",
-                name       = L["Button Style"],
-                desc       = L["Choose button style"],
-                values     = function()
-                    return zBarButtonBG.ButtonStyles.GetStylesForDropdown()
-                end,
-            },
-            { widgetType = "spacer" },
-            { widgetType = "header", name = L["Backdrop"] },
-            {
-                widgetType = "toggle",
-                key        = "showBackdrop",
-                name       = L["Show Backdrop"],
-                desc       = L["Show outer background frame"],
-            },
-            {
-                widgetType  = "toggle",
-                key         = "backdropMaskedToButton",
-                name        = L["Mask Backdrop"],
-                desc        = L["Mask outer background frame to button shape"],
-                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
-                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
-            },
-            {
-                widgetType  = "colorAlpha",
-                name        = L["Backdrop Color"],
-                desc        = L["Color of the outer backdrop frame"],
-                get         = function() return getColor("outerColor") end,
-                set         = function(value) setColor("outerColor", value) end,
-                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
-                disableWhen = function()
-                    return not zBarButtonBG.charSettings.showBackdrop
-                        or zBarButtonBG.charSettings.useClassColorOuter
-                end,
-            },
-            {
-                widgetType  = "toggle",
-                key         = "useClassColorOuter",
-                name        = L["Use Class Color"],
-                desc        = L["Tint the backdrop with your class color"],
-                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
-                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
-            },
-            {
-                widgetType  = "range",
-                key         = "backdropTopAdjustment",
-                name        = L["Top Size"],
-                desc        = L["How far the backdrop extends above the button (in pixels)"],
-                min         = 0,
-                max         = 20,
-                step        = 1,
-                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
-                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
-            },
-            {
-                widgetType  = "range",
-                key         = "backdropBottomAdjustment",
-                name        = L["Bottom Size"],
-                desc        = L["How far the backdrop extends below the button (in pixels)"],
-                min         = 0,
-                max         = 20,
-                step        = 1,
-                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
-                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
-            },
-            {
-                widgetType  = "range",
-                key         = "backdropLeftAdjustment",
-                name        = L["Left Size"],
-                desc        = L["How far the backdrop extends to the left of the button (in pixels)"],
-                min         = 0,
-                max         = 20,
-                step        = 1,
-                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
-                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
-            },
-            {
-                widgetType  = "range",
-                key         = "backdropRightAdjustment",
-                name        = L["Right Size"],
-                desc        = L["How far the backdrop extends to the right of the button (in pixels)"],
-                min         = 0,
-                max         = 20,
-                step        = 1,
-                showWhen    = function() return zBarButtonBG.charSettings.showBackdrop end,
-                disableWhen = function() return not zBarButtonBG.charSettings.showBackdrop end,
-            },
-            { widgetType = "spacer" },
-            { widgetType = "header", name = L["Button Background"] },
-            {
-                widgetType = "toggle",
-                key        = "showSlotBackground",
-                name       = L["Show Button Background"],
-                desc       = L["Show the slot background fill behind each button icon"],
-            },
-            {
-                widgetType  = "colorAlpha",
-                name        = L["Button Background Color"],
-                desc        = L["Color of the button slot background"],
-                get         = function() return getColor("innerColor") end,
-                set         = function(value) setColor("innerColor", value) end,
-                disableWhen = function()
-                    return not zBarButtonBG.charSettings.showSlotBackground
-                        or zBarButtonBG.charSettings.useClassColorInner
-                end,
-            },
-            {
-                widgetType  = "toggle",
-                key         = "useClassColorInner",
-                name        = L["Use Class Color"],
-                desc        = L["Tint the slot background with your class color"],
-                disableWhen = function()
-                    return not zBarButtonBG.charSettings.showSlotBackground
-                end,
-            },
-            { widgetType = "spacer" },
-            { widgetType = "header", name = L["Border"] },
-            {
-                widgetType = "toggle",
-                key        = "showBorder",
-                name       = L["Show Border"],
-                desc       = L["Show border around buttons"],
-            },
-            {
-                widgetType  = "colorAlpha",
-                name        = L["Border Color"],
-                desc        = L["Color of the button border"],
-                get         = function() return getColor("borderColor") end,
-                set         = function(value) setColor("borderColor", value) end,
-                disableWhen = function()
-                    return not zBarButtonBG.charSettings.showBorder
-                        or zBarButtonBG.charSettings.useClassColorBorder
-                end,
-            },
-            {
-                widgetType  = "toggle",
-                key         = "useClassColorBorder",
-                name        = L["Use Class Color"],
-                desc        = L["Tint the border with your class color"],
-                disableWhen = function() return not zBarButtonBG.charSettings.showBorder end,
-            },
         },
     },
 
@@ -543,28 +559,17 @@ local ZBBG_SCHEMA = {
         widgetType = "nav",
         name       = L["Indicators"],
         children   = {
-            {
-                widgetType = "button",
-                name       = L["Reset Indicator Settings"],
-                desc       = L["Reset all indicator-related settings to default values"],
-                confirm    = L["Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator, cooldown fade, and spell alert color settings.\n\nThis action cannot be undone!"],
-                resetKeys  = {
-                    "showHighlightHover", "hoverOverlayColor",
-                    "showRangeIndicator", "rangeIndicatorColor",
-                    "fadeCooldown", "cooldownColor",
-                    "procAltGlowColor", "suggestedActionColor",
-                },
-            },
-            { widgetType = "spacer" },
             { widgetType = "header", name = L["Overlays"] },
             {
                 widgetType = "toggle",
                 key        = "showHighlightHover",
+                width      = "half",
                 name       = L["Hover Overlay"],
                 desc       = L["Show color overlay when hovering over buttons"],
             },
             {
                 widgetType  = "colorAlpha",
+                width      = "half",
                 name        = L["Hover Overlay Color"],
                 desc        = L["Color of the hover overlay"],
                 get         = function() return getColor("hoverOverlayColor") end,
@@ -574,21 +579,23 @@ local ZBBG_SCHEMA = {
             {
                 widgetType = "toggle",
                 key        = "showRangeIndicator",
+                width      = "half",
                 name       = L["Out of Range Overlay"],
                 desc       = L["Show red overlay when abilities are out of range"],
             },
             {
                 widgetType  = "colorAlpha",
+                width      = "half",
                 name        = L["Out of Range Color"],
                 desc        = L["Color of the out of range indicator"],
                 get         = function() return getColor("rangeIndicatorColor") end,
                 set         = function(value) setColor("rangeIndicatorColor", value) end,
                 disableWhen = function() return not zBarButtonBG.charSettings.showRangeIndicator end,
             },
-            { widgetType = "spacer" },
             {
                 widgetType  = "toggle",
                 key         = "fadeCooldown",
+                width      = "half",
                 name        = L["Cooldown Overlay"],
                 desc        = L["Show dark overlay during ability cooldowns"],
                 showWhen    = function() return zBarButtonBG.midnightCooldown end,
@@ -596,6 +603,7 @@ local ZBBG_SCHEMA = {
             },
             {
                 widgetType  = "colorAlpha",
+                width      = "half",
                 name        = L["Cooldown Color"],
                 desc        = L["Color of the cooldown overlay"],
                 get         = function() return getColor("cooldownColor") end,
@@ -606,9 +614,10 @@ local ZBBG_SCHEMA = {
                         or not zBarButtonBG.charSettings.fadeCooldown
                 end,
             },
-            { widgetType = "spacer" },
+            { widgetType = "header" },
             {
                 widgetType = "colorAlpha",
+                width      = "half",
                 name       = L["Proc Alt Glow Color"],
                 desc       = L["Color of spell proc alerts"],
                 get        = function() return getColor("procAltGlowColor") end,
@@ -616,10 +625,27 @@ local ZBBG_SCHEMA = {
             },
             {
                 widgetType = "colorAlpha",
+                width      = "half",
                 name       = L["Suggested Action Color"],
                 desc       = L["Color of suggested action indicators"],
                 get        = function() return getColor("suggestedActionColor") end,
                 set        = function(value) setColor("suggestedActionColor", value) end,
+            },
+            { widgetType = "header" },
+            { widgetType = "filler", width = "third",     divider = false },
+            { widgetType = "filler", width = "third",     divider = false },
+            {
+                widgetType = "button",
+                width      = "third",
+                name       = L["Reset Indicator Settings"],
+                desc       = L["Reset all indicator-related settings to default values"],
+                confirm    = L["Are you sure you want to reset all indicator settings to default values?\n\nThis will reset range indicator, cooldown fade, and spell alert color settings.\n\nThis action cannot be undone!"],
+                resetKeys  = {
+                    "showHighlightHover", "hoverOverlayColor",
+                    "showRangeIndicator", "rangeIndicatorColor",
+                    "fadeCooldown", "cooldownColor",
+                    "procAltGlowColor", "suggestedActionColor",
+                },
             },
         },
     },
@@ -746,9 +772,9 @@ local ZBBG_SCHEMA = {
                             ["BOTTOM"] = L["Bottom"],
                         },
                     },
-                    {   widgetType = "spacer" },
-                    {   widgetType = "filler", width = "third", separator = "hide" },
-                    {   widgetType = "filler", width = "third", separator = "hide" },
+                    { widgetType = "header" },
+                    { widgetType = "filler", width = "third", divider = false },
+                    { widgetType = "filler", width = "third", divider = false },
                     {
                         widgetType = "button",
                         width      = "third",
@@ -772,20 +798,9 @@ local ZBBG_SCHEMA = {
                 children   = {
                     { widgetType = "header", name = L["Count / Charge"] },
                     {
-                        widgetType = "button",
-                        name       = L["Reset Count Settings"],
-                        desc       = L["Reset count/charge text settings to default values"],
-                        confirm    = L["Are you sure you want to reset all count/charge text settings to default values?\n\nThis will reset font, size, color, and positioning settings for count/charge numbers.\n\nThis action cannot be undone!"],
-                        resetKeys  = {
-                            "countFont", "countFontSize", "countFontFlags",
-                            "countColor", "countWidth", "countHeight",
-                            "countOffsetX", "countOffsetY",
-                        },
-                    },
-                    { widgetType = "spacer" },
-                    {
                         widgetType = "select",
                         key        = "countFont",
+                        width      = "half",
                         name       = L["Count Font"],
                         desc       = L["Font family for count/charge numbers"],
                         values     = function()
@@ -797,6 +812,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "select",
                         key        = "countFontFlags",
+                        width      = "half",
                         name       = L["Font Flags"],
                         desc       = L["Font style flags for count/charge numbers"],
                         values     = {
@@ -808,6 +824,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "range",
                         key        = "countFontSize",
+                        width      = "half",
                         name       = L["Count Font Size"],
                         desc       = L["Font size for count/charge numbers"],
                         min        = 6,
@@ -816,6 +833,7 @@ local ZBBG_SCHEMA = {
                     },
                     {
                         widgetType = "colorAlpha",
+                        width      = "half",
                         name       = L["Count Color"],
                         get        = function() return getColor("countColor") end,
                         set        = function(v) setColor("countColor", v) end,
@@ -823,6 +841,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "range",
                         key        = "countWidth",
+                        width      = "half",
                         name       = L["Width"],
                         desc       = L["Width of the count text frame"],
                         min        = 1,
@@ -832,6 +851,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "range",
                         key        = "countHeight",
+                        width      = "half",
                         name       = L["Height"],
                         desc       = L["Height of the count text frame"],
                         min        = 1,
@@ -841,6 +861,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "range",
                         key        = "countOffsetX",
+                        width      = "half",
                         name       = L["Offset X"],
                         desc       = L["Horizontal positioning offset for count/charge text"],
                         min        = -30,
@@ -850,11 +871,26 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "range",
                         key        = "countOffsetY",
+                        width      = "half",
                         name       = L["Offset Y"],
                         desc       = L["Vertical positioning offset for count/charge text"],
                         min        = -30,
                         max        = 30,
                         step       = 1,
+                    },
+                    { widgetType = "header" },
+                    { widgetType = "filler", width = "third",           divider = false },
+                    { widgetType = "filler", width = "third",           divider = false },
+                    {
+                        widgetType = "button",
+                        name       = L["Reset Count Settings"],
+                        desc       = L["Reset count/charge text settings to default values"],
+                        confirm    = L["Are you sure you want to reset all count/charge text settings to default values?\n\nThis will reset font, size, color, and positioning settings for count/charge numbers.\n\nThis action cannot be undone!"],
+                        resetKeys  = {
+                            "countFont", "countFontSize", "countFontFlags",
+                            "countColor", "countWidth", "countHeight",
+                            "countOffsetX", "countOffsetY",
+                        },
                     },
                 },
             },
@@ -864,6 +900,104 @@ local ZBBG_SCHEMA = {
                 name       = L["Keybind / Hotkey"],
                 children   = {
                     { widgetType = "header", name = L["Keybind / Hotkey"] },
+                    {
+                        widgetType = "toggle",
+                        key        = "showKeybindText",
+                        width      = "half",
+                        name       = L["Show Keybind Text"],
+                        desc       = L["Show or hide the keybind/hotkey label on buttons"],
+                    },
+                    {
+                        widgetType = "toggle",
+                        key        = "keybindShortenText",
+                        width      = "half",
+                        name       = L["Shorten Keybind"],
+                        desc       = L["Abbreviate modifier keys in keybind text (e.g. Ctrl-Shift-Alt-1 becomes CSA1)"],
+                    },
+                    {
+                        widgetType = "select",
+                        key        = "keybindFont",
+                        width      = "half",
+                        name       = L["Keybind Font"],
+                        desc       = L["Font family for keybind/hotkey text"],
+                        values     = function()
+                            local r = {}
+                            for _, n in ipairs(LSM:List("font")) do r[n] = n end
+                            return r
+                        end,
+                    },
+                    {
+                        widgetType = "select",
+                        key        = "keybindFontFlags",
+                        width      = "half",
+                        name       = L["Font Flags"],
+                        desc       = L["Font style flags for keybind/hotkey text"],
+                        values     = {
+                            [""]             = L["None"],
+                            ["OUTLINE"]      = L["Outline"],
+                            ["THICKOUTLINE"] = L["Thick Outline"],
+                        },
+                    },
+                    {
+                        widgetType = "range",
+                        key        = "keybindFontSize",
+                        width      = "half",
+                        name       = L["Keybind Font Size"],
+                        desc       = L["Font size for keybind/hotkey text"],
+                        min        = 6,
+                        max        = 40,
+                        step       = 1,
+                    },
+                    {
+                        widgetType = "colorAlpha",
+                        width      = "half",
+                        name       = L["Keybind Color"],
+                        get        = function() return getColor("keybindColor") end,
+                        set        = function(v) setColor("keybindColor", v) end,
+                    },
+                    {
+                        widgetType = "range",
+                        key        = "keybindWidth",
+                        width      = "half",
+                        name       = L["Width"],
+                        desc       = L["Width of the keybind text frame"],
+                        min        = 1,
+                        max        = 100,
+                        step       = 1,
+                    },
+                    {
+                        widgetType = "range",
+                        key        = "keybindHeight",
+                        width      = "half",
+                        name       = L["Height"],
+                        desc       = L["Height of the keybind text frame"],
+                        min        = 1,
+                        max        = 60,
+                        step       = 1,
+                    },
+                    {
+                        widgetType = "range",
+                        key        = "keybindOffsetX",
+                        width      = "half",
+                        name       = L["Offset X"],
+                        desc       = L["Horizontal positioning offset for keybind/hotkey text"],
+                        min        = -30,
+                        max        = 30,
+                        step       = 1,
+                    },
+                    {
+                        widgetType = "range",
+                        key        = "keybindOffsetY",
+                        width      = "half",
+                        name       = L["Offset Y"],
+                        desc       = L["Vertical positioning offset for keybind/hotkey text"],
+                        min        = -30,
+                        max        = 30,
+                        step       = 1,
+                    },
+                    { widgetType = "header" },
+                    { widgetType = "filler", width = "third",             divider = false },
+                    { widgetType = "filler", width = "third",             divider = false },
                     {
                         widgetType = "button",
                         name       = L["Reset Keybind Settings"],
@@ -876,94 +1010,6 @@ local ZBBG_SCHEMA = {
                             "keybindShortenText",
                             "showKeybindText",
                         },
-                    },
-                    { widgetType = "spacer" },
-                    {
-                        widgetType = "toggle",
-                        key        = "showKeybindText",
-                        name       = L["Show Keybind Text"],
-                        desc       = L["Show or hide the keybind/hotkey label on buttons"],
-                    },
-                    { widgetType = "spacer" },
-                    {
-                        widgetType = "toggle",
-                        key        = "keybindShortenText",
-                        name       = L["Shorten Keybind"],
-                        desc       = L["Abbreviate modifier keys in keybind text (e.g. Ctrl-Shift-Alt-1 becomes CSA1)"],
-                    },
-                    { widgetType = "spacer" },
-                    {
-                        widgetType = "select",
-                        key        = "keybindFont",
-                        name       = L["Keybind Font"],
-                        desc       = L["Font family for keybind/hotkey text"],
-                        values     = function()
-                            local r = {}
-                            for _, n in ipairs(LSM:List("font")) do r[n] = n end
-                            return r
-                        end,
-                    },
-                    {
-                        widgetType = "select",
-                        key        = "keybindFontFlags",
-                        name       = L["Font Flags"],
-                        desc       = L["Font style flags for keybind/hotkey text"],
-                        values     = {
-                            [""]             = L["None"],
-                            ["OUTLINE"]      = L["Outline"],
-                            ["THICKOUTLINE"] = L["Thick Outline"],
-                        },
-                    },
-                    {
-                        widgetType = "range",
-                        key        = "keybindFontSize",
-                        name       = L["Keybind Font Size"],
-                        desc       = L["Font size for keybind/hotkey text"],
-                        min        = 6,
-                        max        = 40,
-                        step       = 1,
-                    },
-                    {
-                        widgetType = "colorAlpha",
-                        name       = L["Keybind Color"],
-                        get        = function() return getColor("keybindColor") end,
-                        set        = function(v) setColor("keybindColor", v) end,
-                    },
-                    {
-                        widgetType = "range",
-                        key        = "keybindWidth",
-                        name       = L["Width"],
-                        desc       = L["Width of the keybind text frame"],
-                        min        = 1,
-                        max        = 100,
-                        step       = 1,
-                    },
-                    {
-                        widgetType = "range",
-                        key        = "keybindHeight",
-                        name       = L["Height"],
-                        desc       = L["Height of the keybind text frame"],
-                        min        = 1,
-                        max        = 60,
-                        step       = 1,
-                    },
-                    {
-                        widgetType = "range",
-                        key        = "keybindOffsetX",
-                        name       = L["Offset X"],
-                        desc       = L["Horizontal positioning offset for keybind/hotkey text"],
-                        min        = -30,
-                        max        = 30,
-                        step       = 1,
-                    },
-                    {
-                        widgetType = "range",
-                        key        = "keybindOffsetY",
-                        name       = L["Offset Y"],
-                        desc       = L["Vertical positioning offset for keybind/hotkey text"],
-                        min        = -30,
-                        max        = 30,
-                        step       = 1,
                     },
                 },
             },
