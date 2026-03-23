@@ -636,20 +636,6 @@ local ZBBG_SCHEMA = {
                 children   = {
                     { widgetType = "header", name = L["Macro Name"] },
                     {
-                        widgetType = "button",
-                        name       = L["Reset Macro Settings"],
-                        desc       = L["Reset macro name text settings to default values"],
-                        confirm    = L["Are you sure you want to reset all macro text settings to default values?\n\nThis will reset font, size, color, positioning, and justification settings for macro names.\n\nThis action cannot be undone!"],
-                        resetKeys  = {
-                            "macroNameFont", "macroNameFontSize", "macroNameFontFlags",
-                            "macroNameColor", "macroNameWidth", "macroNameHeight",
-                            "macroNameJustification", "macroNamePosition",
-                            "macroNameOffsetX", "macroNameOffsetY",
-                            "showMacroName",
-                        },
-                    },
-                    { widgetType = "spacer" },
-                    {
                         widgetType = "toggle",
                         key        = "showMacroName",
                         name       = L["Show Macro Text"],
@@ -659,6 +645,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "select",
                         key        = "macroNameFont",
+                        width      = "half",
                         name       = L["Macro Name Font"],
                         desc       = L["Font family for macro names"],
                         values     = function()
@@ -670,6 +657,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "select",
                         key        = "macroNameFontFlags",
+                        width      = "half",
                         name       = L["Font Flags"],
                         desc       = L["Font style flags for macro names"],
                         values     = {
@@ -681,6 +669,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "range",
                         key        = "macroNameFontSize",
+                        width      = "half",
                         name       = L["Font Size"],
                         desc       = L["Font size for macro names"],
                         min        = 6,
@@ -689,6 +678,7 @@ local ZBBG_SCHEMA = {
                     },
                     {
                         widgetType = "colorAlpha",
+                        width      = "half",
                         name       = L["Macro Name Color"],
                         get        = function() return getColor("macroNameColor") end,
                         set        = function(v) setColor("macroNameColor", v) end,
@@ -696,6 +686,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "range",
                         key        = "macroNameWidth",
+                        width      = "half",
                         name       = L["Width"],
                         desc       = L["Width of the macro name text frame"],
                         min        = 1,
@@ -705,6 +696,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "range",
                         key        = "macroNameHeight",
+                        width      = "half",
                         name       = L["Height"],
                         desc       = L["Height of the macro name text frame"],
                         min        = 1,
@@ -714,6 +706,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "range",
                         key        = "macroNameOffsetX",
+                        width      = "half",
                         name       = L["Offset X"],
                         desc       = L["Horizontal positioning offset for macro name text"],
                         min        = -30,
@@ -723,6 +716,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "range",
                         key        = "macroNameOffsetY",
+                        width      = "half",
                         name       = L["Offset Y"],
                         desc       = L["Vertical positioning offset for macro name text"],
                         min        = -30,
@@ -732,6 +726,7 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "select",
                         key        = "macroNameJustification",
+                        width      = "half",
                         name       = L["Macro Text Justification"],
                         desc       = L["Horizontal text alignment for macro names"],
                         values     = {
@@ -743,11 +738,29 @@ local ZBBG_SCHEMA = {
                     {
                         widgetType = "select",
                         key        = "macroNamePosition",
+                        width      = "half",
                         name       = L["Macro Text Position"],
                         desc       = L["Vertical position of macro text within the text frame"],
                         values     = {
                             ["TOP"]    = L["Top"],
                             ["BOTTOM"] = L["Bottom"],
+                        },
+                    },
+                    {   widgetType = "spacer" },
+                    {   widgetType = "filler", width = "third", separator = "hide" },
+                    {   widgetType = "filler", width = "third", separator = "hide" },
+                    {
+                        widgetType = "button",
+                        width      = "third",
+                        name       = L["Reset Macro Settings"],
+                        desc       = L["Reset macro name text settings to default values"],
+                        confirm    = L["Are you sure you want to reset all macro text settings to default values?\n\nThis will reset font, size, color, positioning, and justification settings for macro names.\n\nThis action cannot be undone!"],
+                        resetKeys  = {
+                            "macroNameFont", "macroNameFontSize", "macroNameFontFlags",
+                            "macroNameColor", "macroNameWidth", "macroNameHeight",
+                            "macroNameJustification", "macroNamePosition",
+                            "macroNameOffsetX", "macroNameOffsetY",
+                            "showMacroName",
                         },
                     },
                 },
@@ -975,4 +988,6 @@ zBarButtonBG.zSFCtx = zSettingsFrame.Register({
     reset       = function(keys) zBarButtonBG.ApplyDefaults(keys) end,
     subscribe   = function(cb) zBarButtonBG.settingsStore:SubscribeAll(cb) end,
     onPanelShow = function() zBarButtonBG.SyncAllSignals() end,
+    themeColors = { primary = RAID_CLASS_COLORS["WARRIOR"], secondary = RAID_CLASS_COLORS["EVOKER"] },
+
 })
