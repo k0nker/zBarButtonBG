@@ -2,7 +2,7 @@
 ## Title: zBarButtonBG
 ## Notes: Adds customizable backgrounds to action bar buttons
 ## Author: kyroaei - Zimgen/Ahenaku-WrA
-## Version: 2026.0324.01
+## Version: 2026.0325.01
 ## SavedVariables: zBarButtonBGDB
 ## IconTexture: Interface\AddOns\zBarButtonBG\Assets\zBarButtonBG.tga
 ## Category: Action Bars

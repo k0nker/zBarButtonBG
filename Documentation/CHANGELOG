@@ -1,4 +1,11 @@
 # Changelog
+
+### 2026.0325.01
+
+#### Bug Fixes
+- Attempt to reduce possible cross taint by other addons that attempt to modify the action bars insecurely.
+
+---
 ### 2026.0324.01
 
 #### Changes
