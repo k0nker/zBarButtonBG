@@ -707,23 +707,68 @@ function zBarButtonBG.createActionBarBackgrounds()
         -- This is the natural trigger point: a new target may be at a different
         -- range, and any previously-stuck overlays will be corrected here.
         updateFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+
+        -- Update HotKey color and zBBG range overlay for a button WITHOUT calling
+        -- ActionButton_UpdateRangeIndicator.  Calling that global from insecure code
+        -- triggers every hooksecurefunc chain (including other addons) from tainted
+        -- context, which can propagate secret-value taint into Blizzard's own secure
+        -- button update path.  This helper replicates only the HotKey and overlay logic.
+        local function updateRangeStateForButton(button)
+            local rangeResult = IsActionInRange(button.action, "target")
+            local checksRange = rangeResult ~= nil
+            local inRange     = rangeResult ~= false
+
+            -- Mirror ActionButton_UpdateRangeIndicator HotKey coloring
+            local hotkey = button.HotKey
+            if hotkey then
+                if hotkey:GetText() == RANGE_INDICATOR then
+                    if checksRange then
+                        hotkey:Show()
+                        if inRange then
+                            hotkey:SetVertexColor(ACTIONBAR_HOTKEY_FONT_COLOR:GetRGB())
+                        else
+                            hotkey:SetVertexColor(RED_FONT_COLOR:GetRGB())
+                        end
+                    else
+                        hotkey:Hide()
+                    end
+                else
+                    if checksRange and not inRange then
+                        hotkey:SetVertexColor(RED_FONT_COLOR:GetRGB())
+                    else
+                        hotkey:SetVertexColor(ACTIONBAR_HOTKEY_FONT_COLOR:GetRGB())
+                    end
+                end
+            end
+
+            -- Update zBBG overlay directly
+            local overlay = button._zBBG_rangeOverlay
+            if overlay then
+                local shouldShow = checksRange and (inRange == false)
+                    and zBarButtonBG.charSettings.showRangeIndicator
+                    and UnitExists("target")
+                if shouldShow and not overlay:IsShown() then
+                    overlay:Show()
+                elseif not shouldShow and overlay:IsShown() then
+                    overlay:Hide()
+                    zBarButtonBG.updateButtonFont(button)
+                end
+            end
+        end
+
         updateFrame:SetScript("OnEvent", function(self, event)
             if zBarButtonBG.enabled then
                 if event == "PLAYER_TARGET_CHANGED" then
                     -- Target changed or dropped.  ACTION_RANGE_CHECK_UPDATE does NOT fire
                     -- when the target is cleared (nothing to measure range against), so
-                    -- Blizzard's HotKey color reset never runs on target-drop.  We call
-                    -- ActionButton_UpdateRangeIndicator directly with args derived from
-                    -- IsActionInRange, which simultaneously resets the HotKey vertex color
-                    -- (Blizzard's code path) AND triggers our hook to update the overlay.
+                    -- Blizzard's HotKey color reset never runs on target-drop.
+                    -- Use the local helper to update HotKey and overlay directly, avoiding
+                    -- a call to ActionButton_UpdateRangeIndicator from insecure context
+                    -- (which would trigger other addons' hooksecurefunc chains).
                     for _, data in pairs(zBarButtonBG.frames) do
                         local button = data and data.button
                         if button and button.action and button._zBBG_rangeOverlay then
-                            -- IsActionInRange: true=in range, false=OOR, nil=no requirement/no target
-                            local rangeResult = IsActionInRange(button.action, "target")
-                            local checksRange = rangeResult ~= nil
-                            local inRange     = rangeResult ~= false
-                            ActionButton_UpdateRangeIndicator(button, checksRange, inRange)
+                            updateRangeStateForButton(button)
                         end
                     end
                 elseif event == "CURSOR_CHANGED" then
@@ -769,10 +814,7 @@ function zBarButtonBG.createActionBarBackgrounds()
                             for _, data in pairs(zBarButtonBG.frames) do
                                 local button = data and data.button
                                 if button and button.action and button._zBBG_rangeOverlay then
-                                    local rangeResult = IsActionInRange(button.action, "target")
-                                    local checksRange = rangeResult ~= nil
-                                    local inRange     = rangeResult ~= false
-                                    ActionButton_UpdateRangeIndicator(button, checksRange, inRange)
+                                    updateRangeStateForButton(button)
                                 end
                             end
                         end)
